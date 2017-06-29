@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
-    
+    android:layout_height="fill_parent">
+
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:background="#d9d9d9"
         android:baselineAligned="false"
         android:gravity="top"
-        android:orientation="horizontal" >
+        android:orientation="horizontal">
 
         <!-- 这是左侧部分 -->
-    
+
         <LinearLayout
             android:layout_width="0.0dip"
             android:layout_height="fill_parent"
             android:layout_weight="4"
-            android:orientation="vertical"
             android:gravity="bottom"
+            android:orientation="vertical"
             android:paddingBottom="@dimen/activity_vertical_margin"
             android:paddingLeft="@dimen/activity_horizontal_margin"
             android:paddingRight="@dimen/activity_horizontal_margin"
             android:paddingTop="@dimen/activity_vertical_margin">
-             
-            
-			<!--  
+
+
+            <!--
             <CheckBox
                 android:id="@+id/checkBox1"
                 android:layout_width="wrap_content"
@@ -49,71 +49,69 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="bestTravel" />
-         	-->
-         	
-         	<ImageView
+             -->
+
+            <ImageView
                 android:id="@+id/WarningImage"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:src = "@drawable/icon_car"
-                 />
-         	
+                android:src="@drawable/icon_car" />
+
             <TextView
                 android:id="@+id/show"
                 android:layout_width="wrap_content"
-                android:textSize="25sp"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
                 android:text="@string/hello_world"
-                android:layout_marginBottom="20dp" />
-            
-			<LinearLayout
-			    android:layout_width="wrap_content"
-			    android:layout_height="match_parent"
-			    android:baselineAligned="false"
-			    android:orientation="horizontal"
-			    android:padding="5dp" >
+                android:textSize="25sp" />
 
-	        	<Button
-	                android:id="@+id/begin"
-	                android:layout_width="50dp"
-	                android:layout_height="50dp"
-	                android:background="@drawable/btn_start"
-	                android:layout_margin="10dp"
-	                 />
-	            
-	            <Button
-	                android:id="@+id/mapEnable"
-	                android:layout_width="50dp"
-	                android:layout_height="50dp"
-	                android:layout_margin="10dp"
-	                android:background="@drawable/pause_icon"
-	    	        android:onClick="MapOnOff"/>
-        	
-        	</LinearLayout>
-                        
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:padding="5dp">
 
-        </LinearLayout> 
-        <!-- 这是右侧部分 --> 
-        <LinearLayout 
+                <Button
+                    android:id="@+id/begin"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/btn_start" />
+
+                <Button
+                    android:id="@+id/mapEnable"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/pause_icon"
+                    android:onClick="MapOnOff" />
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+        <!-- 这是右侧部分 -->
+        <LinearLayout
             android:id="@+id/viewSwitcher1"
-            android:layout_above="@+id/mapEnable"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentTop="true" 
             android:layout_width="0.0dip"
             android:layout_height="fill_parent"
-             android:layout_weight="7">
-            
-        
+            android:layout_above="@+id/mapEnable"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_weight="7">
+
+
             <com.baidu.mapapi.map.MapView
                 android:id="@+id/bmapView"
                 android:layout_width="320dp"
                 android:layout_height="250dp"
                 android:clickable="true" />
-        
+
         </LinearLayout>
 
     </LinearLayout>
-    
+
 </FrameLayout>
 
