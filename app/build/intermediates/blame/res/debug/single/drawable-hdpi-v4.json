@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "D:\\All Projects\\Android Project\\FragmentDemo1\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\btn_oval.xml",
+        "source": "D:\\All Projects\\Android Project\\FragmentDemo1\\app\\src\\main\\res\\drawable-hdpi\\btn_oval.xml"
+    },
+    {
+        "merged": "D:\\All Projects\\Android Project\\MapDemo\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi-v4\\btn_oval.xml",
+        "source": "D:\\All Projects\\Android Project\\MapDemo\\app\\src\\main\\res\\drawable-hdpi\\btn_oval.xml"
+    }
+]

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        is-multidex="false"
+        jar="D:\Android\sdk\extras\android\m2repository\com\android\support\support-v4\19.1.0\support-v4-19.1.0.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="26.0.0"
+        sha1="85f201b380937e61a9dce6ca90ccf6872abbfb67">
+        <dex dex="D:\All Projects\Android Project\MapDemo\app\build\intermediates\pre-dexed\debug\support-v4-19.1.0_73b9883bfda7e9a6ae205d0e99c174e73ba72aaa.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="D:\All Projects\Android Project\MapDemo\app\libs\BaiduLBS_Android.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="26.0.0"
+        sha1="c0b886708093ae2354b1432cc500f7115cb454c4">
+        <dex dex="D:\All Projects\Android Project\MapDemo\app\build\intermediates\pre-dexed\debug\BaiduLBS_Android_494d925c9093d48e6ce41f48530e848b7ced3794.jar" />
+    </item>
+    <item
+        is-multidex="false"
+        jar="D:\All Projects\Android Project\MapDemo\app\libs\baidumapapi_radar_v3_6_1.jar"
+        jumboMode="false"
+        optimize="true"
+        revision="26.0.0"
+        sha1="1798aaeab5d68706f7e5be9399590f1b41df5053">
+        <dex dex="D:\All Projects\Android Project\MapDemo\app\build\intermediates\pre-dexed\debug\baidumapapi_radar_v3_6_1_0f5411459bea04f5273d984138592601d8fd8481.jar" />
+    </item>
+
+</items>
