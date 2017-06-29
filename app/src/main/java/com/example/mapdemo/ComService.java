@@ -1,23 +1,19 @@
 package com.example.mapdemo;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class ComService extends Service {
 
@@ -154,8 +150,6 @@ public class ComService extends Service {
             public void run() {
                 doListen();
             }
-
-            ;
         }.start();
         return START_NOT_STICKY;
     }

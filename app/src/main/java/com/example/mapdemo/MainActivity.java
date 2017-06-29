@@ -1,28 +1,5 @@
 package com.example.mapdemo;
 
-import java.util.LinkedList;
-import java.util.Locale;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Queue;
-
-import com.baidu.mapapi.SDKInitializer;
-import com.baidu.mapapi.map.BaiduMap;
-import com.baidu.mapapi.map.MapPoi;
-import com.baidu.mapapi.map.MapStatus;
-import com.baidu.mapapi.map.MapStatusUpdate;
-import com.baidu.mapapi.map.MapStatusUpdateFactory;
-import com.baidu.mapapi.map.MapView;
-import com.baidu.mapapi.map.Marker;
-import com.baidu.mapapi.map.MarkerOptions;
-import com.baidu.mapapi.map.OverlayOptions;
-import com.baidu.mapapi.map.BitmapDescriptor;
-import com.baidu.mapapi.map.BitmapDescriptorFactory;
-import com.baidu.mapapi.map.Stroke;
-import com.baidu.mapapi.model.LatLng;
-
-import com.baidu.mapapi.map.BaiduMap.OnMapClickListener;
-
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Service;
@@ -33,17 +10,36 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.LinearLayout.LayoutParams;
-import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.lang.Math;
+import com.baidu.mapapi.SDKInitializer;
+import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.BaiduMap.OnMapClickListener;
+import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
+import com.baidu.mapapi.map.MapPoi;
+import com.baidu.mapapi.map.MapStatus;
+import com.baidu.mapapi.map.MapStatusUpdate;
+import com.baidu.mapapi.map.MapStatusUpdateFactory;
+import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.Marker;
+import com.baidu.mapapi.map.MarkerOptions;
+import com.baidu.mapapi.map.OverlayOptions;
+import com.baidu.mapapi.model.LatLng;
+
+import java.util.LinkedList;
+import java.util.Locale;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Queue;
 
 public class MainActivity extends Activity {
     /*
@@ -64,7 +60,7 @@ public class MainActivity extends Activity {
             // TODO Auto-generated method stub
             System.out.println("Service connected");
             binder = (ComuService.MyBinder) service;
-            Log.i("nib", binder.toString());
+//            Log.i("nib", binder.toString());
         }
 
         @Override
@@ -103,7 +99,7 @@ public class MainActivity extends Activity {
                 try {
                     lat = binder.getLatL();
                     lng = binder.getLngL();
-                    Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng));
+//                    Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng));
                     event = binder.getEvent();
                     LatLng pt = new LatLng(lat, lng);
 
@@ -117,10 +113,10 @@ public class MainActivity extends Activity {
                         }
 
                         if (prev_angle != angle)
-                            Log.i("angle", angle + "   " + prev_angle);
+//                            Log.i("angle", angle + "   " + prev_angle);
                         prev_angle = angle;
                         //angle = (float) Math.toDegrees(Math.atan((pt.latitude-prev_pt.latitude)/(pt.longitude-prev_pt.longitude)));
-                        Log.i("angle", angle + "");
+//                        Log.i("angle", angle + "");
                         MapStatus mMapStatus = new MapStatus.Builder().target(pt).rotate(angle).build();
 
                         MapStatusUpdate msu = MapStatusUpdateFactory.newMapStatus(mMapStatus);
@@ -386,8 +382,8 @@ public class MainActivity extends Activity {
         }
         return true;
     }
-	/*
-	@Override
+    /*
+    @Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long

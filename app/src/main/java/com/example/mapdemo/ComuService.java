@@ -6,13 +6,14 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
+import java.net.Socket;
 
 /**
  * Created by Nibius on 2017/6/29.
@@ -23,8 +24,8 @@ public class ComuService extends Service {
     private static final String MESSAGE_OUT = "message_output";
     private static final String MESSAGE_IN = "message_input";
     private boolean quit = false;
+    private boolean isIOThread = true;
     private IBinder binder = new MyBinder();
-    //    private int Index_data = 0;
     final int SERVER_PORT = 8888;
     ServerSocket serverSocket = null;
     private String message;
@@ -69,71 +70,64 @@ public class ComuService extends Service {
         }
     }
 
-    public ComuService() {
-        super();
-        // TODO Auto-generated constructor stub
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
         Log.i("nib", "Service is created");
-        InputStream is = null;
-        try {
-            is = getAssets().open("simu.txt");
-        } catch (IOException e2) {
-            // TODO Auto-generated catch block
-            e2.printStackTrace();
-        }
-        InputStreamReader ireader = new InputStreamReader(is);
-        final BufferedReader reader = new BufferedReader(ireader);
-        new Thread() {
-            @Override
-            public void run() {
-                while (!quit) {
-                    JSONObject json;
-                    try {
-                        String line = reader.readLine();
-                        System.out.println(line);
-                        json = new JSONObject(line);
-                        Log.i("numb", json.toString());
-                        lat = json.getDouble("lat_l");
-                        lng = json.getDouble("long_l");
-                        event = json.getInt("event");
-                        latR = json.getDouble("lat_r");
-                        lngR = json.getDouble("long_r");
-//                        Log.i("nib", String.valueOf(lat)+"\t"+String.valueOf(lng)+"\t"+String.valueOf(event)+"\t"+String.valueOf(latR)+"\t"+String.valueOf(lngR));
-                        //double latR1 = latR,lngR1 = lngR;
-
-                        latS = json.getDouble("lat_s");
-                        lngS = json.getDouble("long_s");
-                        speed = json.getInt("speed");
-//                        Log.i("nib", String.valueOf(latS)+"\t"+String.valueOf(lngS)+"\t"+String.valueOf(speed));
-                        switch (event) {
-                            case 1:
-                                message = "��·ǰ���г������У�����ٻ�ĵ�";
-                                break;
-                            case 2:
-                                int BTD;
-                                BTD = (int) AngleUtil.getDistance(lng, lat, lngS, latS);
-                                message = "ǰ��" + BTD + "���к��̵�,���鳵��" + speed + "km/h";
-                                break;
-                            case 3:
-                                int SLD;
-                                SLD = (int) AngleUtil.getDistance(lng, lat, lngS, latS);
-                                message = "ǰ��" + SLD + "����������ʾ,����" + speed + "km/h";
-                                break;
-                            default:
-                                break;
-                        }
-                        Thread.sleep(100);
-                    } catch (Exception e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }.start();
+//        InputStream is = null;
+//        try {
+//            is = getAssets().open("simu.txt");
+//        } catch (IOException e2) {
+//            e2.printStackTrace();
+//        }
+//        InputStreamReader ireader = new InputStreamReader(is);
+//        final BufferedReader reader = new BufferedReader(ireader);
+//        new Thread() {
+//            @Override
+//            public void run() {
+//                while (!quit) {
+//                    JSONObject json;
+//                    try {
+//                        String line = reader.readLine();
+//                        System.out.println(line);
+//                        json = new JSONObject(line);
+//                        Log.i("numb", json.toString());
+//                        lat = json.getDouble("lat_l");
+//                        lng = json.getDouble("long_l");
+//                        event = json.getInt("event");
+//                        latR = json.getDouble("lat_r");
+//                        lngR = json.getDouble("long_r");
+////                        Log.i("nib", String.valueOf(lat)+"\t"+String.valueOf(lng)+"\t"+String.valueOf(event)+"\t"+String.valueOf(latR)+"\t"+String.valueOf(lngR));
+//                        //double latR1 = latR,lngR1 = lngR;
+//
+//                        latS = json.getDouble("lat_s");
+//                        lngS = json.getDouble("long_s");
+//                        speed = json.getInt("speed");
+////                        Log.i("nib", String.valueOf(latS)+"\t"+String.valueOf(lngS)+"\t"+String.valueOf(speed));
+//                        switch (event) {
+//                            case 1:
+//                                message = "��·ǰ���г������У�����ٻ�ĵ�";
+//                                break;
+//                            case 2:
+//                                int BTD;
+//                                BTD = (int) AngleUtil.getDistance(lng, lat, lngS, latS);
+//                                message = "ǰ��" + BTD + "���к��̵�,���鳵��" + speed + "km/h";
+//                                break;
+//                            case 3:
+//                                int SLD;
+//                                SLD = (int) AngleUtil.getDistance(lng, lat, lngS, latS);
+//                                message = "ǰ��" + SLD + "����������ʾ,����" + speed + "km/h";
+//                                break;
+//                            default:
+//                                break;
+//                        }
+//                        Thread.sleep(100);
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        }.start();
     }
 
 	/*
@@ -158,15 +152,88 @@ public class ComuService extends Service {
 	*/
 
     @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i("nib", "Service onStartCommand");
+        quit = false;
+        new Thread() {
+            public void run() {
+                try {
+                    serverSocket = new ServerSocket(SERVER_PORT);
+                    Log.i("nib", "serverSocket");
+                    while (!quit) {
+                        try {
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        Socket socket = serverSocket.accept();
+                                        Log.i("nib", "socket accepted");
+                                        Log.i("nib", "new Thread running");
+                                        BufferedInputStream in = new BufferedInputStream(socket.getInputStream());
+                                        isIOThread = true;
+                                        while (isIOThread) {
+                                            try {
+                                                String msg = readFromSocket(in);
+                                                JSONObject json = new JSONObject(msg);
+                                                lat = json.getDouble("lat_l");
+                                                lng = json.getDouble("long_l");
+                                                latR = json.getDouble("lat_r");
+                                                lngR = json.getDouble("long_r");
+                                                latS = json.getDouble("lat_s");
+                                                lngS = json.getDouble("long_s");
+                                                message = json.getString("message");
+                                                event = json.getInt("event");
+                                                speed = json.getInt("speed");
+                                                Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng) + "\t" + String.valueOf(event) + "\t" + String.valueOf(latR) + "\t" + String.valueOf(lngR));
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }).start();
+                            Thread.sleep(50);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                            Log.i("nib", e.toString());
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    /* 从socket的输入流中读取数据 */
+    private String readFromSocket(InputStream in) {
+        int MAX_BUFFER_BYTES = 20480;
+        String msg = "";
+        byte[] tempbuffer = new byte[MAX_BUFFER_BYTES];
+        try {
+            int numReadedBytes = in.read(tempbuffer, 0, tempbuffer.length);
+            msg = new String(tempbuffer, 0, numReadedBytes, "utf-8");
+        } catch (Exception e) {
+            Log.v("nib", "readFromSocket error");
+            e.printStackTrace();
+        }
+        return msg;
+    }
+
+    @Override
     public IBinder onBind(Intent intent) {
-        // TODO Auto-generated method stub
-        Log.i("nib", "Service is binded");
+        Log.i("nib", "Service onBind");
         return binder;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.i("nib", "service onDestroy");
         this.quit = true;
+        isIOThread = false;
     }
 }
