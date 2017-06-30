@@ -25,8 +25,8 @@ public class DTmsgPayld {
 	
 	int Timestamp;	// 1s, 0=1970/1/1 00:00:00
 	short Event;	
-					//Ϊ�˲�ʹĳЩ����Խ����������Ҫ�����ţ�����൱�е�ֵȫ��ΪINT32��Ҳ�����տͻ��˽��յ���ֵ��
-					//��γ�Ȳ���WGS84����ϵ���ڵ�ͼ����Ҫ��һ����ת����
+					//为了不使某些数据越界引发不必要的困扰，这个类当中的值全部为INT32（也是最终客户端接收到的值）
+					//经纬度采用WGS84坐标系。在地图上需要进一步的转化。
 	/*
 	 * switch(Event)
 	 * 0 no events

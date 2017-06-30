@@ -1,2 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<merger version="3"><dataSet config="main"><source path="D:\All Projects\Android Project\MapDemo\app\src\main\assets"><file name="simu.txt" path="D:\All Projects\Android Project\MapDemo\app\src\main\assets\simu.txt"/></source><source path="D:\All Projects\Android Project\MapDemo\app\build\generated\assets\shaders\debug"/></dataSet><dataSet config="debug"><source path="D:\All Projects\Android Project\MapDemo\app\src\debug\assets"/></dataSet></merger>
