@@ -53,12 +53,23 @@ public class MainActivity extends Activity {
     private static final String ACTION_RECV_MSG = "com.example.mapdemo.action.RECEIVE_MESSAGE";
     private static final String MESSAGE_OUT = "message_output";
     private static final String MESSAGE_IN = "message_input";
-    //MessageReceiver receiver;
-    private LocationClient locationClient = null;
-    private MyLocationListener bdLocationListener = new MyLocationListener();
 
-    ComuService.MyBinder binder; //������������IBinder����
-    private ServiceConnection conn = new ServiceConnection() {
+    //MessageReceiver receiver;
+    private LocationClient locationClient = null;       // 定位服务的核心类
+    private MyLocationListener bdLocationListener = new MyLocationListener();   // 定位服务接口
+
+    private TextView tipText;
+    private ImageView WarnImg;
+    private MapView mMapView = null;
+    private boolean IsMapStretched = false;
+    private static final int MAX_SOURCE = 4;    //ͬʱ��ʾ�ĳ����������Ŀ��
+    private int event;
+    private boolean icon_change = true;
+    private boolean getChange = false;
+    private double lat = 31.03533, lng = 121.44262;
+
+    ComuService.MyBinder binder;                        //通信服务的binder
+    private ServiceConnection conn = new ServiceConnection() {                  // 用于绑定服务的连接类
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.i("nib", "Service connected");
@@ -69,30 +80,19 @@ public class MainActivity extends Activity {
         public void onServiceDisconnected(ComponentName name) {
             Log.i("nib", "Service disconnected");
             binder = null;
-
         }
 
     };
 
-    private TextView tipText;
-    private ImageView WarnImg;
-    MapView mMapView = null;
-    private boolean IsMapStretched = false;
-    private static final int MAX_SOURCE = 4;    //ͬʱ��ʾ�ĳ����������Ŀ��
-    private int event;
-    private boolean icon_change = true;
-    private boolean getChange = false;
-    double lat = 31.03533, lng = 121.44262;
-
     //ʵ�ֵ�ͼ�����ͱ�־���µ��̡߳�
-    Marker[] markers; // �����ͼ�����б�־�����顣markers[0]��ָ������ű���λ�á�
-    LatLng prev_pt = null;
-    float prev_angle = 0;
-    Handler MapUpdater = new Handler();//�������̺߳����̵߳�Handler
-    Runnable MapUpdate = new Runnable() {//���µ�ͼ��Ϣ���߳�
+    private Marker[] markers; // �����ͼ�����б�־�����顣markers[0]��ָ������ű���λ�á�
+    private LatLng prev_pt = null;
+    private float prev_angle = 0;
+    private Handler MapUpdater = new Handler();//�������̺߳����̵߳�Handler
+    private Runnable MapUpdate = new Runnable() {//���µ�ͼ��Ϣ���߳�
         public void run() {
             BaiduMap mBaiduMap = mMapView.getMap();
-//            如果服务已绑定，显示接收到的数据，否则，显示定位结果
+            // 如果服务已绑定 {@code binder!=null}，显示接收到的数据，否则，显示定位结果
             if (binder != null) {
                 if (!getChange) {
                     LatLng pt = new LatLng(lat, lng);
@@ -194,7 +194,7 @@ public class MainActivity extends Activity {
     };
 
     //������Ϣ�����߳̿��ص�Observable��.�����ر�ʱ,�߳̽�������.
-    class IsUpdateEnabled extends Observable {
+    private class IsUpdateEnabled extends Observable {
         private boolean isOpen = true;
 
         public boolean getState() {
@@ -212,7 +212,7 @@ public class MainActivity extends Activity {
     }
 
     //������Ϣ�����߳̿��ص�watcher�ࡣ
-    class Watcher implements Observer {
+    private class Watcher implements Observer {
         public Watcher(Observable obj) {
             obj.addObserver(this); //Ϊ���۲�Ķ�����ӹ۲���
         }
@@ -233,7 +233,7 @@ public class MainActivity extends Activity {
     Observable mapEnabled;
     Observer myWatcher;
 
-    class myMapClickListener implements OnMapClickListener {
+    private class myMapClickListener implements OnMapClickListener {
         //������ͼ����õ�listener��
         LayoutParams original;
 
@@ -322,7 +322,6 @@ public class MainActivity extends Activity {
 
             @Override
             public void onInit(int status) {
-                // TODO Auto-generated method stub
                 if (status == TextToSpeech.SUCCESS) {
                     //�����ʶ�����
                     int supported = mTextToSpeech.setLanguage(Locale.CHINESE);
@@ -338,7 +337,6 @@ public class MainActivity extends Activity {
 
             @Override
             public void onClick(View v) {
-                // TODO Auto-generated method stub
                 mServiceIntent.putExtra(MESSAGE_IN, "begin");
                 startService(mServiceIntent);
                 Log.i("nib", "btn clicked, service started");
@@ -361,38 +359,27 @@ public class MainActivity extends Activity {
         LocationClientOption option = new LocationClientOption();
         option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);
         //可选，默认高精度，设置定位模式，高精度，低功耗，仅设备
-
         option.setCoorType("bd09ll");
         //可选，默认gcj02，设置返回的定位结果坐标系
-
         int span = 1000;
         option.setScanSpan(span);
         //可选，默认0，即仅定位一次，设置发起定位请求的间隔需要大于等于1000ms才是有效的
-
         option.setIsNeedAddress(true);
         //可选，设置是否需要地址信息，默认不需要
-
         option.setOpenGps(true);
         //可选，默认false,设置是否使用gps
-
         option.setLocationNotify(true);
         //可选，默认false，设置是否当GPS有效时按照1S/1次频率输出GPS结果
-
         option.setIsNeedLocationDescribe(true);
         //可选，默认false，设置是否需要位置语义化结果，可以在BDLocation.getLocationDescribe里得到，结果类似于“在北京天安门附近”
-
         option.setIsNeedLocationPoiList(true);
         //可选，默认false，设置是否需要POI结果，可以在BDLocation.getPoiList里得到
-
         option.setIgnoreKillProcess(false);
         //可选，默认true，定位SDK内部是一个SERVICE，并放到了独立进程，设置是否在stop的时候杀死这个进程，默认不杀死
-
         option.SetIgnoreCacheException(false);
         //可选，默认false，设置是否收集CRASH信息，默认收集
-
         option.setEnableSimulateGps(false);
         //可选，默认false，设置是否需要过滤GPS仿真结果，默认需要
-
         locationClient.setLocOption(option);
     }
 
