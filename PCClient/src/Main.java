@@ -36,7 +36,7 @@ public class Main {
                 out.write(line.getBytes());
                 out.flush();
                 System.out.println("Send: " + line);
-                Thread.sleep(1000);
+                Thread.sleep(100);
             }
             reader.close();
 //            while (true) {

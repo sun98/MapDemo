@@ -20,6 +20,8 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.baidu.location.LocationClient;
+import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BaiduMap.OnMapClickListener;
@@ -52,21 +54,22 @@ public class MainActivity extends Activity {
     private static final String MESSAGE_OUT = "message_output";
     private static final String MESSAGE_IN = "message_input";
     //MessageReceiver receiver;
+    private LocationClient locationClient = null;
+    private MyLocationListener bdLocationListener = new MyLocationListener();
 
     ComuService.MyBinder binder; //������������IBinder����
     private ServiceConnection conn = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            // TODO Auto-generated method stub
-            System.out.println("Service connected");
+            Log.i("nib", "Service connected");
             binder = (ComuService.MyBinder) service;
-//            Log.i("nib", binder.toString());
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            // TODO Auto-generated method stub
-            System.out.println("Service disconnected");
+            Log.i("nib", "Service disconnected");
+            binder = null;
+
         }
 
     };
@@ -89,66 +92,69 @@ public class MainActivity extends Activity {
     Runnable MapUpdate = new Runnable() {//���µ�ͼ��Ϣ���߳�
         public void run() {
             BaiduMap mBaiduMap = mMapView.getMap();
-
-            if (!getChange) {
-                LatLng pt = new LatLng(lat, lng);
-                MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(pt);
-                mBaiduMap.setMapStatus(msu);
-                markers[0].setPosition(pt);
-            } else {
-                try {
-                    lat = binder.getLatL();
-                    lng = binder.getLngL();
-//                    Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng));
-                    event = binder.getEvent();
+//            如果服务已绑定，显示接收到的数据，否则，显示定位结果
+            if (binder != null) {
+                if (!getChange) {
                     LatLng pt = new LatLng(lat, lng);
-
+                    MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(pt);
+                    mBaiduMap.setMapStatus(msu);
                     markers[0].setPosition(pt);
-                    float angle = prev_angle;
-                    if (prev_pt != null) {
-                        if (pt.longitude - prev_pt.longitude != 0) {
-                            angle = (float) AngleUtil.getAngle(prev_pt.longitude, prev_pt.latitude, pt.longitude, pt.latitude);
-                            if (Math.abs(angle - prev_angle) < 15)
-                                angle = prev_angle;
-                        }
+                } else {
+                    try {
+                        lat = binder.getLatL();
+                        lng = binder.getLngL();
+                        Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng));
+                        event = binder.getEvent();
+                        LatLng pt = new LatLng(lat, lng);
 
-                        if (prev_angle != angle)
+                        markers[0].setPosition(pt);
+                        float angle = prev_angle;
+                        if (prev_pt != null) {
+                            if (pt.longitude - prev_pt.longitude != 0) {
+                                angle = (float) AngleUtil.getAngle(prev_pt.longitude, prev_pt.latitude, pt.longitude, pt.latitude);
+                                if (Math.abs(angle - prev_angle) < 15)
+                                    angle = prev_angle;
+                            }
+
+                            if (prev_angle != angle)
 //                            Log.i("angle", angle + "   " + prev_angle);
-                        prev_angle = angle;
-                        //angle = (float) Math.toDegrees(Math.atan((pt.latitude-prev_pt.latitude)/(pt.longitude-prev_pt.longitude)));
+                                prev_angle = angle;
+                            //angle = (float) Math.toDegrees(Math.atan((pt.latitude-prev_pt.latitude)/(pt.longitude-prev_pt.longitude)));
 //                        Log.i("angle", angle + "");
-                        MapStatus mMapStatus = new MapStatus.Builder().target(pt).rotate(angle).build();
+                            MapStatus mMapStatus = new MapStatus.Builder().target(pt).rotate(angle).build();
 
-                        MapStatusUpdate msu = MapStatusUpdateFactory.newMapStatus(mMapStatus);
-                        //mBaiduMap.setMapStatus(msu);
-                        mBaiduMap.animateMapStatus(msu);
-                    }
-                    prev_pt = new LatLng(lat, lng);
-
-                    markers[1].setVisible(false);
-                    if (event > 0) {
-                        Log.i("msgmsg", binder.getMsg());
-                        LatLng newPt;
-                        if (event == 1) {
-                            lat = binder.getLatR();
-                            lng = binder.getLngR();
-                            newPt = new LatLng(lat + 0.00004, lng - 0.0004);
-                        } else {
-                            lat = binder.getLatStable();
-                            lng = binder.getLngStable();
-                            newPt = new LatLng(lat, lng);
+                            MapStatusUpdate msu = MapStatusUpdateFactory.newMapStatus(mMapStatus);
+                            //mBaiduMap.setMapStatus(msu);
+                            mBaiduMap.animateMapStatus(msu);
                         }
-                        //markers[i].setIcon(NewIcon);
-                        markers[event].setPosition(newPt);
-                        markers[event].setVisible(true);
+                        prev_pt = new LatLng(lat, lng);
+
+                        markers[1].setVisible(false);
+                        if (event > 0) {
+                            Log.i("nib", binder.getMsg());
+                            LatLng newPt;
+                            if (event == 1) {
+                                lat = binder.getLatR();
+                                lng = binder.getLngR();
+                                newPt = new LatLng(lat + 0.00004, lng - 0.0004);
+                            } else {
+                                lat = binder.getLatStable();
+                                lng = binder.getLngStable();
+                                newPt = new LatLng(lat, lng);
+                            }
+                            //markers[i].setIcon(NewIcon);
+                            markers[event].setPosition(newPt);
+                            markers[event].setVisible(true);
+                        }
+                    } catch (Exception e) {
+                        Log.i("nib", e.toString());
                     }
-
-
-                } catch (Exception e) {
-                    // TODO Auto-generated catch block
-                    //Toast.makeText(MainActivity.this,"Server is down!",Toast.LENGTH_LONG).show();
-                    e.printStackTrace();
                 }
+            } else {
+                LatLng latLng = bdLocationListener.getLatLng();
+                MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(latLng);
+                mBaiduMap.setMapStatus(msu);
+                markers[0].setPosition(latLng);
             }
             //��������Ϣ����ʱ������������µ�marker.
             MapUpdater.postDelayed(this, 100);
@@ -299,6 +305,12 @@ public class MainActivity extends Activity {
         markers = new Marker[MAX_SOURCE];
         initializeMap(mMapView);
 
+//        声明LocationClient对象
+        locationClient = new LocationClient(getApplicationContext());
+        locationClient.registerLocationListener(bdLocationListener);
+        initLocation();
+        locationClient.start();
+
         Button mStartBtn = (Button) findViewById(R.id.begin);
         pause_map = (Button) findViewById(R.id.mapEnable);
         tipText = (TextView) findViewById(R.id.show);
@@ -343,6 +355,45 @@ public class MainActivity extends Activity {
         receiver = new MessageReceiver();  
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter);  
 		*/
+    }
+
+    private void initLocation() {
+        LocationClientOption option = new LocationClientOption();
+        option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);
+        //可选，默认高精度，设置定位模式，高精度，低功耗，仅设备
+
+        option.setCoorType("bd09ll");
+        //可选，默认gcj02，设置返回的定位结果坐标系
+
+        int span = 1000;
+        option.setScanSpan(span);
+        //可选，默认0，即仅定位一次，设置发起定位请求的间隔需要大于等于1000ms才是有效的
+
+        option.setIsNeedAddress(true);
+        //可选，设置是否需要地址信息，默认不需要
+
+        option.setOpenGps(true);
+        //可选，默认false,设置是否使用gps
+
+        option.setLocationNotify(true);
+        //可选，默认false，设置是否当GPS有效时按照1S/1次频率输出GPS结果
+
+        option.setIsNeedLocationDescribe(true);
+        //可选，默认false，设置是否需要位置语义化结果，可以在BDLocation.getLocationDescribe里得到，结果类似于“在北京天安门附近”
+
+        option.setIsNeedLocationPoiList(true);
+        //可选，默认false，设置是否需要POI结果，可以在BDLocation.getPoiList里得到
+
+        option.setIgnoreKillProcess(false);
+        //可选，默认true，定位SDK内部是一个SERVICE，并放到了独立进程，设置是否在stop的时候杀死这个进程，默认不杀死
+
+        option.SetIgnoreCacheException(false);
+        //可选，默认false，设置是否收集CRASH信息，默认收集
+
+        option.setEnableSimulateGps(false);
+        //可选，默认false，设置是否需要过滤GPS仿真结果，默认需要
+
+        locationClient.setLocOption(option);
     }
 
     private void displayToast(String s) {
