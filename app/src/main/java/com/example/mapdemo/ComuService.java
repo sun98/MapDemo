@@ -6,9 +6,6 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -172,22 +169,28 @@ public class ComuService extends Service {
                                         BufferedInputStream in = new BufferedInputStream(socket.getInputStream());
                                         isIOThread = true;
                                         while (isIOThread) {
-                                            try {
-                                                String msg = readFromSocket(in);
-                                                JSONObject json = new JSONObject(msg);
-                                                lat = json.getDouble("lat_l");
-                                                lng = json.getDouble("long_l");
-                                                latR = json.getDouble("lat_r");
-                                                lngR = json.getDouble("long_r");
-                                                latS = json.getDouble("lat_s");
-                                                lngS = json.getDouble("long_s");
-                                                message = json.getString("message");
-                                                event = json.getInt("event");
-                                                speed = json.getInt("speed");
-                                                Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng) + "\t" + String.valueOf(event) + "\t" + String.valueOf(latR) + "\t" + String.valueOf(lngR));
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
+//                                            try {
+                                            String msg = readFromSocket(in);
+                                            NumString2Message numString2Message = new NumString2Message(msg);
+                                            lat = numString2Message.getLat();
+                                            lng = numString2Message.getLng();
+                                            latR = numString2Message.getLatR();
+                                            lngR = numString2Message.getLngR();
+                                            event = numString2Message.getEvent();
+//                                                JSONObject json = new JSONObject(msg);
+//                                                lat = json.getDouble("lat_l");
+//                                                lng = json.getDouble("long_l");
+//                                                latR = json.getDouble("lat_r");
+//                                                lngR = json.getDouble("long_r");
+//                                                latS = json.getDouble("lat_s");
+//                                                lngS = json.getDouble("long_s");
+//                                                message = json.getString("message");
+//                                                event = json.getInt("event");
+//                                                speed = json.getInt("speed");
+//                                                Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng) + "\t" + String.valueOf(event) + "\t" + String.valueOf(latR) + "\t" + String.valueOf(lngR));
+//                                            } catch (JSONException e) {
+//                                                e.printStackTrace();
+//                                            }
                                         }
                                     } catch (IOException e) {
                                         e.printStackTrace();
