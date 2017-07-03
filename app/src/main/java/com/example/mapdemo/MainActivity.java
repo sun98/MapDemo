@@ -131,7 +131,7 @@ public class MainActivity extends Activity {
 
                         markers[1].setVisible(false);
                         if (event > 0) {
-                            Log.i("nib", binder.getMsg());
+//                            Log.i("nib", "msg:" + binder.getMsg());
                             LatLng newPt;
                             if (event == 1) {
                                 lat = binder.getLatR();
@@ -142,6 +142,7 @@ public class MainActivity extends Activity {
                                 lng = binder.getLngStable();
                                 newPt = new LatLng(lat, lng);
                             }
+                            Log.i("nib", "new lat:" + newPt.latitude + " new lng:" + newPt.longitude);
                             //markers[i].setIcon(NewIcon);
                             markers[event].setPosition(newPt);
                             markers[event].setVisible(true);

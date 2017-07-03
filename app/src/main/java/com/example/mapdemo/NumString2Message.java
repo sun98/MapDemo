@@ -4,31 +4,41 @@ package com.example.mapdemo;
  * Created by Nibius at 2017/7/3 15:14.
  */
 public class NumString2Message {
-    private long lat;
-    private long lng;
-    private long latR;
-
-    private long lngR;
+    private double lat;
+    private double lng;
+    private double latS;
+    private double lngS;
     private int event;
 
     public NumString2Message(String string) {
-        String latString = string.substring(0, 8);
-        byte[] latByte = hexString2Byte(latString);
-        lat = byte2Int(latByte);
+        if (string != null) {
+            String latString = string.substring(0, 8);
+//        TODO: 由于位数不够，无法判断纬度的正负，暂时只考虑正数
+//        byte[] latByte = hexString2Byte(latString);
+//        lat = byte2Int(latByte) * 1.0 / 100000000;
+            lat = Long.valueOf(latString, 16) * 1.0 / 100000000;
 
-        String lngString = string.substring(8, 16);
-        byte[] lngByte = hexString2Byte(lngString);
-        lng = byte2Int(lngByte);
+            String lngString = string.substring(8, 16);
+            byte[] lngByte = hexString2Byte(lngString);
+            lng = byte2Int(lngByte) * 1.0 / 10000000;
 
-        String latRString = string.substring(16, 24);
-        byte[] latRByte = hexString2Byte(latRString);
-        latR = byte2Int(latRByte);
+            String latRString = string.substring(16, 24);
+//        byte[] latRByte = hexString2Byte(latRString);
+//        latS = byte2Int(latRByte) * 1.0 / 100000000;
+            latS = Long.valueOf(latRString, 16) * 1.0 / 100000000;
 
-        String lngRString = string.substring(24, 32);
-        byte[] lngRByte = hexString2Byte(lngRString);
-        lngR = byte2Int(lngRByte);
+            String lngRString = string.substring(24, 32);
+            byte[] lngRByte = hexString2Byte(lngRString);
+            lngS = byte2Int(lngRByte) * 1.0 / 10000000;
 
-        event = Integer.valueOf(string.substring(32, 34));
+            event = Integer.valueOf(string.substring(32, 34));
+        } else {
+            lat = 0;
+            lng = 0;
+            latS = 0;
+            lngS = 0;
+            event = 0;
+        }
     }
 
     private int byte2Int(byte[] b) {
@@ -49,24 +59,24 @@ public class NumString2Message {
         return b;
     }
 
-    public long getLat() {
+    public double getLat() {
         return lat;
+    }
+
+    public double getLng() {
+        return lng;
+    }
+
+    public double getLatS() {
+        return latS;
+    }
+
+    public double getLngS() {
+        return lngS;
     }
 
     public int getEvent() {
         return event;
-    }
-
-    public long getLng() {
-        return lng;
-    }
-
-    public long getLatR() {
-        return latR;
-    }
-
-    public long getLngR() {
-        return lngR;
     }
 
     public static void main(String[] args) {

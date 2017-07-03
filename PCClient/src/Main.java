@@ -29,7 +29,7 @@ public class Main {
             socket = new Socket(serveraddr, PC_PORT);
             System.out.println("Connected");
             BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());
-            File file = new File("src/simu.txt");
+            File file = new File("src/simu_hex.txt");
             reader = new BufferedReader(new FileReader(file));
             String line = null;
             while ((line = reader.readLine()) != null) {

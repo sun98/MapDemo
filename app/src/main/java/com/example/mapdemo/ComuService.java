@@ -169,14 +169,14 @@ public class ComuService extends Service {
                                         BufferedInputStream in = new BufferedInputStream(socket.getInputStream());
                                         isIOThread = true;
                                         while (isIOThread) {
-//                                            try {
-                                            String msg = readFromSocket(in);
-                                            NumString2Message numString2Message = new NumString2Message(msg);
-                                            lat = numString2Message.getLat();
-                                            lng = numString2Message.getLng();
-                                            latR = numString2Message.getLatR();
-                                            lngR = numString2Message.getLngR();
-                                            event = numString2Message.getEvent();
+                                            try {
+                                                String msg = readFromSocket(in);
+                                                NumString2Message numString2Message = new NumString2Message(msg);
+                                                lat = numString2Message.getLat();
+                                                lng = numString2Message.getLng();
+                                                latS = numString2Message.getLatS();
+                                                lngS = numString2Message.getLngS();
+                                                event = numString2Message.getEvent();
 //                                                JSONObject json = new JSONObject(msg);
 //                                                lat = json.getDouble("lat_l");
 //                                                lng = json.getDouble("long_l");
@@ -191,6 +191,9 @@ public class ComuService extends Service {
 //                                            } catch (JSONException e) {
 //                                                e.printStackTrace();
 //                                            }
+                                            } catch (StringIndexOutOfBoundsException e) {
+                                                e.printStackTrace();
+                                            }
                                         }
                                     } catch (IOException e) {
                                         e.printStackTrace();
@@ -220,7 +223,7 @@ public class ComuService extends Service {
             int numReadedBytes = in.read(tempbuffer, 0, tempbuffer.length);
             msg = new String(tempbuffer, 0, numReadedBytes, "utf-8");
         } catch (Exception e) {
-            Log.v("nib", "readFromSocket error");
+            Log.i("nib", "readFromSocket error");
             e.printStackTrace();
         }
         return msg;

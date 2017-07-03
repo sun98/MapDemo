@@ -11,16 +11,18 @@ public class NumString2Message {
 
     public NumString2Message(String string) {
         String latString = string.substring(0, 8);
-        byte[] latByte = hexString2Byte(latString);
-        lat = byte2Int(latByte);
+//        byte[] latByte = hexString2Byte(latString);
+//        lat = byte2Int(latByte);
+        lat = Long.valueOf(latString, 16);
 
         String lngString = string.substring(8, 16);
         byte[] lngByte = hexString2Byte(lngString);
         lng = byte2Int(lngByte);
 
         String latRString = string.substring(16, 24);
-        byte[] latRByte = hexString2Byte(latRString);
-        latR = byte2Int(latRByte);
+//        byte[] latRByte = hexString2Byte(latRString);
+//        latR = byte2Int(latRByte);
+        latR = Long.valueOf(latRString);
 
         String lngRString = string.substring(24, 32);
         byte[] lngRByte = hexString2Byte(lngRString);
@@ -68,7 +70,7 @@ public class NumString2Message {
     }
 
     public static void main(String[] args) {
-        String m1 = "191B0080CE74E500191B0080CE74E50001";
+        String m1 = "b8fe420f4862e22bb8fc3b504862d43002";
         NumString2Message sample1 = new NumString2Message(m1);
         System.out.println(sample1.getLat() + "\t" + sample1.getLng() + "\t" + sample1.getLatR() + "\t" + sample1.getLngR() + "\t" + sample1.getEvent());
     }
