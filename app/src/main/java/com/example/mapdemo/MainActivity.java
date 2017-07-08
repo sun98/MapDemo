@@ -338,9 +338,9 @@ public class MainActivity extends Activity {
 
             @Override
             public void onClick(View v) {
-                mServiceIntent.putExtra(MESSAGE_IN, "begin");
+//                mServiceIntent.putExtra(MESSAGE_IN, "begin");
                 startService(mServiceIntent);
-                Log.i("nib", "btn clicked, service started");
+                Log.i("nib", "service started");
                 boolean r = bindService(mServiceIntent, conn, Service.BIND_AUTO_CREATE);
                 Log.i("nib", String.valueOf(r));
                 getChange = true;

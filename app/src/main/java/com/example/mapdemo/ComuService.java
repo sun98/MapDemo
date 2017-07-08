@@ -6,11 +6,11 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
-import java.net.Socket;
 
 /**
  * Created by Nibius on 2017/6/29.
@@ -23,7 +23,7 @@ public class ComuService extends Service {
     private boolean quit = false;
     private boolean isIOThread = true;
     private IBinder binder = new MyBinder();
-    final int SERVER_PORT = 8888;
+    final int PORT0 = 8888;
     ServerSocket serverSocket = null;
     private String message;
     private int event = 0, speed = 0;
@@ -155,46 +155,24 @@ public class ComuService extends Service {
         new Thread() {
             public void run() {
                 try {
-                    serverSocket = new ServerSocket(SERVER_PORT);
-                    Log.i("nib", "serverSocket");
+                    final DatagramSocket socket = new DatagramSocket(PORT0);
+                    Log.i("nib", "Datagram socket");
                     while (!quit) {
                         try {
                             new Thread(new Runnable() {
                                 @Override
                                 public void run() {
                                     try {
-                                        Socket socket = serverSocket.accept();
-                                        Log.i("nib", "socket accepted");
-                                        Log.i("nib", "new Thread running");
-                                        BufferedInputStream in = new BufferedInputStream(socket.getInputStream());
-                                        isIOThread = true;
-                                        while (isIOThread) {
-                                            try {
-                                                String msg = readFromSocket(in);
-                                                NumString2Message numString2Message = new NumString2Message(msg);
-                                                lat = numString2Message.getLat();
-                                                lng = numString2Message.getLng();
-                                                latS = numString2Message.getLatS();
-                                                lngS = numString2Message.getLngS();
-                                                event = numString2Message.getEvent();
-//                                                JSONObject json = new JSONObject(msg);
-//                                                lat = json.getDouble("lat_l");
-//                                                lng = json.getDouble("long_l");
-//                                                latR = json.getDouble("lat_r");
-//                                                lngR = json.getDouble("long_r");
-//                                                latS = json.getDouble("lat_s");
-//                                                lngS = json.getDouble("long_s");
-//                                                message = json.getString("message");
-//                                                event = json.getInt("event");
-//                                                speed = json.getInt("speed");
-//                                                Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng) + "\t" + String.valueOf(event) + "\t" + String.valueOf(latR) + "\t" + String.valueOf(lngR));
-//                                            } catch (JSONException e) {
-//                                                e.printStackTrace();
-//                                            }
-                                            } catch (StringIndexOutOfBoundsException e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
+                                        DatagramPacket datagramPacket = new DatagramPacket(new byte[2048], 2048);
+                                        socket.receive(datagramPacket);
+                                        String receivedString = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
+                                        Log.i("nib", receivedString + " from " + datagramPacket.getAddress().getHostAddress() + ":" + datagramPacket.getPort());
+                                        NumString2Message numString2Message = new NumString2Message(receivedString);
+                                        lat = numString2Message.getLat();
+                                        lng = numString2Message.getLng();
+                                        latS = numString2Message.getLatS();
+                                        lngS = numString2Message.getLngS();
+                                        event = numString2Message.getEvent();
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -241,5 +219,35 @@ public class ComuService extends Service {
         Log.i("nib", "service onDestroy");
         this.quit = true;
         isIOThread = false;
+    }
+
+    public int String8ToInt(String s) {
+        byte[] latByte = hexString2Byte(s);
+        return (byte2Int(latByte));
+    }
+
+    public int String4ToInt(String s) {
+        if (s.charAt(0) >= '0' && s.charAt(0) <= '8')
+            return String8ToInt("0000" + s);
+        else return String8ToInt("ffff" + s);
+
+    }
+
+    private int byte2Int(byte[] b) {
+        int intValue = 0;
+        for (int i = 0; i < b.length; i++) {
+            intValue += (b[i] & 0xFF) << (8 * (3 - i));
+        }
+        return intValue;
+    }
+
+    private byte[] hexString2Byte(String s) {
+        int len = s.length();
+        byte[] b = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            b[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character
+                    .digit(s.charAt(i + 1), 16));
+        }
+        return b;
     }
 }

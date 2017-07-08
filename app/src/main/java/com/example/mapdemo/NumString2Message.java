@@ -80,7 +80,7 @@ public class NumString2Message {
     }
 
     public static void main(String[] args) {
-        String m1 = "191B0080CE74E50001";
+        String m1 = "191B0080CE74E500191B0080CE74E50001";
         NumString2Message sample1 = new NumString2Message(m1);
         System.out.println(sample1.getLat() + "\t" + sample1.getLng() + "\t" + sample1.getEvent());
     }
