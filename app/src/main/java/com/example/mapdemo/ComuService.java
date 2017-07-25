@@ -23,13 +23,20 @@ public class ComuService extends Service {
     private boolean quit = false;
     private boolean isIOThread = true;
     private IBinder binder = new MyBinder();
-    final int PORT0 = 8888;
+    final int PORT0 = 8887;
+    final int PORT1 = 8888;
+    final int PORT2 = 8889;
     ServerSocket serverSocket = null;
+    private String source;
     private String message;
     private int event = 0, speed = 0;
     private double lat = 0, lng = 0, latR = 0, lngR = 0, latS = 0, lngS = 0;
 
     public class MyBinder extends Binder {
+        public String getSource() {
+            return source;
+        }
+
         public String getMsg() {
             return message;
         }
@@ -155,7 +162,10 @@ public class ComuService extends Service {
         new Thread() {
             public void run() {
                 try {
-                    final DatagramSocket socket = new DatagramSocket(PORT0);
+                    final DatagramSocket socket[] = new DatagramSocket[3];
+                    socket[0] = new DatagramSocket(PORT0);
+                    socket[1] = new DatagramSocket(PORT1);
+                    socket[2] = new DatagramSocket(PORT2);
                     Log.i("nib", "Datagram socket");
                     while (!quit) {
                         try {
@@ -163,16 +173,29 @@ public class ComuService extends Service {
                                 @Override
                                 public void run() {
                                     try {
-                                        DatagramPacket datagramPacket = new DatagramPacket(new byte[2048], 2048);
-                                        socket.receive(datagramPacket);
-                                        String receivedString = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
-                                        Log.i("nib", receivedString + " from " + datagramPacket.getAddress().getHostAddress() + ":" + datagramPacket.getPort());
-                                        NumString2Message numString2Message = new NumString2Message(receivedString);
-                                        lat = numString2Message.getLat();
-                                        lng = numString2Message.getLng();
-                                        latS = numString2Message.getLatS();
-                                        lngS = numString2Message.getLngS();
-                                        event = numString2Message.getEvent();
+                                        DatagramPacket datagramPacket[] = new DatagramPacket[3];
+                                        for (int i = 0; i < 3; i++) {
+                                            datagramPacket[i] = new DatagramPacket(new byte[2048], 2048);
+                                            socket[i].receive(datagramPacket[i]);
+                                            byte[] data = datagramPacket[i].getData();
+                                            String receivedString = new String(datagramPacket[i].getData(), 0, datagramPacket[i].getLength());
+//                                            String receivedString = "";
+//                                            for (byte aData : data) {
+//                                                if ((aData & 0xff) == 0) receivedString += "00";
+//                                                else {
+//                                                    if ((aData & 0xff) < 128) receivedString += "0";
+//                                                    receivedString += Integer.toHexString(aData & 0xff);
+//                                                }
+//                                            }
+                                            if (i == 0) source = receivedString;
+                                            Log.i("nib", receivedString + " from " + datagramPacket[i].getAddress().getHostAddress() + ":" + datagramPacket[i].getPort());
+                                        }
+//                                        NumString2Message numString2Message = new NumString2Message(receivedString);
+//                                        lat = numString2Message.getLat();
+//                                        lng = numString2Message.getLng();
+//                                        latS = numString2Message.getLatS();
+//                                        lngS = numString2Message.getLngS();
+//                                        event = numString2Message.getEvent();
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }

@@ -19,7 +19,9 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:19.1.0'
     compile files('libs/BaiduLBS_Android.jar')
     compile files('libs/baidumapapi_radar_v3_6_1.jar')
+    compile 'com.android.support:support-v4:19.1.0'
+    compile 'com.android.support:appcompat-v7:19.1.0'
+    compile 'com.github.zcweng:switch-button:0.0.3@aar'
 }

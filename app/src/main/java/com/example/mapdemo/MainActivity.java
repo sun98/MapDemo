@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -36,6 +37,7 @@ import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.model.LatLng;
+import com.suke.widget.SwitchButton;
 
 import java.util.LinkedList;
 import java.util.Locale;
@@ -59,8 +61,12 @@ public class MainActivity extends Activity {
     private MyLocationListener bdLocationListener = new MyLocationListener();   // 定位服务接口
 
     private TextView tipText;
+    private TextView sourceString;
     private ImageView WarnImg;
     private MapView mMapView = null;
+    private SwitchButton switchSpecial;
+    private SharedPreferences isSpecial;
+    private SharedPreferences.Editor isSpecialEditor;
     private boolean IsMapStretched = false;
     private static final int MAX_SOURCE = 4;    //ͬʱ��ʾ�ĳ����������Ŀ��
     private int event;
@@ -103,7 +109,7 @@ public class MainActivity extends Activity {
                     try {
                         lat = binder.getLatL();
                         lng = binder.getLngL();
-                        Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng));
+//                        Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng));
                         event = binder.getEvent();
                         LatLng pt = new LatLng(lat, lng);
 
@@ -173,8 +179,8 @@ public class MainActivity extends Activity {
 
         @Override
         public void run() {
-            // TODO Auto-generated method stub
             if (getChange) {
+                sourceString.setText(binder.getSource());
                 if (event > 0 && !MsgUsed) {
                     String warnMsg = binder.getMsg();
                     tipText.setText(warnMsg);
@@ -186,7 +192,7 @@ public class MainActivity extends Activity {
                     if (event == 0) {
                         MsgUsed = false;
                         WarnImg.setImageResource(R.drawable.icon_car);
-                        tipText.setText("��ӭʹ�ó�·Эͬϵͳ");
+                        tipText.setText(R.string.hello_world);
                     }
                 }
             }
@@ -243,12 +249,12 @@ public class MainActivity extends Activity {
         public void onMapClick(LatLng arg0) {
             if (!IsMapStretched) {
                 original = (LayoutParams) mMapView.getLayoutParams();        //��ԭʼ��λ�ò������棬�Ա�֮��ص����״̬��
-                mMapView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+                mMapView.setLayoutParams(new LayoutParams(320, 250));
+//                mMapView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
                 //ֱ������Layout������
                 IsMapStretched = true;
             } else {
                 mMapView.setLayoutParams(original);
-
                 IsMapStretched = false;
             }
         }
@@ -260,19 +266,21 @@ public class MainActivity extends Activity {
 
     }
 
-    protected void initializeMap(MapView mMapView) {
+    protected void initializeMap(MapView mMapView, boolean isSpecialCar) {
 
         mMapView.showScaleControl(false);
         mMapView.showZoomControls(false);            //���ص�ͼ�ķŴ�/��С��ť���Լ����ƴ�С���϶��ᡣ
         MapStatusUpdate msu = MapStatusUpdateFactory.zoomTo(255);        //����ͼ�ŵ����
         BaiduMap mBaiduMap = mMapView.getMap();
         mBaiduMap.setMapStatus(msu);
-        mBaiduMap.setOnMapClickListener(new myMapClickListener());
+//        mBaiduMap.setOnMapClickListener(new myMapClickListener());
         LatLng pt = new LatLng(lat, lng);
         msu = MapStatusUpdateFactory.newLatLngZoom(pt, 175);
         mBaiduMap.setMapStatus(msu);        // ����ͼ�ŵ���󣬲������ĵ���Ϊpt.
 
-        BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_icon);
+        BitmapDescriptor bitmap;
+        if (isSpecialCar) bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_red);
+        else bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_icon);
         OverlayOptions opt = new MarkerOptions().position(pt).icon(bitmap);    // ����Overlay������ʾ ����ɫ��ͷ��
         markers[0] = (Marker) (mBaiduMap.addOverlay(opt)); // ��Marker��ӵ���ͼ�ϡ�
         int resourceArray[] = {R.drawable.icon2, R.drawable.trafficlight, R.drawable.spdlimit};
@@ -304,7 +312,8 @@ public class MainActivity extends Activity {
         mMapView = (MapView) findViewById(R.id.bmapView);
 
         markers = new Marker[MAX_SOURCE];
-        initializeMap(mMapView);
+        initializeMap(mMapView, false);
+
 
 //        声明LocationClient对象
         locationClient = new LocationClient(getApplicationContext());
@@ -315,6 +324,7 @@ public class MainActivity extends Activity {
         Button mStartBtn = (Button) findViewById(R.id.begin);
         pause_map = (Button) findViewById(R.id.mapEnable);
         tipText = (TextView) findViewById(R.id.show);
+        sourceString = (TextView) findViewById(R.id.text_source_string);
         WarnImg = (ImageView) findViewById(R.id.WarningImage);
         ActionBar actionBar = getActionBar();
         actionBar.setTitle("SpeedGuiding");
@@ -344,6 +354,17 @@ public class MainActivity extends Activity {
                 boolean r = bindService(mServiceIntent, conn, Service.BIND_AUTO_CREATE);
                 Log.i("nib", String.valueOf(r));
                 getChange = true;
+            }
+        });
+        isSpecial = getSharedPreferences("config", MODE_APPEND);
+        isSpecialEditor = isSpecial.edit();
+        switchSpecial = (SwitchButton) findViewById(R.id.switch_special);
+        switchSpecial.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(SwitchButton view, boolean isChecked) {
+                isSpecialEditor.putBoolean("is_special", isChecked);
+                isSpecialEditor.apply();
+                initializeMap(mMapView, isChecked);
             }
         });
 
@@ -413,8 +434,10 @@ public class MainActivity extends Activity {
                 Toast.makeText(this, "Menu Item 1 selected", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.menuitem2:
-                Toast.makeText(this, "Menu item 2 selected", Toast.LENGTH_SHORT)
-                        .show();
+                Toast.makeText(this, "Menu item 2 selected", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.action_settings:
+                startActivity(new Intent(MainActivity.this, SettingsActivity.class));
                 break;
             default:
                 break;
