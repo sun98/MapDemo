@@ -72,9 +72,10 @@ public class SendUDP {
                 }
             }
         });
-        thread0.start();
-        thread1.start();
-        thread2.start();
+        System.out.println("12345".substring(2,4));
+//        thread0.start();
+//        thread1.start();
+//        thread2.start();
 
         // Use this port to send broadcast packet
 //        @SuppressWarnings("resource") final DatagramSocket detectSocket = new DatagramSocket(8888);

@@ -36,9 +36,14 @@ import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
+import com.baidu.mapapi.map.offline.MKOLSearchRecord;
+import com.baidu.mapapi.map.offline.MKOLUpdateElement;
+import com.baidu.mapapi.map.offline.MKOfflineMap;
+import com.baidu.mapapi.map.offline.MKOfflineMapListener;
 import com.baidu.mapapi.model.LatLng;
 import com.suke.widget.SwitchButton;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Observable;
@@ -66,6 +71,8 @@ public class MainActivity extends Activity {
     private MapView mMapView = null;
     private SwitchButton switchSpecial;
     private SharedPreferences isSpecial;
+    private MKOfflineMap mOffline;
+    private ArrayList<MKOLUpdateElement> localMapList;
     private SharedPreferences.Editor isSpecialEditor;
     private boolean IsMapStretched = false;
     private static final int MAX_SOURCE = 4;    //ͬʱ��ʾ�ĳ����������Ŀ��
@@ -90,11 +97,11 @@ public class MainActivity extends Activity {
 
     };
 
-    //ʵ�ֵ�ͼ�����ͱ�־���µ��̡߳�
-    private Marker[] markers; // �����ͼ�����б�־�����顣markers[0]��ָ������ű���λ�á�
+    //实现地图卷屏和标志更新的线程。
+    private Marker[] markers; // 储存地图上所有标志的数组。markers[0]被指定来存放本车位置。
     private LatLng prev_pt = null;
     private float prev_angle = 0;
-    private Handler MapUpdater = new Handler();//�������̺߳����̵߳�Handler
+    private Handler MapUpdater = new Handler();//调控主线程和子线程的Handler
     private Runnable MapUpdate = new Runnable() {//���µ�ͼ��Ϣ���߳�
         public void run() {
             BaiduMap mBaiduMap = mMapView.getMap();
@@ -107,9 +114,9 @@ public class MainActivity extends Activity {
                     markers[0].setPosition(pt);
                 } else {
                     try {
-                        lat = binder.getLatL();
-                        lng = binder.getLngL();
-//                        Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng));
+                        lat = binder.getLatL() + 0.0043953298;
+                        lng = binder.getLngL() + 0.0110212588;
+                        Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng));
                         event = binder.getEvent();
                         LatLng pt = new LatLng(lat, lng);
 
@@ -140,19 +147,25 @@ public class MainActivity extends Activity {
 //                            Log.i("nib", "msg:" + binder.getMsg());
                             LatLng newPt;
                             if (event == 1) {
-                                lat = binder.getLatR();
-                                lng = binder.getLngR();
+                                lat = binder.getLatR() + 0.0043953298;
+                                lng = binder.getLngR() + 0.0110212588;
                                 newPt = new LatLng(lat + 0.00004, lng - 0.0004);
                             } else {
-                                lat = binder.getLatStable();
-                                lng = binder.getLngStable();
+                                lat = binder.getLatStable() + 0.0043953298;
+                                lng = binder.getLngStable() + 0.0110212588;
                                 newPt = new LatLng(lat, lng);
                             }
-                            Log.i("nib", "new lat:" + newPt.latitude + " new lng:" + newPt.longitude);
+//                            Log.i("nib", "new lat:" + newPt.latitude + " new lng:" + newPt.longitude);
                             //markers[i].setIcon(NewIcon);
                             markers[event].setPosition(newPt);
                             markers[event].setVisible(true);
                         }
+//                        else {
+//                            LatLng newPt = new LatLng(binder.getLatStable() + 0.0043953298,
+//                                    binder.getLngStable() + 0.0110212588);
+//                            markers[2].setPosition(newPt);
+//                            markers[2].setVisible(true);
+//                        }
                     } catch (Exception e) {
                         Log.i("nib", e.toString());
                     }
@@ -161,9 +174,9 @@ public class MainActivity extends Activity {
                 LatLng latLng = bdLocationListener.getLatLng();
                 MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(latLng);
                 mBaiduMap.setMapStatus(msu);
-                markers[0].setPosition(latLng);
+                if (latLng != null)
+                    markers[0].setPosition(latLng);
             }
-            //��������Ϣ����ʱ������������µ�marker.
             MapUpdater.postDelayed(this, 100);
 
         }
@@ -173,14 +186,14 @@ public class MainActivity extends Activity {
     private Queue<String> messageQueue = null;
     private boolean MsgUsed = false;
     private Button pause_map = null;
-    Runnable MsgUpdate = new Runnable() {//���¾�ʾ��Ϣ���г�����
+    Runnable MsgUpdate = new Runnable() {//更新地图信息的线程
         private int srcArr[] =
                 {R.drawable.icon2, R.drawable.trafficlight, R.drawable.spdlimit};
 
         @Override
         public void run() {
             if (getChange) {
-                sourceString.setText(binder.getSource());
+//                sourceString.setText(binder.getSource());
                 if (event > 0 && !MsgUsed) {
                     String warnMsg = binder.getMsg();
                     tipText.setText(warnMsg);
@@ -200,7 +213,7 @@ public class MainActivity extends Activity {
         }
     };
 
-    //������Ϣ�����߳̿��ص�Observable��.�����ر�ʱ,�߳̽�������.
+    //控制消息更新线程开关的Observable类.卷屏关闭时,线程将不运行.
     private class IsUpdateEnabled extends Observable {
         private boolean isOpen = true;
 
@@ -211,26 +224,26 @@ public class MainActivity extends Activity {
         public void setState(boolean state) {
             if (this.isOpen != state) {
                 this.isOpen = state;
-                setChanged();//����һ���ڲ���־λע�����ݷ����˱仯
+                setChanged();//设置一个内部标志位注明数据发生了变化
             }
-            notifyObservers();//�ص�����󶨵�Observer��update()����
+            notifyObservers();//回调和其绑定的Observer的update()方法
         }
 
     }
 
-    //������Ϣ�����߳̿��ص�watcher�ࡣ
+    //监听消息更新线程开关的watcher类。
     private class Watcher implements Observer {
         public Watcher(Observable obj) {
-            obj.addObserver(this); //Ϊ���۲�Ķ�����ӹ۲���
+            obj.addObserver(this);//为被观察的对象添加观察者
         }
 
-        //���۲���״̬�ı�ʱ��ִ��update()����
+        //被观察者状态改变时，执行update()方法
         public void update(Observable obj, Object arg) {
             boolean flag = ((IsUpdateEnabled) obj).getState();
-            if (!flag) { //ֹͣ�߳�
+            if (!flag) { //停止线程
                 MapUpdater.removeCallbacks(MapUpdate);
                 MapUpdater.removeCallbacks(MsgUpdate);
-            } else {   //�����߳�
+            } else {   //启动线程
                 MapUpdater.post(MapUpdate);
                 MapUpdater.post(MsgUpdate);
             }
@@ -269,26 +282,25 @@ public class MainActivity extends Activity {
     protected void initializeMap(MapView mMapView, boolean isSpecialCar) {
 
         mMapView.showScaleControl(false);
-        mMapView.showZoomControls(false);            //���ص�ͼ�ķŴ�/��С��ť���Լ����ƴ�С���϶��ᡣ
-        MapStatusUpdate msu = MapStatusUpdateFactory.zoomTo(255);        //����ͼ�ŵ����
+        mMapView.showZoomControls(false); //隐藏地图的放大/缩小按钮，以及控制大小的拖动轴。
+        MapStatusUpdate msu = MapStatusUpdateFactory.zoomTo(255);        //将地图放到最大
         BaiduMap mBaiduMap = mMapView.getMap();
         mBaiduMap.setMapStatus(msu);
 //        mBaiduMap.setOnMapClickListener(new myMapClickListener());
         LatLng pt = new LatLng(lat, lng);
         msu = MapStatusUpdateFactory.newLatLngZoom(pt, 175);
-        mBaiduMap.setMapStatus(msu);        // ����ͼ�ŵ���󣬲������ĵ���Ϊpt.
+        mBaiduMap.setMapStatus(msu);        // 将地图放到最大，并且中心点设为pt.
 
         BitmapDescriptor bitmap;
-        if (isSpecialCar) bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_red);
-        else bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_icon);
-        OverlayOptions opt = new MarkerOptions().position(pt).icon(bitmap);    // ����Overlay������ʾ ����ɫ��ͷ��
-        markers[0] = (Marker) (mBaiduMap.addOverlay(opt)); // ��Marker��ӵ���ͼ�ϡ�
+        bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_icon);
+        OverlayOptions opt = new MarkerOptions().position(pt).icon(bitmap);    // 设置Overlay对象演示 （红色箭头）
+        markers[0] = (Marker) (mBaiduMap.addOverlay(opt));  // 将Marker添加到地图上。
         int resourceArray[] = {R.drawable.icon2, R.drawable.trafficlight, R.drawable.spdlimit};
         for (int i = 1; i < MAX_SOURCE; ++i) {
             bitmap = BitmapDescriptorFactory.fromResource(resourceArray[i - 1]);
-            opt = new MarkerOptions().position(pt).icon(bitmap);    // ����Overlay������ʾ ����ɫ��ͷ��
-            markers[i] = (Marker) (mBaiduMap.addOverlay(opt)); // ��Marker��ӵ���ͼ�ϡ�
-            markers[i].setVisible(false);    //  �Ƚ�Marker���ء��ڻ�ö�Ӧλ����Ϣ��ʱ��������ʾ��
+            opt = new MarkerOptions().position(pt).icon(bitmap);    // 设置Overlay对象演示 （红色箭头）
+            markers[i] = (Marker) (mBaiduMap.addOverlay(opt)); // 将Marker添加到地图上。
+            markers[i].setVisible(false);    //  先将Marker隐藏。在获得对应位置信息的时候再行显示。
         }
 
         markers[0].setVisible(true);
@@ -314,6 +326,16 @@ public class MainActivity extends Activity {
         markers = new Marker[MAX_SOURCE];
         initializeMap(mMapView, false);
 
+        initOfflineMap();
+        localMapList = mOffline.getAllUpdateInfo();
+        if (localMapList == null) {
+            ArrayList<MKOLSearchRecord> records = mOffline.searchCity("上海");
+            if (records == null || records.size() != 1) {
+                Log.i("nib", "cannot find sh offline");
+            }
+            int id = records.get(0).cityID;
+            mOffline.start(id);
+        }
 
 //        声明LocationClient对象
         locationClient = new LocationClient(getApplicationContext());
@@ -362,9 +384,13 @@ public class MainActivity extends Activity {
         switchSpecial.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(SwitchButton view, boolean isChecked) {
-                isSpecialEditor.putBoolean("is_special", isChecked);
-                isSpecialEditor.apply();
-                initializeMap(mMapView, isChecked);
+//                isSpecialEditor.putBoolean("is_special", isChecked);
+//                isSpecialEditor.apply();
+//                initializeMap(mMapView, isChecked);
+                BitmapDescriptor bitmap;
+                if (isChecked) bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_red);
+                else bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_icon);
+                markers[0] = (Marker) mMapView.getMap().addOverlay(new MarkerOptions().position(new LatLng(lat, lng)).icon(bitmap));
             }
         });
 
@@ -375,6 +401,32 @@ public class MainActivity extends Activity {
         receiver = new MessageReceiver();  
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter);  
 		*/
+    }
+
+    private void initOfflineMap() {
+        mOffline = new MKOfflineMap();
+        // 设置监听
+        mOffline.init(new MKOfflineMapListener() {
+            @Override
+            public void onGetOfflineMapState(int type, int state) {
+                switch (type) {
+                    case MKOfflineMap.TYPE_DOWNLOAD_UPDATE:
+                        // 离线地图下载更新事件类型
+                        MKOLUpdateElement update = mOffline.getUpdateInfo(state);
+                        Log.e("offlineMap", update.cityName + " ," + update.ratio);
+                        Log.e("a", "TYPE_DOWNLOAD_UPDATE");
+                        break;
+                    case MKOfflineMap.TYPE_NEW_OFFLINE:
+                        // 有新离线地图安装
+                        Log.e("b", "TYPE_NEW_OFFLINE");
+                        break;
+                    case MKOfflineMap.TYPE_VER_UPDATE:
+                        // 版本更新提示
+                        break;
+                }
+
+            }
+        });
     }
 
     private void initLocation() {
