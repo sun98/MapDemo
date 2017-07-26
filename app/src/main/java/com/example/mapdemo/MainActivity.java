@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
@@ -41,6 +42,12 @@ import com.baidu.mapapi.map.offline.MKOLUpdateElement;
 import com.baidu.mapapi.map.offline.MKOfflineMap;
 import com.baidu.mapapi.map.offline.MKOfflineMapListener;
 import com.baidu.mapapi.model.LatLng;
+import com.elvishew.xlog.LogConfiguration;
+import com.elvishew.xlog.LogLevel;
+import com.elvishew.xlog.XLog;
+import com.elvishew.xlog.printer.AndroidPrinter;
+import com.elvishew.xlog.printer.file.FilePrinter;
+import com.elvishew.xlog.printer.file.naming.DateFileNameGenerator;
 import com.suke.widget.SwitchButton;
 
 import java.util.ArrayList;
@@ -393,6 +400,12 @@ public class MainActivity extends Activity {
                 markers[0] = (Marker) mMapView.getMap().addOverlay(new MarkerOptions().position(new LatLng(lat, lng)).icon(bitmap));
             }
         });
+
+        XLog.init(
+                new LogConfiguration.Builder().logLevel(LogLevel.INFO).build(),
+                new AndroidPrinter(),
+                new FilePrinter.Builder(Environment.getExternalStorageDirectory().getPath() + "/xlog").fileNameGenerator(new DateFileNameGenerator()).build()
+        );
 
         /*
          * ��̬ע��receiver  

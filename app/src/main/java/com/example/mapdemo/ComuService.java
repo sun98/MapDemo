@@ -6,6 +6,8 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.elvishew.xlog.XLog;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.DatagramPacket;
@@ -237,14 +239,11 @@ public class ComuService extends Service {
                     for (int i = 0; i < 4; i++) {
                         new Thread(runnables[i]).start();
                     }
-//                        if (msgSPAT != null)
-//                            Log.i("nib", "run: spat:" + removeTail0(msgSPAT));
-//                        if (msgMAP != null)
-//                            Log.i("nib", "run: map:" + removeTail0(msgMAP));
-//                        if (msgBSM != null)
-//                            Log.i("nib", "run: bsm:" + removeTail0(msgBSM));
-//                        if (msgTIM != null)
-//                            Log.i("nib", "run: tim:" + removeTail0(msgTIM));
+                    XLog.i("////////////////////--------------------");
+                    XLog.i("spat:\t" + ((msgSPAT == null) ? "null" : removeTail0(msgSPAT)));
+                    XLog.i("map:\t" + ((msgMAP == null) ? "null" : removeTail0(msgMAP)));
+                    XLog.i("bsm:\t" + ((msgBSM == null) ? "null" : removeTail0(msgBSM)));
+                    XLog.i("tim:\t" + ((msgTIM == null) ? "null" : removeTail0(msgTIM)));
                     if (msgBSM != null) {
                         lat = String8ToInt(msgBSM.substring(14, 22)) / 1E7;//自身经纬度
                         lng = String8ToInt(msgBSM.substring(22, 30)) / 1E7;
@@ -319,9 +318,9 @@ public class ComuService extends Service {
                                 }
                             }
                             angles[i][3] = result / count;
-                            Log.i(TAG, "run: angles[" + i + "]= " + angles[i][3]);
+                            XLog.i("run: angles[" + i + "]= " + angles[i][3]);
                         }
-                        Log.i(TAG, "run: angle= " + angle);
+                        XLog.i("run: angle= " + angle);
                         if (Math.abs(angle - angles[0][3]) < 15) {//车的方向角 和 红绿灯与北路上一点的方向角 基本相同
                             LightState = msgSPAT.substring(50, 52);
                             LightTime = Integer.parseInt(msgSPAT.substring(56, 58), 16);
@@ -345,21 +344,19 @@ public class ComuService extends Service {
                         case 1:
                             if ("01".equals(TIMstate))
                                 message = "前方" + (int) TimDistance + "米有道路施工，请绕道行驶";
-
                             if ("02".equals(TIMstate))
                                 message = "前方" + (int) TimDistance + "米为冰雪路况，请减速慢行";
-
                             tim_flag = true;
                             break;
                         case 2:
-                            Log.i("nib", "Light: " + LightState + " " + LightTime + " " + LightDistance);
+                            XLog.i("LightState: " + LightState + "\tLightTime: " + LightTime + "\tLightDistance: " + LightDistance);
                             if ("02".equals(LightState)) {
                                 if (LightDistance > speed * LightTime)
                                     message = "前方红灯剩余" + LightTime + "秒，建议保持原速通行";
                                 else {
                                     speed_sug = (int) (((int) (speed - LightTime * 1.5 + Math.sqrt(1.5 * 1.5 * LightTime * LightTime - 2 * 1.5 * LightTime * speed + 2 * 1.5 * LightDistance)) * 3.6));
                                     if (speed_sug > 1)
-                                        message = "前方红灯剩余" + LightTime + "秒，建议缓慢减速至" + speed_sug + "千米每时";
+                                        message = "前方红灯剩余" + LightTime + "秒，建议缓慢减速至" + speed_sug + "km/h";
                                     else
                                         message = "前方红灯剩余" + LightTime + "秒，建议缓慢减速停车等候";
                                 }
@@ -372,7 +369,8 @@ public class ComuService extends Service {
                         default:
                             break;
                     }
-                    Log.i("nib", "run: " + event + " " + message);
+                    XLog.i("event: " + event + "\tmessage: " + message);
+                    XLog.i("--------------------////////////////////");
                     try {
                         Thread.sleep(80);
                     } catch (InterruptedException e) {
