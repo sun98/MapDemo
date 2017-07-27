@@ -8,13 +8,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -42,12 +39,6 @@ import com.baidu.mapapi.map.offline.MKOLUpdateElement;
 import com.baidu.mapapi.map.offline.MKOfflineMap;
 import com.baidu.mapapi.map.offline.MKOfflineMapListener;
 import com.baidu.mapapi.model.LatLng;
-import com.elvishew.xlog.LogConfiguration;
-import com.elvishew.xlog.LogLevel;
-import com.elvishew.xlog.XLog;
-import com.elvishew.xlog.printer.AndroidPrinter;
-import com.elvishew.xlog.printer.file.FilePrinter;
-import com.elvishew.xlog.printer.file.naming.DateFileNameGenerator;
 import com.suke.widget.SwitchButton;
 
 import java.util.ArrayList;
@@ -221,7 +212,7 @@ public class MainActivity extends Activity {
         public void run() {
             if (getChange) {
 //                sourceString.setText(binder.getSource());
-                Log.i("nib", "run: event=" + event + "\tprev=" + prevEvent);
+//                Log.i("nib", "run: event=" + event + "\tprev=" + prevEvent);
                 if (event > 0) {
                     String warnMsg = binder.getMsg();
                     if (event != prevEvent)
@@ -354,13 +345,15 @@ public class MainActivity extends Activity {
         initializeMap(mMapView, false);
 
         initOfflineMap();
+        //mOffline.start(289);
         localMapList = mOffline.getAllUpdateInfo();
         if (localMapList == null) {
             ArrayList<MKOLSearchRecord> records = mOffline.searchCity("上海");
             if (records == null || records.size() != 1) {
                 Log.i("nib", "cannot find sh offline");
-            }
+        }
             int id = records.get(0).cityID;
+//        mOffline.remove(id);
             mOffline.start(id);
         }
 
@@ -422,15 +415,15 @@ public class MainActivity extends Activity {
             }
         });
 
-        try {
-            XLog.init(
-                    new LogConfiguration.Builder().logLevel(LogLevel.INFO).build(),
-                    new AndroidPrinter(),
-                    new FilePrinter.Builder(Environment.getExternalStorageDirectory().getPath() + "/xlog").fileNameGenerator(new DateFileNameGenerator()).build()
-            );
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            XLog.init(
+//                    new LogConfiguration.Builder().logLevel(LogLevel.INFO).build(),
+//                    new AndroidPrinter(),
+//                    new FilePrinter.Builder(Environment.getExternalStorageDirectory().getPath() + "/xlog").fileNameGenerator(new DateFileNameGenerator()).build()
+//            );
+//        } catch (RuntimeException e) {
+//            e.printStackTrace();
+//        }
 
 
         /*
@@ -443,6 +436,7 @@ public class MainActivity extends Activity {
     }
 
     private void initOfflineMap() {
+        Log.i("nib", "initOfflineMap: ");
         mOffline = new MKOfflineMap();
         // 设置监听
         mOffline.init(new MKOfflineMapListener() {
@@ -513,30 +507,30 @@ public class MainActivity extends Activity {
 
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.main, menu);
+//        return true;
+//    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menuitem1:
-                Toast.makeText(this, "Menu Item 1 selected", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.menuitem2:
-                Toast.makeText(this, "Menu item 2 selected", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.action_settings:
-                startActivity(new Intent(MainActivity.this, SettingsActivity.class));
-                break;
-            default:
-                break;
-        }
-        return true;
-    }
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        switch (item.getItemId()) {
+//            case R.id.menuitem1:
+//                Toast.makeText(this, "Menu Item 1 selected", Toast.LENGTH_SHORT).show();
+//                break;
+//            case R.id.menuitem2:
+//                Toast.makeText(this, "Menu item 2 selected", Toast.LENGTH_SHORT).show();
+//                break;
+//            case R.id.action_settings:
+//                startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+//                break;
+//            default:
+//                break;
+//        }
+//        return true;
+//    }
     /*
     @Override
 	public boolean onOptionsItemSelected(MenuItem item) {

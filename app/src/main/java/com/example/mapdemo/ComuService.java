@@ -6,8 +6,6 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.elvishew.xlog.XLog;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -149,7 +147,7 @@ public class ComuService extends Service {
                         if (angleDiffe > 180)
                             angleDiffe = 360 - angleDiffe;
                         LightDistance = AngleUtil.getDistance(lng, lat, lngS_tmp, latS_tmp);
-                        Log.i(TAG, "angle= " + angleDiffe + "\tdistance" + LightDistance);
+//                        Log.i(TAG, "angle= " + angleDiffe + "\tdistance" + LightDistance);
                         if (!"FF".equals(msgSPAT.substring(44, 46)) && angleDiffe < 45 && LightDistance < 3) {
                             event = 0;
                             flagDistance = 1e6;
@@ -204,14 +202,14 @@ public class ComuService extends Service {
 //                            LightState = msgSPAT.substring(152, 154);
 //                            LightTime = Integer.parseInt(msgSPAT.substring(158, 160), 16);
                             } else {
-                                Log.w(TAG, "run: minIndex = " + minIndex);
+//                                Log.w(TAG, "run: minIndex = " + minIndex);
                             }
                         } else {
                             event = 0;
                         }
                     }
 //                    Log.i("nib", "S: " + lng + " " + lat + " " + lngS_tmp + " " + latS_tmp + " " + LightState + " " + event);
-                    XLog.i("event: " + event + "\tmessage: " + message);
+//                    XLog.i("event: " + event + "\tmessage: " + message);
                     switch (event) {
                         case 5:
                             if ("01".equals(TIMstate))
@@ -242,7 +240,7 @@ public class ComuService extends Service {
                                 }
                             } else if ("05".equals(LightState)) {
                                 event = 4;
-                                Log.i(TAG, "LightTime = " + LightTime + "\tspeed" + speed + "\tLightDistance" + LightDistance);
+//                                Log.i(TAG, "LightTime = " + LightTime + "\tspeed" + speed + "\tLightDistance" + LightDistance);
                                 if (LightTime != 127) {
                                     if (LightDistance > speed * LightTime)
                                         message = "前方红灯剩余" + LightTime + "秒，建议保持原速通行";
@@ -308,9 +306,9 @@ public class ComuService extends Service {
                     if (msgBSM != null) {
                         Double new_lat = String8ToInt(msgBSM.substring(14, 22)) / 1E7;//自身经纬度
                         Double new_lng = String8ToInt(msgBSM.substring(22, 30)) / 1E7;
-                        Log.i(TAG, "new lat: " + new_lat + "\tnew lng: " + new_lng + "\nlat: " + lat + "\tlng: " + lng);
+//                        Log.i(TAG, "new lat: " + new_lat + "\tnew lng: " + new_lng + "\nlat: " + lat + "\tlng: " + lng);
                         if (Math.abs(new_lat - lat) > 1e-6 && Math.abs(new_lng - lng) > 1e-6) {
-                            Log.i(TAG, "yes: ");
+//                            Log.i(TAG, "yes: ");
                             lat = new_lat;
                             lng = new_lng;
                         }
@@ -344,7 +342,7 @@ public class ComuService extends Service {
                         Double timAngle = Math.abs(angle - AngleUtil.getAngle(lng, lat, lngR, latR));
                         timAngle = (timAngle > 180) ? (360 - timAngle) : timAngle;
                         if (!tim_flag && (timAngle < 45) && TimDistance < 200 && TimDistance > 50) {
-                            Log.i(TAG, "run: timAngle=" + timAngle + "\ttimDistance" + TimDistance);
+//                            Log.i(TAG, "run: timAngle=" + timAngle + "\ttimDistance" + TimDistance);
                             event = 5;
                             TIMstate = msgTIM.substring(52, 54);
                         } else if (tim_flag && TimDistance < 50) {
