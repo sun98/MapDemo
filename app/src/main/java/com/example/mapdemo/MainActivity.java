@@ -82,11 +82,11 @@ public class MainActivity extends Activity {
     private ArrayList<MKOLUpdateElement> localMapList;
     private SharedPreferences.Editor isSpecialEditor;
     private boolean IsMapStretched = false;
-    private static final int MAX_SOURCE = 4;    //ͬʱ��ʾ�ĳ����������Ŀ��
+    private static final int MAX_SOURCE = 4;
     private int event;
     private boolean icon_change = true;
     private boolean getChange = false;
-    private double lat = 31.03533, lng = 121.44262;
+    private double lat = 31.2318467649, lng = 121.4690501907;
 
     ComuService.MyBinder binder;                        //通信服务的binder
     private ServiceConnection conn = new ServiceConnection() {                  // 用于绑定服务的连接类
@@ -123,7 +123,8 @@ public class MainActivity extends Activity {
                     try {
                         lat = binder.getLatL() + 0.0043953298;
                         lng = binder.getLngL() + 0.0110212588;
-                        Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng));
+//                        Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng));
+                        prevEvent = event;
                         event = binder.getEvent();
                         LatLng pt = new LatLng(lat, lng);
 
@@ -132,10 +133,11 @@ public class MainActivity extends Activity {
                         if (prev_pt != null) {
                             if (pt.longitude - prev_pt.longitude != 0) {
                                 angle = (float) AngleUtil.getAngle(prev_pt.longitude, prev_pt.latitude, pt.longitude, pt.latitude);
-                                if (Math.abs(angle - prev_angle) < 15)
+                                float d = Math.abs(angle - prev_angle);
+                                d = (d > 180) ? (360 - d) : d;
+                                if (d < 15)
                                     angle = prev_angle;
                             }
-
                             if (prev_angle != angle)
 //                            Log.i("angle", angle + "   " + prev_angle);
                                 prev_angle = angle;
@@ -153,26 +155,45 @@ public class MainActivity extends Activity {
                         if (event > 0) {
 //                            Log.i("nib", "msg:" + binder.getMsg());
                             LatLng newPt;
-                            if (event == 1) {
-                                lat = binder.getLatR() + 0.0043953298;
-                                lng = binder.getLngR() + 0.0110212588;
-                                newPt = new LatLng(lat + 0.00004, lng - 0.0004);
-                            } else {
-                                lat = binder.getLatStable() + 0.0043953298;
-                                lng = binder.getLngStable() + 0.0110212588;
-                                newPt = new LatLng(lat, lng);
+                            if (event == 5) {
+                                newPt = new LatLng(binder.getLatR() + 0.0043953298,
+                                        binder.getLngR() + 0.0110212588);
+                                markers[3].setPosition(newPt);
+                                markers[3].setVisible(true);
+                            } else if (event >= 2) {
+                                newPt = new LatLng(binder.getLatStable() + 0.0043953298,
+                                        binder.getLngStable() + 0.0110212588);
+                                markers[2].setPosition(newPt);
+                                markers[2].setVisible(true);
                             }
-//                            Log.i("nib", "new lat:" + newPt.latitude + " new lng:" + newPt.longitude);
-                            //markers[i].setIcon(NewIcon);
-                            markers[event].setPosition(newPt);
-                            markers[event].setVisible(true);
+
+//                            if (event == 1) {
+//                                lat = binder.getLatR() + 0.0043953298;
+//                                lng = binder.getLngR() + 0.0110212588;
+//                                newPt = new LatLng(lat + 0.00004, lng - 0.0004);
+//                            } else {
+//                                lat = binder.getLatStable() + 0.0043953298;
+//                                lng = binder.getLngStable() + 0.0110212588;
+//                                newPt = new LatLng(lat, lng);
+//                            }
+////                            Log.i("nib", "new lat:" + newPt.latitude + " new lng:" + newPt.longitude);
+//                            //markers[i].setIcon(NewIcon);
+//                            if (event == 5) {
+//                                markers[3].setPosition(newPt);
+//                                markers[3].setVisible(true);
+//                            } else if (event > 2) {
+//                                markers[2].setPosition(newPt);
+//                                markers[2].setVisible(true);
+//                            } else {
+//                                markers[event].setPosition(newPt);
+//                                markers[event].setVisible(true);
+//                            }
+                        } else {
+                            LatLng newPt = new LatLng(binder.getLatL() + 0.0043953298,
+                                    binder.getLngL() + 0.0110212588);
+                            markers[0].setPosition(newPt);
+                            markers[0].setVisible(true);
                         }
-//                        else {
-//                            LatLng newPt = new LatLng(binder.getLatStable() + 0.0043953298,
-//                                    binder.getLngStable() + 0.0110212588);
-//                            markers[2].setPosition(newPt);
-//                            markers[2].setVisible(true);
-//                        }
                     } catch (Exception e) {
                         Log.i("nib", e.toString());
                     }
@@ -184,14 +205,13 @@ public class MainActivity extends Activity {
                 if (latLng != null)
                     markers[0].setPosition(latLng);
             }
-            MapUpdater.postDelayed(this, 100);
-
+            MapUpdater.postDelayed(this, 50);
         }
     };
 
     private TextToSpeech mTextToSpeech = null;
     private Queue<String> messageQueue = null;
-    private boolean MsgUsed = false;
+    private int prevEvent = 0;
     private Button pause_map = null;
     Runnable MsgUpdate = new Runnable() {//更新地图信息的线程
         private int srcArr[] =
@@ -201,19 +221,19 @@ public class MainActivity extends Activity {
         public void run() {
             if (getChange) {
 //                sourceString.setText(binder.getSource());
-                if (event > 0 && !MsgUsed) {
+                Log.i("nib", "run: event=" + event + "\tprev=" + prevEvent);
+                if (event > 0) {
                     String warnMsg = binder.getMsg();
+                    if (event != prevEvent)
+                        mTextToSpeech.speak(warnMsg, TextToSpeech.QUEUE_ADD, null);
                     tipText.setText(warnMsg);
-                    WarnImg.setImageResource(srcArr[event - 1]);
-                    mTextToSpeech.speak(warnMsg, TextToSpeech.QUEUE_ADD, null);
+                    if (event == 5) WarnImg.setImageResource(srcArr[2]);
+                    else if (event > 2) WarnImg.setImageResource(srcArr[1]);
+                    else WarnImg.setImageResource(srcArr[event - 1]);
                     //mTextToSpeech.playSilence(1000, TextToSpeech.QUEUE_ADD, null);
-                    MsgUsed = true;
-                } else {
-                    if (event == 0) {
-                        MsgUsed = false;
-                        WarnImg.setImageResource(R.drawable.icon_car);
-                        tipText.setText(R.string.hello_world);
-                    }
+                } else if (event == 0) {
+                    WarnImg.setImageResource(R.drawable.icon_car);
+                    tipText.setText(R.string.hello_world);
                 }
             }
             MapUpdater.postDelayed(this, 50);
@@ -363,7 +383,6 @@ public class MainActivity extends Activity {
             @Override
             public void onInit(int status) {
                 if (status == TextToSpeech.SUCCESS) {
-                    //�����ʶ�����
                     int supported = mTextToSpeech.setLanguage(Locale.CHINESE);
                     if ((supported != TextToSpeech.LANG_AVAILABLE) && (supported !=
                             TextToSpeech.LANG_COUNTRY_AVAILABLE)) {
@@ -377,7 +396,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void onClick(View v) {
-//                mServiceIntent.putExtra(MESSAGE_IN, "begin");
+                mServiceIntent.putExtra(MESSAGE_IN, "begin");
                 startService(mServiceIntent);
                 Log.i("nib", "service started");
                 boolean r = bindService(mServiceIntent, conn, Service.BIND_AUTO_CREATE);
@@ -385,8 +404,8 @@ public class MainActivity extends Activity {
                 getChange = true;
             }
         });
-        isSpecial = getSharedPreferences("config", MODE_APPEND);
-        isSpecialEditor = isSpecial.edit();
+//        isSpecial = getSharedPreferences("config", MODE_APPEND);
+//        isSpecialEditor = isSpecial.edit();
         switchSpecial = (SwitchButton) findViewById(R.id.switch_special);
         switchSpecial.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
             @Override
@@ -397,15 +416,22 @@ public class MainActivity extends Activity {
                 BitmapDescriptor bitmap;
                 if (isChecked) bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_red);
                 else bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_icon);
+                markers[0].setVisible(false);
                 markers[0] = (Marker) mMapView.getMap().addOverlay(new MarkerOptions().position(new LatLng(lat, lng)).icon(bitmap));
+                markers[0].setVisible(true);
             }
         });
 
-        XLog.init(
-                new LogConfiguration.Builder().logLevel(LogLevel.INFO).build(),
-                new AndroidPrinter(),
-                new FilePrinter.Builder(Environment.getExternalStorageDirectory().getPath() + "/xlog").fileNameGenerator(new DateFileNameGenerator()).build()
-        );
+        try {
+            XLog.init(
+                    new LogConfiguration.Builder().logLevel(LogLevel.INFO).build(),
+                    new AndroidPrinter(),
+                    new FilePrinter.Builder(Environment.getExternalStorageDirectory().getPath() + "/xlog").fileNameGenerator(new DateFileNameGenerator()).build()
+            );
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+        }
+
 
         /*
          * ��̬ע��receiver  
@@ -479,8 +505,10 @@ public class MainActivity extends Activity {
         if (icon_change) {
             pause_map.setBackgroundResource(R.drawable.play_icon);
             icon_change = false;
-        } else
+        } else {
             icon_change = true;
+            pause_map.setBackgroundResource(R.drawable.pause_icon);
+        }
         ((IsUpdateEnabled) mapEnabled).setState(!state);
 
     }
@@ -528,7 +556,8 @@ public class MainActivity extends Activity {
             MapUpdater.removeCallbacks(MapUpdate);
             MapUpdater.removeCallbacks(MsgUpdate);
         }
-
+        unbindService(conn);
+        stopService(new Intent(MainActivity.this, ComuService.class));
         mMapView.onDestroy();
         if (mTextToSpeech != null)
             mTextToSpeech.shutdown();//shutdown TTS
