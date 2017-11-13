@@ -33,15 +33,20 @@ public class ComuService extends Service {
     private Runnable[] runnables = new Runnable[4];
 
     private String source, LightState, msgBSM, msgMAP, msgSPAT, msgTIM, TIMstate;
-    private String message;
-    private int event = 0, LightTime = 0;
+    private String message = "前方绿灯时间较长";
+    private int event = 4, LightTime = 0;
+    private int event_lock = -1;
     private double flagDistance = 1e6;
     private double LightDistance = 0, LightDistance_tmp = 0;
     private double TimDistance = 0;
-    private double lat = 31.2318467649, lng = 121.4690501907, prev_lat = 0, prev_lng = 0, latR = 0, lngR = 0, latS = 0, lngS = 0, angle = 0, speed = 0, speed_sug = 0;
-    private double latS_tmp = 0, lngS_tmp = 0;
+    private double lat = 31.0275818566, lng = 121.4220209306, prev_lat = 0, prev_lng = 0, latR = 31.0290615881, lngR = 121.4257645656, latS = 0, lngS = 0, angle = 0, speed = 0, speed_sug = 0;
+    private double latS_tmp = 31.0278092865, lngS_tmp = 121.4219172864;
 
     class MyBinder extends Binder {
+        int getEventLock() {
+            return event_lock;
+        }
+
         String getSource() {
             return source;
         }
@@ -117,7 +122,7 @@ public class ComuService extends Service {
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
         Log.i("nib", "Service onStartCommand");
-        final boolean test = true;
+        final boolean test = false;
         quit = false;
         for (int i = 0; i < 4; i++) {
             try {
@@ -212,6 +217,7 @@ public class ComuService extends Service {
 //                    XLog.i("event: " + event + "\tmessage: " + message);
                     switch (event) {
                         case 5:
+
                             if ("01".equals(TIMstate))
                                 message = "前方" + (int) TimDistance + "米有道路施工，请绕道行驶";
                             if ("02".equals(TIMstate))
@@ -222,11 +228,11 @@ public class ComuService extends Service {
 //                            XLog.i("LightState: " + LightState + "\tLightTime: " + LightTime + "\tLightDistance: " + LightDistance);
                             if ("02".equals(LightState)) {
                                 if (LightTime == 127) {
-                                    message = "前方红灯";//多于8秒
+                                    message = "前方红灯时间较长";//多于8秒
                                 }
                             } else if ("01".equals(LightState)) {
                                 if (LightTime == 127) {
-                                    message = "前方绿灯"; //多于10秒
+                                    message = "前方绿灯时间较长"; //多于10秒
                                 }
                             } else if ("04".equals(LightState)) {
                                 if (LightTime != 127) {
@@ -236,7 +242,7 @@ public class ComuService extends Service {
                                     else
                                         message = "前方绿灯剩余" + LightTime + "秒，无法通过路口，建议停车等待";
                                 } else {
-                                    message = "前方红灯";
+                                    message = "前方红灯时间较长";
                                 }
                             } else if ("05".equals(LightState)) {
                                 event = 4;
@@ -252,7 +258,7 @@ public class ComuService extends Service {
                                             message = "前方红灯剩余" + LightTime + "秒，建议缓慢减速停车等候";
                                     }
                                 } else {
-                                    message = "前方红灯";
+                                    message = "前方绿灯时间较长";
                                 }
                             }
 //                            else if ("03".equals(LightState)) {
@@ -262,6 +268,7 @@ public class ComuService extends Service {
                         default:
                             break;
                     }
+                    event_lock = event;
                 }
             }
         };

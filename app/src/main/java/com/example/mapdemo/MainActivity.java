@@ -75,9 +75,10 @@ public class MainActivity extends Activity {
     private boolean IsMapStretched = false;
     private static final int MAX_SOURCE = 4;
     private int event;
+    private String warnMessage;
     private boolean icon_change = true;
     private boolean getChange = false;
-    private double lat = 31.2318467649, lng = 121.4690501907;
+    private double lat = 31.0289793247, lng = 121.4250639544;
 
     ComuService.MyBinder binder;                        //通信服务的binder
     private ServiceConnection conn = new ServiceConnection() {                  // 用于绑定服务的连接类
@@ -117,6 +118,7 @@ public class MainActivity extends Activity {
 //                        Log.i("nib", String.valueOf(lat) + "\t" + String.valueOf(lng));
                         prevEvent = event;
                         event = binder.getEvent();
+                        warnMessage = binder.getMsg();
                         LatLng pt = new LatLng(lat, lng);
 
                         markers[0].setPosition(pt);
@@ -203,6 +205,7 @@ public class MainActivity extends Activity {
     private TextToSpeech mTextToSpeech = null;
     private Queue<String> messageQueue = null;
     private int prevEvent = 0;
+    private int event_ = 0, prevEvent_ = 0;
     private Button pause_map = null;
     Runnable MsgUpdate = new Runnable() {//更新地图信息的线程
         private int srcArr[] =
@@ -213,16 +216,20 @@ public class MainActivity extends Activity {
             if (getChange) {
 //                sourceString.setText(binder.getSource());
 //                Log.i("nib", "run: event=" + event + "\tprev=" + prevEvent);
-                if (event > 0) {
+                prevEvent_ = event_;
+                event_ = binder.getEvent();
+                if (event_ > 0) {
                     String warnMsg = binder.getMsg();
-                    if (event != prevEvent)
+                    if (event_ != prevEvent_)
+//                        mTextToSpeech.speak(warnMessage, TextToSpeech.QUEUE_ADD, null);
                         mTextToSpeech.speak(warnMsg, TextToSpeech.QUEUE_ADD, null);
+//                    tipText.setText(warnMessage);
                     tipText.setText(warnMsg);
-                    if (event == 5) WarnImg.setImageResource(srcArr[2]);
-                    else if (event > 2) WarnImg.setImageResource(srcArr[1]);
-                    else WarnImg.setImageResource(srcArr[event - 1]);
+                    if (event_ == 5) WarnImg.setImageResource(srcArr[2]);
+                    else if (event_ > 2) WarnImg.setImageResource(srcArr[1]);
+                    else WarnImg.setImageResource(srcArr[event_ - 1]);
                     //mTextToSpeech.playSilence(1000, TextToSpeech.QUEUE_ADD, null);
-                } else if (event == 0) {
+                } else if (event_ == 0) {
                     WarnImg.setImageResource(R.drawable.icon_car);
                     tipText.setText(R.string.hello_world);
                 }
@@ -345,23 +352,20 @@ public class MainActivity extends Activity {
         initializeMap(mMapView, false);
 
         initOfflineMap();
-        //mOffline.start(289);
+//        mOffline.start(289);
         localMapList = mOffline.getAllUpdateInfo();
-        if (localMapList == null) {
-            ArrayList<MKOLSearchRecord> records = mOffline.searchCity("上海");
-            if (records == null || records.size() != 1) {
-                Log.i("nib", "cannot find sh offline");
+        ArrayList<MKOLSearchRecord> records = mOffline.searchCity("上海");
+        if (records == null || records.size() != 1) {
+            Log.i("nib", "cannot find sh offline");
         }
-            int id = records.get(0).cityID;
-//        mOffline.remove(id);
-            mOffline.start(id);
-        }
+        int id = records.get(0).cityID;
+        mOffline.start(id);
 
 //        声明LocationClient对象
         locationClient = new LocationClient(getApplicationContext());
         locationClient.registerLocationListener(bdLocationListener);
-        initLocation();
-        locationClient.start();
+//        initLocation();
+//        locationClient.start();
 
         Button mStartBtn = (Button) findViewById(R.id.begin);
         pause_map = (Button) findViewById(R.id.mapEnable);
