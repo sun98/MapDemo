@@ -1,4 +1,4 @@
-package com.example.mapdemo;
+package com.example.mapdemo.util;
 
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;

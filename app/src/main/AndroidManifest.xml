@@ -53,7 +53,7 @@
             android:value="Gj2ww38i2Rwv87PzoxxWcNdt6rsMUjOL" />
         <!-- android:value="GQnZCCR0IHvgUMl9VzWXHBPn" -->
         <activity
-            android:name=".MainActivity"
+            android:name=".activity.MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="landscape">
             <intent-filter>
@@ -62,14 +62,14 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".ComuService" />
+        <service android:name=".service.ComuService" />
         <service
             android:name="com.baidu.location.f"
             android:enabled="true"
             android:process=":remote" />
 
         <activity
-            android:name=".SettingsActivity"
+            android:name=".activity.SettingsActivity"
             android:screenOrientation="landscape">
 
         </activity>

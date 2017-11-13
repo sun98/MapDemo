@@ -1,8 +1,12 @@
-package com.example.mapdemo;
+package com.example.mapdemo.activity;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+
+import com.example.mapdemo.R;
+
+// TODO: not used yet
 
 public class SettingsActivity extends Activity {
     private static String APP_CONFIG = "app_config";

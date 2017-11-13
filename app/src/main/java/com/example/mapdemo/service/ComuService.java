@@ -1,10 +1,12 @@
-package com.example.mapdemo;
+package com.example.mapdemo.service;
 
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+
+import com.example.mapdemo.util.AngleUtil;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -14,6 +16,8 @@ import java.net.SocketException;
 /**
  * Created by Nibius on 2017/6/29.
  */
+
+// TODO: split this service into several sub-modules.
 
 public class ComuService extends Service {
     private static final String TAG = "nib";
@@ -41,48 +45,48 @@ public class ComuService extends Service {
     private double lat = 31.2318467649, lng = 121.4690501907, prev_lat = 0, prev_lng = 0, latR = 0, lngR = 0, latS = 0, lngS = 0, angle = 0, speed = 0, speed_sug = 0;
     private double latS_tmp = 0, lngS_tmp = 0;
 
-    class MyBinder extends Binder {
-        String getSource() {
+    public class MyBinder extends Binder {
+        public String getSource() {
             return source;
         }
 
-        String getMsg() {
+        public String getMsg() {
             return message;
         }
 
-        int getEvent() {
+        public int getEvent() {
             return event;
         }
 
-        double getLatL() {
+        public double getLatL() {
             return lat;
         }
 
-        double getLngL() {
+        public double getLngL() {
             return lng;
         }
 
-        double getLatR() {
+        public double getLatR() {
             return latR;
         }
 
-        double getLngR() {
+        public double getLngR() {
             return lngR;
         }
 
-        double getLatStable() {
+        public double getLatStable() {
             return latS_tmp;
         }
 
-        double getLngStable() {
+        public double getLngStable() {
             return lngS_tmp;
         }
 
-        double getSpd() {
+        public double getSpd() {
             return speed;
         }
 
-        double getAngle() {
+        public double getAngle() {
             return angle;
         }
     }

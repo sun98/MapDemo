@@ -1,4 +1,4 @@
-package com.example.mapdemo;
+package com.example.mapdemo.activity;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -39,6 +39,10 @@ import com.baidu.mapapi.map.offline.MKOLUpdateElement;
 import com.baidu.mapapi.map.offline.MKOfflineMap;
 import com.baidu.mapapi.map.offline.MKOfflineMapListener;
 import com.baidu.mapapi.model.LatLng;
+import com.example.mapdemo.util.AngleUtil;
+import com.example.mapdemo.service.ComuService;
+import com.example.mapdemo.util.MyLocationListener;
+import com.example.mapdemo.R;
 import com.suke.widget.SwitchButton;
 
 import java.util.ArrayList;
@@ -47,6 +51,8 @@ import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Queue;
+
+// TODO: clean code.
 
 public class MainActivity extends Activity {
     /*

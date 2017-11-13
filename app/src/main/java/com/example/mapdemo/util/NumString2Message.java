@@ -1,4 +1,4 @@
-package com.example.mapdemo;
+package com.example.mapdemo.util;
 
 /**
  * Created by Nibius at 2017/7/3 15:14.
