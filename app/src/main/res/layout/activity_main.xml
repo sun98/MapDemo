@@ -1,152 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:background="#d9d9d9"
-        android:baselineAligned="false"
-        android:gravity="top"
-        android:orientation="horizontal">
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/left_part"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_weight="4"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/right_part"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <!-- 这是左侧部分 -->
-
-        <LinearLayout
+        <RelativeLayout
+            android:id="@+id/tips"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="4"
+            android:layout_height="0dp"
+            android:gravity="top"
+            app:layout_constraintBottom_toTopOf="@id/button_set"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_weight="2">
+
+            <ImageView
+                android:id="@+id/img_warn"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/car" />
+
+            <TextView
+                android:id="@+id/tip_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/img_warn"
+                android:layout_marginBottom="20dp"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="@string/welcome"
+                android:textAlignment="center"
+                android:textSize="30sp" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/button_set"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:gravity="center"
-            android:orientation="vertical"
-            android:paddingBottom="@dimen/activity_vertical_margin"
-            android:paddingLeft="@dimen/activity_horizontal_margin"
-            android:paddingRight="@dimen/activity_horizontal_margin"
-            android:paddingTop="@dimen/activity_vertical_margin">
+            app:layout_constraintBottom_toTopOf="@id/special"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tips"
+            app:layout_constraintVertical_weight="1">
 
-            <!--
-            <CheckBox
-                android:id="@+id/checkBox1"
+            <Button
+                android:id="@+id/btn_service"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:background="@drawable/btn_start" />
+
+            <Button
+                android:id="@+id/btn_map"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_marginStart="40dp"
+                android:layout_toEndOf="@id/btn_service"
+                android:background="@drawable/pause_icon" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/special"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:gravity="center"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/button_set"
+            app:layout_constraintVertical_weight="2">
+
+            <TextView
+                android:id="@+id/text_special"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="carObstacle" />
+                android:layout_centerVertical="true"
+                android:text="@string/special_car"
+                android:textSize="20sp" />
 
-            <CheckBox
-                android:id="@+id/checkBox2"
+            <com.suke.widget.SwitchButton
+                android:id="@+id/switch_special"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="roadWork" />
+                android:layout_centerVertical="true"
+                android:layout_marginStart="60dp"
+                android:layout_toEndOf="@id/text_special" />
+        </RelativeLayout>
 
-            <CheckBox
-                android:id="@+id/checkBox3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="spdLimit" />
+    </android.support.constraint.ConstraintLayout>
 
-            <CheckBox
-                android:id="@+id/checkBox4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="bestTravel" />
-             -->
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/right_part"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_weight="7"
+        app:layout_constraintLeft_toRightOf="@id/left_part"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="2">
+        <com.baidu.mapapi.map.MapView
+            android:id="@+id/bmap"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-                <ImageView
-                    android:id="@+id/WarningImage"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_centerHorizontal="true"
-                    android:src="@drawable/icon_car" />
-
-                <TextView
-                    android:id="@+id/show"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/WarningImage"
-                    android:layout_marginBottom="20dp"
-                    android:layout_marginTop="10dp"
-                    android:text="@string/hello_world"
-                    android:textAlignment="center"
-                    android:gravity="center"
-                    android:textSize="30sp" />
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:gravity="center">
-
-                <Button
-                    android:id="@+id/begin"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:background="@drawable/btn_start" />
-
-                <Button
-                    android:id="@+id/mapEnable"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:layout_marginStart="40dp"
-                    android:layout_toEndOf="@id/begin"
-                    android:background="@drawable/pause_icon"
-                    android:onClick="MapOnOff" />
-
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="2">
-
-                <TextView
-                    android:id="@+id/text_special"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:layout_centerVertical="true"
-                    android:text="@string/special_car"
-                    android:textSize="20sp" />
-
-                <com.suke.widget.SwitchButton
-                    android:id="@+id/switch_special"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true" />
-            </RelativeLayout>
-
-        </LinearLayout>
-
-        <!-- 这是右侧部分 -->
-        <LinearLayout
-            android:id="@+id/viewSwitcher1"
-            android:layout_width="0.0dip"
-            android:layout_height="fill_parent"
-            android:layout_above="@+id/mapEnable"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:layout_weight="7">
-
-            <com.baidu.mapapi.map.MapView
-                android:id="@+id/bmapView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clickable="true" />
-        </LinearLayout>
-
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/text_source_string"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:textSize="8sp" />
-</FrameLayout>
-
+    </android.support.constraint.ConstraintLayout>
+</android.support.constraint.ConstraintLayout>
