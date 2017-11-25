@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         bindService(new Intent(context, ComService.class), connection, BIND_AUTO_CREATE);    // bind service on activity created
         initVariables();  // initialize variables
-        initLocation(); // initialize and start location service
+        initLocation(); // initialize and start location service, have some problems yet
         initMap();    // initialize map status
     }
 

@@ -41,6 +41,7 @@
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
             android:value="44E1v9W3RezOD1QrnCmGG1nLgzZxw1CI" />
+            <!--在这里改为你的key-->
 
         <activity
             android:name=".activity.MainActivity"
@@ -55,7 +56,9 @@
         <service
             android:name=".service.ComService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true">
+
+        </service>
     </application>
 
 </manifest>
