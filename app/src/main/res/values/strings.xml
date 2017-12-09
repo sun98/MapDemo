@@ -6,4 +6,20 @@
     <string name="normal_car">普通车辆</string>
     <string name="lang_not_support">不支持的语言</string>
     <string name="location_error">定位服务不可用</string>
+    <string name="in_front">前方</string>
+    <string name="construction_message">米有道路施工，请绕道行驶。</string>
+    <string name="ice_message">米为冰雪路况，请减速慢性。</string>
+    <string name="error_5">Error: event=5 &amp;&amp; TIM state!=01 &amp;&amp; TIM state!=02</string>
+    <string name="red_too_long">前方红灯时间较长。</string>
+    <string name="green_too_long">前方绿灯时间较长，可原速通行。</string>
+    <string name="error_too_long">Error: lightTime=127 &amp;&amp; lightState!=01 &amp;&amp; lightState!=02</string>
+    <string name="error_6">Error: event=6</string>
+    <string name="green_remain">前方绿灯剩余</string>
+    <string name="red_remain">前方红灯剩余</string>
+    <string name="origin_speed">秒，建议保持原速通行。</string>
+    <string name="green_stop">秒，无法通过路口，建议停车等待。</string>
+    <string name="red_slow">秒，建议减速至</string>
+    <string name="kmh">km/h。</string>
+    <string name="red_stop">秒，建议缓慢减速停车等候。</string>
+    <string name="current_speed">当前车速：</string>
 </resources>

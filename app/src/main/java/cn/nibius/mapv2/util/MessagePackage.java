@@ -7,6 +7,8 @@ package cn.nibius.mapv2.util;
 
 public class MessagePackage {
     private double currentLat, currentLng;   // 43, 44
+    private double currentSpeed;
+    private double currentAngle;    // 46
     private int currentEvent;   // 47
     private boolean currentMapFlag; // 48
     private double effectiveLatS, effectiveLngS;    // 49, 50; light position
@@ -17,6 +19,8 @@ public class MessagePackage {
     public MessagePackage() {
         this.currentLat = 0;
         this.currentLng = 0;
+        this.currentSpeed = 0;
+        this.currentAngle = 0;
         this.currentEvent = -1;
         this.currentMapFlag = false;
         this.effectiveLatS = 0;
@@ -30,6 +34,8 @@ public class MessagePackage {
     public MessagePackage(
             double currentLat,
             double currentLng,
+            double currentSpeed,
+            double currentAngle,
             int currentEvent,
             boolean currentMapFlag,
             double effectiveLatS,
@@ -40,6 +46,8 @@ public class MessagePackage {
             String message) {
         this.currentLat = currentLat;
         this.currentLng = currentLng;
+        this.currentSpeed = currentSpeed;
+        this.currentAngle = currentAngle;
         this.currentEvent = currentEvent;
         this.currentMapFlag = currentMapFlag;
         this.effectiveLatS = effectiveLatS;
@@ -128,5 +136,21 @@ public class MessagePackage {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public double getCurrentAngle() {
+        return currentAngle;
+    }
+
+    public void setCurrentAngle(double currentAngle) {
+        this.currentAngle = currentAngle;
+    }
+
+    public double getCurrentSpeed() {
+        return currentSpeed;
+    }
+
+    public void setCurrentSpeed(double currentSpeed) {
+        this.currentSpeed = currentSpeed;
     }
 }

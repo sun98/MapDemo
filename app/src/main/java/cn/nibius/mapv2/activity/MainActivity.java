@@ -32,6 +32,8 @@ import com.baidu.mapapi.model.LatLng;
 import com.suke.widget.SwitchButton;
 
 import java.util.Locale;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import cn.nibius.mapv2.R;
 import cn.nibius.mapv2.service.ComService;
@@ -45,9 +47,11 @@ public class MainActivity extends AppCompatActivity {
     private Context context;
     private double latOffset = 0.0043953298, lngOffset = 0.0110212588;
     private double myLat = 31.0278622712, myLng = 121.4218843711; // my position with initial value
+    private double obsLat = 0, obsLng = 0, lightLat = 0, lightLng = 0;
     private MessagePackage messagePackage;
     private int currentEvent = 0;
     private String currentMessage = "";
+    private double currentSpeed = 0;
     private TextToSpeech textToSpeech;
     private int MAX_SOURCE = 4; // max number of markers
     private Marker[] markers = new Marker[MAX_SOURCE];  // markers
@@ -67,6 +71,8 @@ public class MainActivity extends AppCompatActivity {
     private LocationClient locationClient = null; // core class of location service
     private MyLocationListener myLocationListener = new MyLocationListener(); // interface of location service
 
+    public static Lock lock = new ReentrantLock();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,10 +86,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void initVariables() {
         context = getApplicationContext();
-        mapView = (MapView) findViewById(R.id.bmap);
-        textTip = (TextView) findViewById(R.id.tip_text);
-        imgWarn = (ImageView) findViewById(R.id.img_warn);
-        switchButton = (SwitchButton) findViewById(R.id.switch_special);
+        mapView = findViewById(R.id.bmap);
+        textTip = findViewById(R.id.tip_text);
+        imgWarn = findViewById(R.id.img_warn);
+        switchButton = findViewById(R.id.switch_special);
         switchButton.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(SwitchButton view, boolean isChecked) {
@@ -122,9 +128,9 @@ public class MainActivity extends AppCompatActivity {
                 isUpdating = !isUpdating;
             }
         };
-        btnBind = (Button) findViewById(R.id.btn_service);
+        btnBind = findViewById(R.id.btn_service);
         btnBind.setOnClickListener(startListen);
-        btnMap = (Button) findViewById(R.id.btn_map);
+        btnMap = findViewById(R.id.btn_map);
         btnMap.setOnClickListener(toggleUpdater);
         baiduMap = mapView.getMap();
         locationClient = new LocationClient(getApplicationContext());
@@ -162,7 +168,12 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 if (isBound) { // service started
                     try {
-                        messagePackage = binder.getPackage();
+                        lock.lock();
+                        try {
+                            messagePackage = binder.getPackage();
+                        } finally {
+                            lock.unlock();
+                        }
                         // handle map position update
                         myLat = messagePackage.getCurrentLat() + latOffset;
                         myLng = messagePackage.getCurrentLng() + lngOffset;
@@ -170,6 +181,14 @@ public class MainActivity extends AppCompatActivity {
                         // IMPORTANT: get event here simultaneously to avoid error
                         currentEvent = messagePackage.getCurrentEvent();
                         currentMessage = messagePackage.getMessage();
+                        currentSpeed = messagePackage.getCurrentSpeed();
+                        if (currentEvent == 5) {
+                            obsLat = messagePackage.getEffectiveLatR();
+                            obsLng = messagePackage.getEffectiveLngR();
+                        } else if (currentEvent >= 3) {
+                            lightLat = messagePackage.getEffectiveLatS();
+                            lightLng = messagePackage.getEffectiveLatR();
+                        }
 
                         currentL = new LatLng(myLat, myLng);
                         markers[0].setPosition(currentL);
@@ -188,7 +207,18 @@ public class MainActivity extends AppCompatActivity {
                         }
                         oldMyLat = myLat;
                         oldMyLng = myLng;
-                        // TODO: handle event marker update
+                        // handle event marker update
+                        if (currentEvent == 0) {
+                            for (int i = 1; i < MAX_SOURCE; i++) {
+                                markers[i].setVisible(false);
+                            }
+                        } else if (currentEvent == 5) {
+                            markers[3].setPosition(new LatLng(obsLat, obsLng));
+                            markers[3].setVisible(true);
+                        } else if (currentEvent >= 3) {
+                            markers[2].setPosition(new LatLng(lightLat, lightLng));
+                            markers[2].setVisible(true);
+                        }
                     } catch (Exception e) {
                         Log.i(TAG, "MapUpdater: " + e.toString());
                     }
@@ -224,7 +254,8 @@ public class MainActivity extends AppCompatActivity {
                         else imgWarn.setImageResource(icons[currentEvent - 1]);
                     } else if (currentEvent == 0) {
                         imgWarn.setImageResource(R.drawable.car);
-                        textTip.setText(R.string.welcome);
+                        String speedMessage = getString(R.string.current_speed) + (int) currentSpeed * 3.6 + getString(R.string.kmh);
+                        textTip.setText(speedMessage);
                     }
                 }
                 updaterHandler.postDelayed(this, 100);
