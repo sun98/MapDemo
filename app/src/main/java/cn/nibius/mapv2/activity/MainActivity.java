@@ -28,9 +28,14 @@ import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
+import com.baidu.mapapi.map.offline.MKOLSearchRecord;
+import com.baidu.mapapi.map.offline.MKOLUpdateElement;
+import com.baidu.mapapi.map.offline.MKOfflineMap;
+import com.baidu.mapapi.map.offline.MKOfflineMapListener;
 import com.baidu.mapapi.model.LatLng;
 import com.suke.widget.SwitchButton;
 
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
@@ -54,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private String currentMessage = "";
     private double currentSpeed = 0;
     private TextToSpeech textToSpeech;
+    private MKOfflineMap mOffline;
     private int MAX_SOURCE = 4; // max number of markers
     private Marker[] markers = new Marker[MAX_SOURCE];  // markers
     private Handler updaterHandler = new Handler(); // main handler
@@ -82,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
         initVariables();  // initialize variables
         initLocation(); // initialize and start location service, have some problems yet
         initMap();    // initialize map status
+        initOfflineMap();   // download offline map for Shanghai
         bindService(new Intent(context, ComService.class), connection, BIND_AUTO_CREATE);    // bind service on activity created
     }
 
@@ -319,5 +326,39 @@ public class MainActivity extends AppCompatActivity {
         //可选，默认false，设置是否需要过滤GPS仿真结果，默认需要
         locationClient.setLocOption(option);
         locationClient.start(); //start location service
+    }
+
+    private void initOfflineMap() {
+        Log.i("nib", "initOfflineMap: ");
+        mOffline = new MKOfflineMap();
+        // 设置监听
+        mOffline.init(new MKOfflineMapListener() {
+            @Override
+            public void onGetOfflineMapState(int type, int state) {
+                switch (type) {
+                    case MKOfflineMap.TYPE_DOWNLOAD_UPDATE:
+                        // 离线地图下载更新事件类型
+                        MKOLUpdateElement update = mOffline.getUpdateInfo(state);
+                        Log.i(TAG, "offlineMap " + update.cityName + " ," + update.ratio);
+                        if (update.ratio % 10 == 0)
+                            ToastUtil.showShort(context, getString(R.string.download_offline) + update.ratio + "%");
+                        break;
+                    case MKOfflineMap.TYPE_NEW_OFFLINE:
+                        // 有新离线地图安装
+                        Log.i(TAG, "TYPE_NEW_OFFLINE");
+                        break;
+                    case MKOfflineMap.TYPE_VER_UPDATE:
+                        // 版本更新提示
+                        break;
+                }
+            }
+        });
+//        localMapList = mOffline.getAllUpdateInfo();
+//        ArrayList<MKOLSearchRecord> records=mOffline.searchCity("上海");
+//        if (records == null || records.size() != 1) {
+//            Log.i("nib", "cannot find sh offline");
+//        }
+//        int id = records.get(0).cityID;
+        mOffline.start(289);
     }
 }
