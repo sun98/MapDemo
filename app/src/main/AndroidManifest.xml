@@ -41,14 +41,13 @@
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
             android:value="44E1v9W3RezOD1QrnCmGG1nLgzZxw1CI" />
-            <!--在这里改为你的key-->
+        <!--在这里改为你的key-->
 
         <activity
             android:name=".activity.MainActivity"
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -56,9 +55,13 @@
         <service
             android:name=".service.ComService"
             android:enabled="true"
-            android:exported="true">
+            android:exported="true" />
+        <service
+            android:name="com.baidu.location.f"
+            android:enabled="true"
+            android:process=":remote" />
 
-        </service>
+
     </application>
 
 </manifest>

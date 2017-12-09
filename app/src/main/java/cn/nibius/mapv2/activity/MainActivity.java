@@ -32,6 +32,7 @@ import com.baidu.mapapi.model.LatLng;
 import com.suke.widget.SwitchButton;
 
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private MapView mapView; // mapView object
     private BaiduMap baiduMap;  // map object
     private ComService.MyBinder binder; // binder to the ComService
-    private boolean isBound = false; // whether service is bound
+    private boolean isListening = false; // whether service is bound
     private ServiceConnection connection;
     private LocationClient locationClient = null; // core class of location service
     private MyLocationListener myLocationListener = new MyLocationListener(); // interface of location service
@@ -78,10 +79,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         SDKInitializer.initialize(getApplicationContext());
         setContentView(R.layout.activity_main);
-        bindService(new Intent(context, ComService.class), connection, BIND_AUTO_CREATE);    // bind service on activity created
         initVariables();  // initialize variables
         initLocation(); // initialize and start location service, have some problems yet
         initMap();    // initialize map status
+        bindService(new Intent(context, ComService.class), connection, BIND_AUTO_CREATE);    // bind service on activity created
     }
 
     private void initVariables() {
@@ -103,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 binder.startListen();
+                isListening = true;
                 view.setOnClickListener(stopListen);
             }
         };
@@ -110,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 binder.stopListen();
+                isListening = false;
                 view.setOnClickListener(startListen);
             }
         };
@@ -150,13 +153,11 @@ public class MainActivity extends AppCompatActivity {
             public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
                 Log.i(TAG, "onServiceConnected: ");
                 binder = (ComService.MyBinder) iBinder;
-                isBound = true;
             }
 
             @Override
             public void onServiceDisconnected(ComponentName componentName) {
                 binder = null;
-                isBound = false;
             }
         };
         mapUpdater = new Runnable() {
@@ -166,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void run() {
-                if (isBound) { // service started
+                if (isListening) { // service started
                     try {
                         lock.lock();
                         try {
@@ -185,9 +186,11 @@ public class MainActivity extends AppCompatActivity {
                         if (currentEvent == 5) {
                             obsLat = messagePackage.getEffectiveLatR();
                             obsLng = messagePackage.getEffectiveLngR();
+                            Log.i(TAG, "run: event=5, obsLat=" + obsLat + ", obsLng=" + obsLng);
                         } else if (currentEvent >= 3) {
                             lightLat = messagePackage.getEffectiveLatS();
-                            lightLng = messagePackage.getEffectiveLatR();
+                            lightLng = messagePackage.getEffectiveLngS();
+//                            Log.i(TAG, "run: event=" + currentEvent + ", lightLat=" + lightLat + ", lightLng=" + lightLng);
                         }
 
                         currentL = new LatLng(myLat, myLng);
@@ -213,10 +216,10 @@ public class MainActivity extends AppCompatActivity {
                                 markers[i].setVisible(false);
                             }
                         } else if (currentEvent == 5) {
-                            markers[3].setPosition(new LatLng(obsLat, obsLng));
+                            markers[3].setPosition(new LatLng(obsLat + latOffset, obsLng + lngOffset));
                             markers[3].setVisible(true);
                         } else if (currentEvent >= 3) {
-                            markers[2].setPosition(new LatLng(lightLat, lightLng));
+                            markers[2].setPosition(new LatLng(lightLat + latOffset, lightLng + lngOffset));
                             markers[2].setVisible(true);
                         }
                     } catch (Exception e) {
@@ -243,12 +246,15 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void run() {
-                if (isBound) {
+                if (isListening) {
                     if (currentEvent > 0) {
-                        if (currentEvent != oldEvent) {
+                        if (currentEvent != oldEvent && !Objects.equals(currentMessage, "")) {
+//                            Log.i(TAG, "run: currentEvent=" + currentEvent + ", currentMessage=" + currentMessage);
                             textToSpeech.speak(currentMessage, TextToSpeech.QUEUE_FLUSH, null, null);
+                            oldEvent = currentEvent;
                         }
-                        textTip.setText(currentMessage);
+                        if (!Objects.equals(currentMessage, ""))
+                            textTip.setText(currentMessage);
                         if (currentEvent == 5) imgWarn.setImageResource(icons[2]);
                         else if (currentEvent >= 3) imgWarn.setImageResource(icons[1]);
                         else imgWarn.setImageResource(icons[currentEvent - 1]);
@@ -314,6 +320,4 @@ public class MainActivity extends AppCompatActivity {
         locationClient.setLocOption(option);
         locationClient.start(); //start location service
     }
-
-
 }

@@ -3,6 +3,7 @@
     <string name="welcome">欢迎使用车路协同系统！</string>
     <string name="action_settings">设置</string>
     <string name="special_car">特殊车辆</string>
+    <string name="img_warn_des">警示图片</string>
     <string name="normal_car">普通车辆</string>
     <string name="lang_not_support">不支持的语言</string>
     <string name="location_error">定位服务不可用</string>
@@ -12,6 +13,7 @@
     <string name="error_5">Error: event=5 &amp;&amp; TIM state!=01 &amp;&amp; TIM state!=02</string>
     <string name="red_too_long">前方红灯时间较长。</string>
     <string name="green_too_long">前方绿灯时间较长，可原速通行。</string>
+    <string name="yellow">前方黄灯。</string>
     <string name="error_too_long">Error: lightTime=127 &amp;&amp; lightState!=01 &amp;&amp; lightState!=02</string>
     <string name="error_6">Error: event=6</string>
     <string name="green_remain">前方绿灯剩余</string>

@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -16,8 +17,11 @@ import cn.nibius.mapv2.R;
 import cn.nibius.mapv2.activity.MainActivity;
 import cn.nibius.mapv2.util.AngleUtil;
 import cn.nibius.mapv2.util.MessagePackage;
+import cn.nibius.mapv2.util.ToastUtil;
 
 public class ComService extends Service {
+    private String TAG = "MAPV2";
+
     private boolean test = true;    // true for PC-android test; false for real environment
     private int[] ports = {8887, 8888, 8889, 8890};    // 4 ports to listen
     private boolean stop = false;
@@ -181,7 +185,7 @@ public class ComService extends Service {
                 while (!stop) {
                     int tempEvent = 0, effLightTime = 0;
                     String effLightState = "init_effective_light_state",
-                            tempMessage = "init_temp_message";
+                            tempMessage = "你好";
 
                     if (angleTIM < 45 && distTIM < 200 && distTIM > 50) {
                         tempEvent = 5;
@@ -215,15 +219,24 @@ public class ComService extends Service {
                                 tempMessage = getString(R.string.in_front) + distTIM +
                                         getString(R.string.ice_message);
                             else
-                                tempMessage = getString(R.string.error_5);
+                                Log.i(TAG, "run: Error: event=5 && TIM state!=01 && TIM state!=02");
+//                                tempMessage = getString(R.string.error_5);
                             break;
                         case 2:
+//                            Log.i(TAG, "run: lightLat=" + lightLat + ", lightLng=" + lightLng);
                             if (effLightTime == 127) {
                                 if (Objects.equals(effLightState, "02"))
                                     tempMessage = getString(R.string.red_too_long);
                                 else if (Objects.equals(effLightState, "01"))
                                     tempMessage = getString(R.string.green_too_long);
-                                else tempMessage = getString(R.string.error_too_long);
+                                else if (Objects.equals(effLightState, "03"))
+                                    tempMessage = getString(R.string.yellow);
+                                else if (Objects.equals(effLightState, "04") ||
+                                        Objects.equals(effLightState, "05"))
+                                    tempMessage = "";
+                                else
+                                    Log.i(TAG, "run: Error: lightTime=127 && lightState=" + effLightState);
+//                                    tempMessage = getString(R.string.error_too_long);
                             } else {
                                 double lightDist = AngleUtil.getDistance(currentLng, currentLat, lightLng, lightLat);
                                 if (Objects.equals(effLightState, "04")) {
@@ -251,7 +264,8 @@ public class ComService extends Service {
                                     }
                                 } else {
                                     tempEvent = 6;
-                                    tempMessage = getString(R.string.error_6);
+                                    Log.i(TAG, "run: Error: event=6");
+//                                    tempMessage = getString(R.string.error_6);
                                 }
                             }
                     }
@@ -271,7 +285,6 @@ public class ComService extends Service {
                             messagePackage.setEffectiveLatS(lightLat);
                             messagePackage.setEffectiveLngS(lightLng);
                         }
-
                     } finally {
                         MainActivity.lock.unlock();
                     }
