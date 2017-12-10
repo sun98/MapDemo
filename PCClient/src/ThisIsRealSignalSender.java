@@ -15,7 +15,7 @@ public class ThisIsRealSignalSender {
                 socket8 = new DatagramSocket(8888),
                 socket9 = new DatagramSocket(8889),
                 socket0 = new DatagramSocket(8890);
-        InetAddress inetAddress = InetAddress.getByName("192.168.137.18");
+        InetAddress inetAddress = InetAddress.getByName("192.168.137.25");
         String line = "";
         while ((line = reader.readLine()) != null) {
 //            22,25

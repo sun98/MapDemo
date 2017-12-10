@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView textTip;   // tip text
     private ImageView imgWarn;
     private Button btnBind, btnMap;
-    private SwitchButton switchButton;
+    private SwitchButton switchButton, switchTest;
     private boolean isUpdating = true;
     private View.OnClickListener startListen, stopListen, toggleUpdater;
     private MapView mapView; // mapView object
@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private MyLocationListener myLocationListener = new MyLocationListener(); // interface of location service
 
     public static Lock lock = new ReentrantLock();
+    public static boolean test = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +106,13 @@ public class MainActivity extends AppCompatActivity {
                 if (isChecked) bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_red);
                 else bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_black);
                 markers[0].setIcon(bitmap);
+            }
+        });
+        switchTest = findViewById(R.id.switch_test);
+        switchTest.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(SwitchButton view, boolean isChecked) {
+                test = isChecked;
             }
         });
         startListen = new View.OnClickListener() {
@@ -207,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
                                 currentAngle = (float) AngleUtil.getAngle(oldMyLng, oldMyLat, myLng, myLat);
                                 float d = Math.abs(currentAngle - oldAngle);
                                 d = (d > 180) ? (360 - d) : d;
-                                if (d < 15)
+                                if (d < 5)
                                     currentAngle = oldAngle; // remain old angle to avoid frequently shake
                             }
                             oldAngle = currentAngle; //update angle whatever

@@ -17,12 +17,10 @@ import cn.nibius.mapv2.R;
 import cn.nibius.mapv2.activity.MainActivity;
 import cn.nibius.mapv2.util.AngleUtil;
 import cn.nibius.mapv2.util.MessagePackage;
-import cn.nibius.mapv2.util.ToastUtil;
 
 public class ComService extends Service {
     private String TAG = "MAPV2";
 
-    private boolean test = true;    // true for PC-android test; false for real environment
     private int[] ports = {8887, 8888, 8889, 8890};    // 4 ports to listen
     private boolean stop = false;
     private IBinder myBinder = new MyBinder();      // binder for MainActivity to get values
@@ -70,7 +68,7 @@ public class ComService extends Service {
                         e.printStackTrace();
                     }
                     byte[] dataSPAT = packet.getData();
-                    if (test) messageSPAT = new String(dataSPAT, 0, dataSPAT.length);
+                    if (MainActivity.test) messageSPAT = new String(dataSPAT, 0, dataSPAT.length);
                     else messageSPAT = bytesToHexString(dataSPAT);
                     if (messageSPAT != null) {
                         lightID = messageSPAT.substring(22, 26);
@@ -104,7 +102,7 @@ public class ComService extends Service {
                         e.printStackTrace();
                     }
                     byte[] dataMAP = packet.getData();
-                    if (test) messageMAP = new String(dataMAP, 0, dataMAP.length);
+                    if (MainActivity.test) messageMAP = new String(dataMAP, 0, dataMAP.length);
                     else messageMAP = bytesToHexString(dataMAP);
                     boolean exist = false;
                     if (messageMAP != null) {
@@ -130,7 +128,7 @@ public class ComService extends Service {
                         e.printStackTrace();
                     }
                     byte[] dataBSM = packet.getData();
-                    if (test) messageBSM = new String(dataBSM, 0, dataBSM.length);
+                    if (MainActivity.test) messageBSM = new String(dataBSM, 0, dataBSM.length);
                     else messageBSM = bytesToHexString(dataBSM);
                     if (messageBSM != null) {
                         oldLat = currentLat;
@@ -163,7 +161,7 @@ public class ComService extends Service {
                         e.printStackTrace();
                     }
                     byte[] dataTIM = packet.getData();
-                    if (test) messageTIM = new String(dataTIM, 0, dataTIM.length);
+                    if (MainActivity.test) messageTIM = new String(dataTIM, 0, dataTIM.length);
                     else messageTIM = bytesToHexString(dataTIM);
                     if (messageTIM != null) {
                         obstacleLat = String8ToInt(messageTIM.substring(70, 78)) / 1E7;

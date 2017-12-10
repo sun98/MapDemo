@@ -5,6 +5,7 @@
     <string name="special_car">特殊车辆</string>
     <string name="img_warn_des">警示图片</string>
     <string name="normal_car">普通车辆</string>
+    <string name="test">测试</string>
     <string name="download_offline">正在下载 “上海市” 离线地图：</string>
     <string name="lang_not_support">不支持的语言</string>
     <string name="location_error">定位服务不可用</string>

@@ -98,9 +98,27 @@
                 android:id="@+id/switch_special"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
+                android:layout_alignBottom="@+id/text_special"
+                android:layout_alignTop="@+id/text_special"
                 android:layout_marginStart="60dp"
                 android:layout_toEndOf="@id/text_special" />
+
+            <TextView
+                android:id="@+id/text_test"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignStart="@+id/text_special"
+                android:layout_below="@+id/text_special"
+                android:text="@string/test"
+                android:textSize="20sp" />
+
+            <com.suke.widget.SwitchButton
+                android:id="@+id/switch_test"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/text_test"
+                android:layout_alignStart="@+id/switch_special"
+                android:layout_below="@+id/switch_special" />
         </RelativeLayout>
 
     </android.support.constraint.ConstraintLayout>
