@@ -3,9 +3,13 @@ package cn.nibius.mapv2.service;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -45,15 +49,31 @@ public class ComService extends Service {
     private double obstacleLat, obstacleLng, angleTIM, distTIM;
     private String stateTIM;
 
+    private FileOutputStream fos;
+
+
     @Override
     public void onCreate() {
         super.onCreate();
+        String time = String.valueOf(System.currentTimeMillis());
+        File file = new File(Environment.getExternalStorageDirectory(), time);
+        try {
+            fos = new FileOutputStream(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+//        try {
+//            fos.write("hello".getBytes());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         for (int i = 0; i < 4; i++)
             try {
                 sockets[i] = new DatagramSocket(ports[i]);
             } catch (SocketException e) {
                 e.printStackTrace();
             }
+
 
         networkRunnable[0] = new Runnable() {   // SPAT thread
             String messageSPAT;
@@ -70,6 +90,12 @@ public class ComService extends Service {
                     byte[] dataSPAT = packet.getData();
                     if (MainActivity.test) messageSPAT = new String(dataSPAT, 0, dataSPAT.length);
                     else messageSPAT = bytesToHexString(dataSPAT);
+                    try {
+                        String tmp = removeTail0(messageSPAT);
+                        fos.write(("SPAT " + tmp + "\n").getBytes());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     if (messageSPAT != null) {
                         lightID = messageSPAT.substring(22, 26);
                         lightState[0] = messageSPAT.substring(50, 52);
@@ -104,6 +130,12 @@ public class ComService extends Service {
                     byte[] dataMAP = packet.getData();
                     if (MainActivity.test) messageMAP = new String(dataMAP, 0, dataMAP.length);
                     else messageMAP = bytesToHexString(dataMAP);
+                    try {
+                        String tmp = removeTail0(messageMAP);
+                        fos.write(("MAP: " + tmp + "\n").getBytes());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     boolean exist = false;
                     if (messageMAP != null) {
                         for (MapInfo info : maps)
@@ -130,6 +162,12 @@ public class ComService extends Service {
                     byte[] dataBSM = packet.getData();
                     if (MainActivity.test) messageBSM = new String(dataBSM, 0, dataBSM.length);
                     else messageBSM = bytesToHexString(dataBSM);
+                    try {
+                        String temp = removeTail0(messageBSM);
+                        fos.write(("BSM: " + temp + "\n").getBytes());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     if (messageBSM != null) {
                         oldLat = currentLat;
                         oldLng = currentLng;
@@ -163,6 +201,12 @@ public class ComService extends Service {
                     byte[] dataTIM = packet.getData();
                     if (MainActivity.test) messageTIM = new String(dataTIM, 0, dataTIM.length);
                     else messageTIM = bytesToHexString(dataTIM);
+                    try {
+                        String temp = removeTail0(messageTIM);
+                        fos.write(("TIM: " + temp + "\n").getBytes());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     if (messageTIM != null) {
                         obstacleLat = String8ToInt(messageTIM.substring(70, 78)) / 1E7;
                         obstacleLng = String8ToInt(messageTIM.substring(82, 90)) / 1E7;
@@ -391,6 +435,26 @@ public class ComService extends Service {
             stringBuilder.append(hv);
         }
         return stringBuilder.toString();
+    }
+
+    public String removeTail0(String str) {
+//      如果字符串尾部不为0，返回字符串
+        if (!str.substring(str.length() - 1).equals("0")) {
+            return str;
+        } else {
+//          否则将字符串尾部删除一位再进行递归
+            return removeTail0(str.substring(0, str.length() - 1));
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        try {
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 

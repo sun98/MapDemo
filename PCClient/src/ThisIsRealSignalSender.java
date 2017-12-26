@@ -9,7 +9,7 @@ import java.util.Objects;
  */
 public class ThisIsRealSignalSender {
     public static void main(String[] args) throws IOException, InterruptedException {
-        File f = new File("src/logcat.txt");
+        File f = new File("src/1514258737023.txt");
         BufferedReader reader = new BufferedReader(new FileReader(f));
         DatagramSocket socket7 = new DatagramSocket(8887),
                 socket8 = new DatagramSocket(8888),
