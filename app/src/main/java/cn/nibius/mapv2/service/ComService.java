@@ -46,7 +46,7 @@ public class ComService extends Service {
     // BSM
     private double currentLat, currentLng, oldLat, oldLng, speed, angle;
     // TIM
-    private double obstacleLat, obstacleLng, angleTIM, distTIM;
+    private double obstacleLat, obstacleLng, angleTIM, distTIM, angleMap, distMap;
     private String stateTIM;
 
     private FileOutputStream fos;
@@ -232,6 +232,34 @@ public class ComService extends Service {
                     if (angleTIM < 45 && distTIM < 200 && distTIM > 50) {
                         tempEvent = 5;
                     }
+                    MapInfo targetMap;
+                    for (MapInfo iMap ：maps) {
+                      angleMap = Math.abs(angle - AngleUtil.getAngle(currentLng, currentLat,
+                              iMap.mapLng, iMap.mapLat));
+                      distMap = AngleUtil.getDistance(currentLng, currentLat,
+                              iMap.mapLng, iMap.mapLat);
+                      if (angleMap < 45 && distMap < 200 && distMap > 50) {
+                        targetMap = iMap;
+                      }
+                    }
+                    if (Objects.equals(lightID, targetMap.mapID)) {
+                        tempEvent = 2;
+                        int minIndex = -1;
+                        double deltaAngle[] = new double[4], minDelta = 360;
+                        for (int i = 0; i < 4; i++) {
+                            double t = Math.abs(angle - targetMap.branchAngles[i]);
+                            deltaAngle[i] = (t > 180) ? (360 - t) : t;
+                            if (deltaAngle[i] < minDelta) {
+                                minDelta = deltaAngle[i];
+                                minIndex = i;
+                            }
+                        }
+                        effLightState = lightState[minIndex];
+                        effLightTime = lightTime[minIndex];
+                        lightLat = targetMap.mapLat;
+                        lightLng = targetMap.mapLng;
+                    }
+                    /*
                     for (MapInfo iMap : maps) {
                         if (Objects.equals(lightID, iMap.mapID)) {
                             tempEvent = 2;
@@ -252,6 +280,7 @@ public class ComService extends Service {
                             break;
                         }
                     }
+                    */
                     switch (tempEvent) {
                         case 5:
                             if (Objects.equals("01", stateTIM))
@@ -457,4 +486,3 @@ public class ComService extends Service {
         }
     }
 }
-
