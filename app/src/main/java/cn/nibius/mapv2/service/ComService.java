@@ -20,16 +20,20 @@ import java.util.Objects;
 import cn.nibius.mapv2.R;
 import cn.nibius.mapv2.activity.MainActivity;
 import cn.nibius.mapv2.util.AngleUtil;
+import cn.nibius.mapv2.util.CarInfo;
+import cn.nibius.mapv2.util.Constant.LightEvent;
+import cn.nibius.mapv2.util.Constant.RoadStateEvent;
 import cn.nibius.mapv2.util.MessagePackage;
 
 public class ComService extends Service {
     private String TAG = "MAPV2";
+    private boolean record = false;
 
-    private int[] ports = {8887, 8888, 8889, 8890};    // 4 ports to listen
+    private int[] ports = {8887, 8888, 8889, 8890, 8891};    // 4 ports to listen
     private boolean stop = false;
     private IBinder myBinder = new MyBinder();      // binder for MainActivity to get values
-    private Runnable[] networkRunnable = new Runnable[4];
-    private DatagramSocket[] sockets = new DatagramSocket[4];
+    private Runnable[] networkRunnable = new Runnable[5];
+    private DatagramSocket[] sockets = new DatagramSocket[5];
     private Runnable proThread;
 
     // Package to be get by MainActivity
@@ -46,8 +50,11 @@ public class ComService extends Service {
     // BSM
     private double currentLat, currentLng, oldLat, oldLng, speed, angle;
     // TIM
-    private double obstacleLat, obstacleLng, angleTIM, distTIM, angleMap, distMap;
+    private double obstacleLat, obstacleLng, angleTIM, angleMap, distMap;
+    private int distTIM;
     private String stateTIM;
+    // BSM2
+    private double otherLat, otherLng, otherAngle, otherSpeed;
 
     private FileOutputStream fos;
 
@@ -55,19 +62,16 @@ public class ComService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        String time = String.valueOf(System.currentTimeMillis());
-        File file = new File(Environment.getExternalStorageDirectory(), time);
-        try {
-            fos = new FileOutputStream(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        if (record) {
+            String time = String.valueOf(System.currentTimeMillis());
+            File file = new File(Environment.getExternalStorageDirectory(), time);
+            try {
+                fos = new FileOutputStream(file);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
         }
-//        try {
-//            fos.write("hello".getBytes());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 5; i++)
             try {
                 sockets[i] = new DatagramSocket(ports[i]);
             } catch (SocketException e) {
@@ -89,12 +93,16 @@ public class ComService extends Service {
                     }
                     byte[] dataSPAT = packet.getData();
                     if (MainActivity.test) messageSPAT = new String(dataSPAT, 0, dataSPAT.length);
-                    else messageSPAT = bytesToHexString(dataSPAT);
-                    try {
-                        String tmp = removeTail0(messageSPAT);
-                        fos.write(("SPAT " + tmp + "\n").getBytes());
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    else {
+                        messageSPAT = bytesToHexString(dataSPAT);
+                        if (record) {
+                            try {
+                                String tmp = removeTail0(messageSPAT);
+                                fos.write(("SPAT " + tmp + "\n").getBytes());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                     if (messageSPAT != null) {
                         lightID = messageSPAT.substring(22, 26);
@@ -129,12 +137,16 @@ public class ComService extends Service {
                     }
                     byte[] dataMAP = packet.getData();
                     if (MainActivity.test) messageMAP = new String(dataMAP, 0, dataMAP.length);
-                    else messageMAP = bytesToHexString(dataMAP);
-                    try {
-                        String tmp = removeTail0(messageMAP);
-                        fos.write(("MAP: " + tmp + "\n").getBytes());
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    else {
+                        messageMAP = bytesToHexString(dataMAP);
+                        if (record) {
+                            try {
+                                String tmp = removeTail0(messageMAP);
+                                fos.write(("MAP: " + tmp + "\n").getBytes());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                     boolean exist = false;
                     if (messageMAP != null) {
@@ -161,12 +173,16 @@ public class ComService extends Service {
                     }
                     byte[] dataBSM = packet.getData();
                     if (MainActivity.test) messageBSM = new String(dataBSM, 0, dataBSM.length);
-                    else messageBSM = bytesToHexString(dataBSM);
-                    try {
-                        String temp = removeTail0(messageBSM);
-                        fos.write(("BSM: " + temp + "\n").getBytes());
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    else {
+                        messageBSM = bytesToHexString(dataBSM);
+                        if (record) {
+                            try {
+                                String temp = removeTail0(messageBSM);
+                                fos.write(("BSM: " + temp + "\n").getBytes());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                     if (messageBSM != null) {
                         oldLat = currentLat;
@@ -200,13 +216,18 @@ public class ComService extends Service {
                     }
                     byte[] dataTIM = packet.getData();
                     if (MainActivity.test) messageTIM = new String(dataTIM, 0, dataTIM.length);
-                    else messageTIM = bytesToHexString(dataTIM);
-                    try {
-                        String temp = removeTail0(messageTIM);
-                        fos.write(("TIM: " + temp + "\n").getBytes());
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    else {
+                        messageTIM = bytesToHexString(dataTIM);
+                        if (record) {
+                            try {
+                                String temp = removeTail0(messageTIM);
+                                fos.write(("TIM: " + temp + "\n").getBytes());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
+
                     if (messageTIM != null) {
                         obstacleLat = String8ToInt(messageTIM.substring(70, 78)) / 1E7;
                         obstacleLng = String8ToInt(messageTIM.substring(82, 90)) / 1E7;
@@ -214,8 +235,49 @@ public class ComService extends Service {
                         angleTIM = Math.abs(angle - AngleUtil.getAngle(currentLng, currentLat,
                                 obstacleLng, obstacleLat));
                         angleTIM = (angleTIM > 180) ? (360 - angleTIM) : angleTIM;
-                        distTIM = AngleUtil.getDistance(currentLng, currentLat,
+                        distTIM = (int) AngleUtil.getDistance(currentLng, currentLat,
                                 obstacleLng, obstacleLat);
+                    }
+                }
+            }
+        };
+
+        networkRunnable[4] = new Runnable() {
+            String messageBSM2;
+
+            @Override
+            public void run() {
+                while (!stop) {
+                    DatagramPacket packet = new DatagramPacket(new byte[2048], 2048);
+                    try {
+                        sockets[4].receive(packet);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    byte[] dataBSM = packet.getData();
+                    if (MainActivity.test) messageBSM2 = new String(dataBSM, 0, dataBSM.length);
+                    else {
+                        messageBSM2 = bytesToHexString(dataBSM);
+                        if (record) {
+                            try {
+                                String temp = removeTail0(messageBSM2);
+                                fos.write(("BSM2 " + temp + "\n").getBytes());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                    if (messageBSM2 != null) {
+                        double newLat = String8ToInt(messageBSM2.substring(14, 22)) / 1E7;
+                        double newLng = String8ToInt(messageBSM2.substring(22, 30)) / 1E7;
+//                        /* if the distance is to small, ignore this movement */
+//                        if (Math.abs(newLat - oldLat) > 1e-6 && Math.abs(newLng - oldLng) > 1e-6) {
+                        otherLat = newLat;
+                        otherLng = newLng;
+                        otherAngle = AngleUtil.getAngle(oldLng, oldLat, currentLng, currentLat);
+//                        }
+                        otherSpeed = Integer.parseInt(messageBSM2.substring(42, 46), 16)
+                                % Integer.parseInt("10000000000000", 2) * 0.02;
                     }
                 }
             }
@@ -225,25 +287,28 @@ public class ComService extends Service {
             @Override
             public void run() {
                 while (!stop) {
-                    int tempEvent = 0, effLightTime = 0;
+                    int effLightTime = 0;
+                    LightEvent tempLightEvent = LightEvent.NOLIGHT;
+                    RoadStateEvent tempRoadStateEvent = RoadStateEvent.NOROADSTATE;
                     String effLightState = "init_effective_light_state",
                             tempMessage = "你好";
 
-                    if (angleTIM < 45 && distTIM < 200 && distTIM > 50) {
-                        tempEvent = 5;
+                    if (angleTIM < 45 && distTIM < 200 && distTIM > 130) {
+                        tempRoadStateEvent = RoadStateEvent.UNKNOWNSTATE;
                     }
-                    MapInfo targetMap;
-                    for (MapInfo iMap ：maps) {
-                      angleMap = Math.abs(angle - AngleUtil.getAngle(currentLng, currentLat,
-                              iMap.mapLng, iMap.mapLat));
-                      distMap = AngleUtil.getDistance(currentLng, currentLat,
-                              iMap.mapLng, iMap.mapLat);
-                      if (angleMap < 45 && distMap < 200 && distMap > 50) {
-                        targetMap = iMap;
-                      }
+                    MapInfo targetMap = new MapInfo();
+                    for (MapInfo iMap : maps) {
+                        angleMap = Math.abs(angle - AngleUtil.getAngle(currentLng, currentLat,
+                                iMap.mapLng, iMap.mapLat));
+                        distMap = AngleUtil.getDistance(currentLng, currentLat,
+                                iMap.mapLng, iMap.mapLat);
+                        if (angleMap < 45 && distMap < 120 && distMap > 50) {
+                            targetMap = iMap;
+                            break;
+                        }
                     }
                     if (Objects.equals(lightID, targetMap.mapID)) {
-                        tempEvent = 2;
+                        tempLightEvent = LightEvent.LONGLIGHT;
                         int minIndex = -1;
                         double deltaAngle[] = new double[4], minDelta = 360;
                         for (int i = 0; i < 4; i++) {
@@ -259,87 +324,75 @@ public class ComService extends Service {
                         lightLat = targetMap.mapLat;
                         lightLng = targetMap.mapLng;
                     }
-                    /*
-                    for (MapInfo iMap : maps) {
-                        if (Objects.equals(lightID, iMap.mapID)) {
-                            tempEvent = 2;
-                            int minIndex = -1;
-                            double deltaAngle[] = new double[4], minDelta = 360;
-                            for (int i = 0; i < 4; i++) {
-                                double t = Math.abs(angle - iMap.branchAngles[i]);
-                                deltaAngle[i] = (t > 180) ? (360 - t) : t;
-                                if (deltaAngle[i] < minDelta) {
-                                    minDelta = deltaAngle[i];
-                                    minIndex = i;
-                                }
-                            }
-                            effLightState = lightState[minIndex];
-                            effLightTime = lightTime[minIndex];
-                            lightLat = iMap.mapLat;
-                            lightLng = iMap.mapLng;
-                            break;
+
+//                    deal with road state
+                    if (tempRoadStateEvent == RoadStateEvent.UNKNOWNSTATE) {
+                        if (Objects.equals("01", stateTIM)) {
+                            tempMessage = getString(R.string.in_front) + distTIM +
+                                    getString(R.string.construction_message);
+                            tempRoadStateEvent = RoadStateEvent.OBSTACLE;
+                        } else if (Objects.equals("02", stateTIM)) {
+                            tempMessage = getString(R.string.in_front) + distTIM +
+                                    getString(R.string.ice_message);
+                            tempRoadStateEvent = RoadStateEvent.ICE;
+                        } else {
+                            Log.i(TAG, "run: Error: event=5 && TIM state!=01 && TIM state!=02");
+//                                tempMessage = getString(R.string.error_5);
+                            tempRoadStateEvent = RoadStateEvent.UNKNOWNSTATE;
                         }
                     }
-                    */
-                    switch (tempEvent) {
-                        case 5:
-                            if (Objects.equals("01", stateTIM))
-                                tempMessage = getString(R.string.in_front) + distTIM +
-                                        getString(R.string.construction_message);
-                            else if (Objects.equals("02", stateTIM))
-                                tempMessage = getString(R.string.in_front) + distTIM +
-                                        getString(R.string.ice_message);
-                            else
-                                Log.i(TAG, "run: Error: event=5 && TIM state!=01 && TIM state!=02");
-//                                tempMessage = getString(R.string.error_5);
-                            break;
-                        case 2:
+
+//                    deal with light state
+                    if (tempLightEvent == LightEvent.LONGLIGHT) {
 //                            Log.i(TAG, "run: lightLat=" + lightLat + ", lightLng=" + lightLng);
-                            if (effLightTime == 127) {
-                                if (Objects.equals(effLightState, "02"))
-                                    tempMessage = getString(R.string.red_too_long);
-                                else if (Objects.equals(effLightState, "01"))
-                                    tempMessage = getString(R.string.green_too_long);
-                                else if (Objects.equals(effLightState, "03"))
-                                    tempMessage = getString(R.string.yellow);
-                                else if (Objects.equals(effLightState, "04") ||
-                                        Objects.equals(effLightState, "05"))
-                                    tempMessage = "";
-                                else
-                                    Log.i(TAG, "run: Error: lightTime=127 && lightState=" + effLightState);
+                        if (effLightTime >= 127) {
+                            tempLightEvent = LightEvent.LONGLIGHT;
+                            if (Objects.equals(effLightState, "02")) {
+                                tempMessage = getString(R.string.red_too_long);
+//                                    Log.i(TAG, "run: red 127");
+                            } else if (Objects.equals(effLightState, "01"))
+                                tempMessage = getString(R.string.green_too_long);
+                            else if (Objects.equals(effLightState, "03"))
+                                tempMessage = getString(R.string.yellow);
+                            else if (Objects.equals(effLightState, "04") ||
+                                    Objects.equals(effLightState, "05"))
+                                tempMessage = "";
+                            else
+                                Log.i(TAG, "run: Error: lightTime=127 && lightState=" + effLightState);
 //                                    tempMessage = getString(R.string.error_too_long);
-                            } else {
-                                double lightDist = AngleUtil.getDistance(currentLng, currentLat, lightLng, lightLat);
-                                if (Objects.equals(effLightState, "04")) {
-                                    tempEvent = 3;  //green light
-                                    if (lightDist < speed * effLightTime)
-                                        tempMessage = getString(R.string.green_remain) + effLightTime +
-                                                getString(R.string.origin_speed);
+                        } else {
+                            double lightDist = AngleUtil.getDistance(currentLng, currentLat, lightLng, lightLat);
+                            if (Objects.equals(effLightState, "04")) {
+                                tempLightEvent = LightEvent.TIMEDGREENLIGHT;  //green light
+                                if (lightDist < speed * effLightTime)
+                                    tempMessage = getString(R.string.green_remain) + effLightTime +
+                                            getString(R.string.origin_speed);
+                                else
+                                    tempMessage = getString(R.string.green_remain) + effLightTime +
+                                            getString(R.string.green_stop);
+                            } else if (Objects.equals(effLightState, "05")) {
+                                tempLightEvent = LightEvent.TIMEDREDLIGHT;  // red light
+                                if (lightDist > speed * effLightTime)
+                                    tempMessage = getString(R.string.red_remain) + effLightTime +
+                                            getString(R.string.origin_speed);
+                                else {
+                                    double sugSpeed = (int) (((int) (speed - effLightTime * 1.5 + Math.sqrt(1.5 * 1.5 * effLightTime * effLightTime - 2 * 1.5 * effLightTime * speed + 2 * 1.5 * lightDist)) * 3.6));
+                                    if (sugSpeed > 1)
+                                        tempMessage = getString(R.string.red_remain) +
+                                                effLightTime + getString(R.string.red_slow) +
+                                                sugSpeed + getString(R.string.kmh);
                                     else
-                                        tempMessage = getString(R.string.green_remain) + effLightTime +
-                                                getString(R.string.green_stop);
-                                } else if (Objects.equals(effLightState, "05")) {
-                                    tempEvent = 4;  // red light
-                                    if (lightDist > speed * effLightTime)
-                                        tempMessage = getString(R.string.red_remain) + effLightTime +
-                                                getString(R.string.origin_speed);
-                                    else {
-                                        double sugSpeed = (int) (((int) (speed - effLightTime * 1.5 + Math.sqrt(1.5 * 1.5 * effLightTime * effLightTime - 2 * 1.5 * effLightTime * speed + 2 * 1.5 * lightDist)) * 3.6));
-                                        if (sugSpeed > 1)
-                                            tempMessage = getString(R.string.red_remain) +
-                                                    effLightTime + getString(R.string.red_slow) +
-                                                    sugSpeed + getString(R.string.kmh);
-                                        else
-                                            tempMessage = getString(R.string.red_remain) +
-                                                    effLightTime + getString(R.string.red_stop);
-                                    }
-                                } else {
-                                    tempEvent = 6;
-                                    Log.i(TAG, "run: Error: event=6");
-//                                    tempMessage = getString(R.string.error_6);
+                                        tempMessage = getString(R.string.red_remain) +
+                                                effLightTime + getString(R.string.red_stop);
                                 }
+                            } else {
+                                tempLightEvent = LightEvent.UNKNOWNLIGHT;
+                                Log.i(TAG, "run: Error: event=6");
+//                                    tempMessage = getString(R.string.error_6);
                             }
+                        }
                     }
+
 
                     MainActivity.lock.lock();
                     try {
@@ -347,12 +400,13 @@ public class ComService extends Service {
                         messagePackage.setCurrentLng(currentLng);
                         messagePackage.setCurrentAngle(angle);
                         messagePackage.setCurrentSpeed(speed);
-                        messagePackage.setCurrentEvent(tempEvent);
+                        messagePackage.setCurrentLightEvent(tempLightEvent);
+                        messagePackage.setCurrentRoadStateEvent(tempRoadStateEvent);
                         messagePackage.setMessage(tempMessage);
-                        if (tempEvent == 5) {
+                        if (tempRoadStateEvent != RoadStateEvent.NOROADSTATE) {
                             messagePackage.setEffectiveLatR(obstacleLat);
                             messagePackage.setEffectiveLngR(obstacleLng);
-                        } else if (tempEvent >= 3) {
+                        } else if (tempLightEvent != LightEvent.NOLIGHT) {
                             messagePackage.setEffectiveLatS(lightLat);
                             messagePackage.setEffectiveLngS(lightLng);
                         }
@@ -401,6 +455,9 @@ public class ComService extends Service {
         String mapID;
         double mapLat, mapLng;
         double branchAngles[] = new double[4];
+
+        MapInfo() {
+        }
 
         MapInfo(String messageMAP) {
             tmpAngles = new double[4][4];
@@ -467,11 +524,9 @@ public class ComService extends Service {
     }
 
     public String removeTail0(String str) {
-//      如果字符串尾部不为0，返回字符串
         if (!str.substring(str.length() - 1).equals("0")) {
             return str;
         } else {
-//          否则将字符串尾部删除一位再进行递归
             return removeTail0(str.substring(0, str.length() - 1));
         }
     }
@@ -479,10 +534,12 @@ public class ComService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        try {
-            fos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (record) {
+            try {
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

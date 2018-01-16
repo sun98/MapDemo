@@ -45,6 +45,8 @@ import java.util.logging.LogManager;
 import cn.nibius.mapv2.R;
 import cn.nibius.mapv2.service.ComService;
 import cn.nibius.mapv2.util.AngleUtil;
+import cn.nibius.mapv2.util.Constant.RoadStateEvent;
+import cn.nibius.mapv2.util.Constant.LightEvent;
 import cn.nibius.mapv2.util.MessagePackage;
 import cn.nibius.mapv2.util.MyLocationListener;
 import cn.nibius.mapv2.util.ToastUtil;
@@ -56,7 +58,8 @@ public class MainActivity extends AppCompatActivity {
     private double myLat = 31.0278622712, myLng = 121.4218843711; // my position with initial value
     private double obsLat = 0, obsLng = 0, lightLat = 0, lightLng = 0;
     private MessagePackage messagePackage;
-    private int currentEvent = 0;
+    private LightEvent currentLightEvent = LightEvent.NOLIGHT;
+    private RoadStateEvent currentRoadStateEvent = RoadStateEvent.NOROADSTATE;
     private String currentMessage = "";
     private double currentSpeed = 0;
     private TextToSpeech textToSpeech;
@@ -196,14 +199,15 @@ public class MainActivity extends AppCompatActivity {
                         myLng = messagePackage.getCurrentLng() + lngOffset;
 
                         // IMPORTANT: get event here simultaneously to avoid error
-                        currentEvent = messagePackage.getCurrentEvent();
+                        currentLightEvent = messagePackage.getCurrentLightEvent();
+                        currentRoadStateEvent = messagePackage.getCurrentRoadStateEvent();
                         currentMessage = messagePackage.getMessage();
                         currentSpeed = messagePackage.getCurrentSpeed();
-                        if (currentEvent == 5) {
+                        if (currentRoadStateEvent != RoadStateEvent.NOROADSTATE) {
                             obsLat = messagePackage.getEffectiveLatR();
                             obsLng = messagePackage.getEffectiveLngR();
                             Log.i(TAG, "run: event=5, obsLat=" + obsLat + ", obsLng=" + obsLng);
-                        } else if (currentEvent >= 3) {
+                        } else if (currentLightEvent != LightEvent.NOLIGHT) {
                             lightLat = messagePackage.getEffectiveLatS();
                             lightLng = messagePackage.getEffectiveLngS();
 //                            Log.i(TAG, "run: event=" + currentEvent + ", lightLat=" + lightLat + ", lightLng=" + lightLng);
@@ -227,14 +231,15 @@ public class MainActivity extends AppCompatActivity {
                         oldMyLat = myLat;
                         oldMyLng = myLng;
                         // handle event marker update
-                        if (currentEvent == 0) {
+                        if (currentLightEvent == LightEvent.NOLIGHT &&
+                                currentRoadStateEvent == RoadStateEvent.NOROADSTATE) {
                             for (int i = 1; i < MAX_SOURCE; i++) {
                                 markers[i].setVisible(false);
                             }
-                        } else if (currentEvent == 5) {
+                        } else if (currentRoadStateEvent != RoadStateEvent.NOROADSTATE) {
                             markers[3].setPosition(new LatLng(obsLat + latOffset, obsLng + lngOffset));
                             markers[3].setVisible(true);
-                        } else if (currentEvent >= 3) {
+                        } else if (currentLightEvent != LightEvent.NOLIGHT) {
                             markers[2].setPosition(new LatLng(lightLat + latOffset, lightLng + lngOffset));
                             markers[2].setVisible(true);
                         }
@@ -258,23 +263,32 @@ public class MainActivity extends AppCompatActivity {
         };
         messageUpdater = new Runnable() {
             int icons[] = {R.drawable.position_add, R.drawable.trafficlight, R.drawable.warn};
-            int oldEvent;
+            LightEvent oldLightEvent;
+            RoadStateEvent oldStateEvent;
 
             @Override
             public void run() {
                 if (isListening) {
-                    if (currentEvent > 0) {
-                        if (currentEvent != oldEvent && !Objects.equals(currentMessage, "")) {
+                    if (currentLightEvent != LightEvent.NOLIGHT ||
+                            currentRoadStateEvent != RoadStateEvent.NOROADSTATE) {
+                        if ((currentLightEvent != oldLightEvent ||
+                                currentRoadStateEvent != oldStateEvent) &&
+                                !Objects.equals(currentMessage, "")) {
 //                            Log.i(TAG, "run: currentEvent=" + currentEvent + ", currentMessage=" + currentMessage);
                             textToSpeech.speak(currentMessage, TextToSpeech.QUEUE_FLUSH, null, null);
-                            oldEvent = currentEvent;
+                            oldLightEvent = currentLightEvent;
+                            oldStateEvent = currentRoadStateEvent;
                         }
-                        if (!Objects.equals(currentMessage, ""))
+                        if (!Objects.equals(currentMessage, "")) {
                             textTip.setText(currentMessage);
-                        if (currentEvent == 5) imgWarn.setImageResource(icons[2]);
-                        else if (currentEvent >= 3) imgWarn.setImageResource(icons[1]);
-                        else imgWarn.setImageResource(icons[currentEvent - 1]);
-                    } else if (currentEvent == 0) {
+                        }
+                        if (currentRoadStateEvent != RoadStateEvent.NOROADSTATE)
+                            imgWarn.setImageResource(icons[2]);
+                        else if (currentLightEvent != LightEvent.NOLIGHT)
+                            imgWarn.setImageResource(icons[1]);
+//                        else imgWarn.setImageResource(icons[currentEvent - 1]);
+                    } else if (currentLightEvent == LightEvent.NOLIGHT
+                            && currentRoadStateEvent == RoadStateEvent.NOROADSTATE) {
                         imgWarn.setImageResource(R.drawable.car);
                         String speedMessage = getString(R.string.current_speed) + (int) currentSpeed * 3.6 + getString(R.string.kmh);
                         textTip.setText(speedMessage);

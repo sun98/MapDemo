@@ -11,7 +11,7 @@
     <string name="location_error">定位服务不可用</string>
     <string name="in_front">前方</string>
     <string name="construction_message">米有道路施工，请绕道行驶。</string>
-    <string name="ice_message">米为冰雪路况，请减速慢性。</string>
+    <string name="ice_message">米为冰雪路况，请减速慢行。</string>
     <string name="error_5">Error: event=5 &amp;&amp; TIM state!=01 &amp;&amp; TIM state!=02</string>
     <string name="red_too_long">前方红灯时间较长。</string>
     <string name="green_too_long">前方绿灯时间较长，可原速通行。</string>

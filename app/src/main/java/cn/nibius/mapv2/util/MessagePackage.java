@@ -9,7 +9,8 @@ public class MessagePackage {
     private double currentLat, currentLng;   // 43, 44
     private double currentSpeed;
     private double currentAngle;    // 46
-    private int currentEvent;   // 47
+    private Constant.LightEvent currentLightEvent;   // 47
+    private Constant.RoadStateEvent currentRoadStateEvent;
     private boolean currentMapFlag; // 48
     private double effectiveLatS, effectiveLngS;    // 49, 50; light position
     private boolean currentTimFlag; // 56
@@ -21,7 +22,8 @@ public class MessagePackage {
         this.currentLng = 0;
         this.currentSpeed = 0;
         this.currentAngle = 0;
-        this.currentEvent = -1;
+        this.currentLightEvent = Constant.LightEvent.NOLIGHT;
+        this.currentRoadStateEvent = Constant.RoadStateEvent.NOROADSTATE;
         this.currentMapFlag = false;
         this.effectiveLatS = 0;
         this.effectiveLngS = 0;
@@ -36,7 +38,8 @@ public class MessagePackage {
             double currentLng,
             double currentSpeed,
             double currentAngle,
-            int currentEvent,
+            Constant.LightEvent currentLightEvent,
+            Constant.RoadStateEvent currentRoadStateEvent,
             boolean currentMapFlag,
             double effectiveLatS,
             double effectiveLngS,
@@ -48,7 +51,8 @@ public class MessagePackage {
         this.currentLng = currentLng;
         this.currentSpeed = currentSpeed;
         this.currentAngle = currentAngle;
-        this.currentEvent = currentEvent;
+        this.currentLightEvent = currentLightEvent;
+        this.currentRoadStateEvent = currentRoadStateEvent;
         this.currentMapFlag = currentMapFlag;
         this.effectiveLatS = effectiveLatS;
         this.effectiveLngS = effectiveLngS;
@@ -74,12 +78,20 @@ public class MessagePackage {
         this.currentLng = currentLng;
     }
 
-    public int getCurrentEvent() {
-        return currentEvent;
+    public Constant.LightEvent getCurrentLightEvent() {
+        return currentLightEvent;
     }
 
-    public void setCurrentEvent(int currentEvent) {
-        this.currentEvent = currentEvent;
+    public void setCurrentLightEvent(Constant.LightEvent currentLightEvent) {
+        this.currentLightEvent = currentLightEvent;
+    }
+
+    public Constant.RoadStateEvent getCurrentRoadStateEvent() {
+        return currentRoadStateEvent;
+    }
+
+    public void setCurrentRoadStateEvent(Constant.RoadStateEvent currentRoadStateEvent) {
+        this.currentRoadStateEvent = currentRoadStateEvent;
     }
 
     public boolean isCurrentMapFlag() {
