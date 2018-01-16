@@ -53,7 +53,7 @@ public class ComService extends Service {
     private int distTIM;
     private String stateTIM;
     // BSM2
-    private double otherLat, otherLng, otherAngle, otherSpeed;
+    private double otherLat, otherLng, oldOtherLat, oldOtherLng, otherAngle, otherSpeed;
 
     private FileOutputStream fos;
 
@@ -267,13 +267,15 @@ public class ComService extends Service {
                         }
                     }
                     if (messageBSM2 != null) {
+                        oldOtherLat = otherLat;
+                        oldOtherLng = otherLng;
                         double newLat = String8ToInt(messageBSM2.substring(14, 22)) / 1E7;
                         double newLng = String8ToInt(messageBSM2.substring(22, 30)) / 1E7;
 //                        /* if the distance is to small, ignore this movement */
 //                        if (Math.abs(newLat - oldLat) > 1e-6 && Math.abs(newLng - oldLng) > 1e-6) {
                         otherLat = newLat;
                         otherLng = newLng;
-                        otherAngle = AngleUtil.getAngle(oldLng, oldLat, currentLng, currentLat);
+                        otherAngle = AngleUtil.getAngle(oldOtherLng, oldOtherLat, currentLng, currentLat);
 //                        }
                         otherSpeed = Integer.parseInt(messageBSM2.substring(42, 46), 16)
                                 % Integer.parseInt("10000000000000", 2) * 0.02;
