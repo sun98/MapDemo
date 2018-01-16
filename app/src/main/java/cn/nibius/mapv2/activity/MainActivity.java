@@ -21,6 +21,7 @@ import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
+import com.baidu.mapapi.map.LogoPosition;
 import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
@@ -28,6 +29,7 @@ import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
+import com.baidu.mapapi.map.UiSettings;
 import com.baidu.mapapi.map.offline.MKOLSearchRecord;
 import com.baidu.mapapi.map.offline.MKOLUpdateElement;
 import com.baidu.mapapi.map.offline.MKOfflineMap;
@@ -35,16 +37,15 @@ import com.baidu.mapapi.map.offline.MKOfflineMapListener;
 import com.baidu.mapapi.model.LatLng;
 import com.suke.widget.SwitchButton;
 
-import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.LogManager;
 
 import cn.nibius.mapv2.R;
 import cn.nibius.mapv2.service.ComService;
 import cn.nibius.mapv2.util.AngleUtil;
+import cn.nibius.mapv2.util.Constant.V2VEvent;
 import cn.nibius.mapv2.util.Constant.RoadStateEvent;
 import cn.nibius.mapv2.util.Constant.LightEvent;
 import cn.nibius.mapv2.util.MessagePackage;
@@ -56,10 +57,11 @@ public class MainActivity extends AppCompatActivity {
     private Context context;
     private double latOffset = 0.0043953298, lngOffset = 0.0110212588;
     private double myLat = 31.0278622712, myLng = 121.4218843711; // my position with initial value
-    private double obsLat = 0, obsLng = 0, lightLat = 0, lightLng = 0;
+    private double obsLat = 0, obsLng = 0, lightLat = 0, lightLng = 0, otherLat = 0, otherLng = 0;
     private MessagePackage messagePackage;
     private LightEvent currentLightEvent = LightEvent.NOLIGHT;
     private RoadStateEvent currentRoadStateEvent = RoadStateEvent.NOROADSTATE;
+    private V2VEvent currentV2VEvent = V2VEvent.NOV2V;
     private String currentMessage = "";
     private double currentSpeed = 0;
     private TextToSpeech textToSpeech;
@@ -69,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private Handler updaterHandler = new Handler(); // main handler
     private Runnable mapUpdater, messageUpdater;
     private TextView textTip;   // tip text
-    private ImageView imgWarn;
+    private ImageView imgVelocity, imgTraffic, imgRoad, imgV2v;
     private Button btnBind, btnMap;
     private SwitchButton switchButton, switchTest;
     private boolean isUpdating = true;
@@ -101,14 +103,19 @@ public class MainActivity extends AppCompatActivity {
         context = getApplicationContext();
         mapView = findViewById(R.id.bmap);
         textTip = findViewById(R.id.tip_text);
-        imgWarn = findViewById(R.id.img_warn);
+        imgVelocity = findViewById(R.id.img_velocity);
+        imgTraffic = findViewById(R.id.img_traffic);
+        imgRoad = findViewById(R.id.img_road);
+        imgV2v = findViewById(R.id.img_v2v);
         switchButton = findViewById(R.id.switch_special);
         switchButton.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(SwitchButton view, boolean isChecked) {
                 BitmapDescriptor bitmap;
-                if (isChecked) bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_red);
-                else bitmap = BitmapDescriptorFactory.fromResource(R.drawable.arrow_black);
+                if (isChecked)
+                    bitmap = BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_red_24dp);
+                else
+                    bitmap = BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_black_24dp);
                 markers[0].setIcon(bitmap);
             }
         });
@@ -207,10 +214,15 @@ public class MainActivity extends AppCompatActivity {
                             obsLat = messagePackage.getEffectiveLatR();
                             obsLng = messagePackage.getEffectiveLngR();
                             Log.i(TAG, "run: event=5, obsLat=" + obsLat + ", obsLng=" + obsLng);
-                        } else if (currentLightEvent != LightEvent.NOLIGHT) {
+                        }
+                        if (currentLightEvent != LightEvent.NOLIGHT) {
                             lightLat = messagePackage.getEffectiveLatS();
                             lightLng = messagePackage.getEffectiveLngS();
 //                            Log.i(TAG, "run: event=" + currentEvent + ", lightLat=" + lightLat + ", lightLng=" + lightLng);
+                        }
+                        if (currentV2VEvent != V2VEvent.NOV2V) {
+                            otherLat = messagePackage.getOtherLat();
+                            otherLng = messagePackage.getOtherLng();
                         }
 
                         currentL = new LatLng(myLat, myLng);
@@ -236,10 +248,12 @@ public class MainActivity extends AppCompatActivity {
                             for (int i = 1; i < MAX_SOURCE; i++) {
                                 markers[i].setVisible(false);
                             }
-                        } else if (currentRoadStateEvent != RoadStateEvent.NOROADSTATE) {
+                        }
+                        if (currentRoadStateEvent != RoadStateEvent.NOROADSTATE) {
                             markers[3].setPosition(new LatLng(obsLat + latOffset, obsLng + lngOffset));
                             markers[3].setVisible(true);
-                        } else if (currentLightEvent != LightEvent.NOLIGHT) {
+                        }
+                        if (currentLightEvent != LightEvent.NOLIGHT) {
                             markers[2].setPosition(new LatLng(lightLat + latOffset, lightLng + lngOffset));
                             markers[2].setVisible(true);
                         }
@@ -262,36 +276,46 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         messageUpdater = new Runnable() {
-            int icons[] = {R.drawable.position_add, R.drawable.trafficlight, R.drawable.warn};
+            int icons[] = {R.drawable.ic_add_location_black_24dp, R.drawable.ic_traffic_black_48dp, R.drawable.ic_warning_black_48dp};
             LightEvent oldLightEvent;
             RoadStateEvent oldStateEvent;
+            V2VEvent oldV2vEvent;
 
             @Override
             public void run() {
                 if (isListening) {
-                    if (currentLightEvent != LightEvent.NOLIGHT ||
-                            currentRoadStateEvent != RoadStateEvent.NOROADSTATE) {
-                        if ((currentLightEvent != oldLightEvent ||
-                                currentRoadStateEvent != oldStateEvent) &&
-                                !Objects.equals(currentMessage, "")) {
-//                            Log.i(TAG, "run: currentEvent=" + currentEvent + ", currentMessage=" + currentMessage);
+                    if (currentLightEvent == LightEvent.NOLIGHT
+                            && currentRoadStateEvent == RoadStateEvent.NOROADSTATE
+                            && currentV2VEvent == V2VEvent.NOV2V) {
+                        imgTraffic.setVisibility(View.INVISIBLE);
+                        imgRoad.setVisibility(View.INVISIBLE);
+                        imgV2v.setVisibility(View.INVISIBLE);
+                        imgVelocity.setVisibility(View.VISIBLE);
+                        String speedMessage = getString(R.string.current_speed) + (int) currentSpeed * 3.6 + getString(R.string.kmh);
+                        textTip.setText(speedMessage);
+                    } else {
+                        if ((currentLightEvent != oldLightEvent
+                                || currentRoadStateEvent != oldStateEvent
+                                || currentV2VEvent != oldV2vEvent)
+                                && !Objects.equals(currentMessage, "")) {
                             textToSpeech.speak(currentMessage, TextToSpeech.QUEUE_FLUSH, null, null);
                             oldLightEvent = currentLightEvent;
                             oldStateEvent = currentRoadStateEvent;
+                            oldV2vEvent = currentV2VEvent;
                         }
                         if (!Objects.equals(currentMessage, "")) {
                             textTip.setText(currentMessage);
                         }
+                        imgVelocity.setVisibility(View.INVISIBLE);
+                        if (currentLightEvent != LightEvent.NOLIGHT)
+                            imgTraffic.setVisibility(View.VISIBLE);
+                        else imgTraffic.setVisibility(View.INVISIBLE);
+                        if (currentV2VEvent != V2VEvent.NOV2V)
+                            imgV2v.setVisibility(View.VISIBLE);
+                        else imgV2v.setVisibility(View.INVISIBLE);
                         if (currentRoadStateEvent != RoadStateEvent.NOROADSTATE)
-                            imgWarn.setImageResource(icons[2]);
-                        else if (currentLightEvent != LightEvent.NOLIGHT)
-                            imgWarn.setImageResource(icons[1]);
-//                        else imgWarn.setImageResource(icons[currentEvent - 1]);
-                    } else if (currentLightEvent == LightEvent.NOLIGHT
-                            && currentRoadStateEvent == RoadStateEvent.NOROADSTATE) {
-                        imgWarn.setImageResource(R.drawable.car);
-                        String speedMessage = getString(R.string.current_speed) + (int) currentSpeed * 3.6 + getString(R.string.kmh);
-                        textTip.setText(speedMessage);
+                            imgRoad.setVisibility(View.VISIBLE);
+                        else imgRoad.setVisibility(View.INVISIBLE);
                     }
                 }
                 updaterHandler.postDelayed(this, 100);
@@ -300,17 +324,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initMap() {
-        mapView.showScaleControl(false);
-        mapView.showZoomControls(false); //隐藏地图的放大/缩小按钮，以及控制大小的拖动轴。
+//        mapView.showScaleControl(false);
+//        mapView.showZoomControls(false); //隐藏地图的放大/缩小按钮，以及控制大小的拖动轴。
+        mapView.setLogoPosition(LogoPosition.logoPostionRightBottom);
         MapStatusUpdate mapStatusUpdate;//max scale
         LatLng position = new LatLng(myLat, myLng);
         mapStatusUpdate = MapStatusUpdateFactory.newLatLngZoom(position, 255);
         baiduMap.setMapStatus(mapStatusUpdate);
+        UiSettings uiSettings = baiduMap.getUiSettings();
+        uiSettings.setCompassEnabled(true);
+        uiSettings.setOverlookingGesturesEnabled(false);
+
         BitmapDescriptor bitmapDescriptor;
-        bitmapDescriptor = BitmapDescriptorFactory.fromResource(R.drawable.arrow_black);
+        bitmapDescriptor = BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_black_24dp);
         OverlayOptions options = new MarkerOptions().position(position).icon(bitmapDescriptor);
         markers[0] = (Marker) baiduMap.addOverlay(options);
-        int resourceArray[] = {R.drawable.position_add, R.drawable.trafficlight, R.drawable.warn};
+        int resourceArray[] = {R.drawable.ic_add_location_black_24dp, R.drawable.ic_traffic_black_24dp, R.drawable.ic_warning_black_24dp};
         for (int i = 1; i < MAX_SOURCE; ++i) {
             bitmapDescriptor = BitmapDescriptorFactory.fromResource(resourceArray[i - 1]);
             options = new MarkerOptions().position(position).icon(bitmapDescriptor); // 设置Overlay图标

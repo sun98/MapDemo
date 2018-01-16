@@ -6,9 +6,14 @@ package cn.nibius.mapv2.util;
 
 public class Constant {
     public enum LightEvent {
-        NOLIGHT, LONGLIGHT, TIMEDGREENLIGHT, TIMEDREDLIGHT, UNKNOWNLIGHT;
+        NOLIGHT, LONGLIGHT, TIMEDGREENLIGHT, TIMEDREDLIGHT, UNKNOWNLIGHT
     }
-    public enum RoadStateEvent{
-        NOROADSTATE, ICE, OBSTACLE, UNKNOWNSTATE;
+
+    public enum RoadStateEvent {
+        NOROADSTATE, ICE, OBSTACLE, UNKNOWNSTATE
+    }
+
+    public enum V2VEvent{
+        NOV2V, INTERSECTIONCRASH, FORWARDCRASH, EMERBRAKE, UNKNOWNV2V
     }
 }

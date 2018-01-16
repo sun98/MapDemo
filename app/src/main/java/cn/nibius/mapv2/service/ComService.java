@@ -14,12 +14,13 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.Objects;
 
 import cn.nibius.mapv2.R;
 import cn.nibius.mapv2.activity.MainActivity;
 import cn.nibius.mapv2.util.AngleUtil;
+import cn.nibius.mapv2.util.Constant.V2VEvent;
 import cn.nibius.mapv2.util.Constant.LightEvent;
 import cn.nibius.mapv2.util.Constant.RoadStateEvent;
 import cn.nibius.mapv2.util.MessagePackage;
@@ -44,7 +45,7 @@ public class ComService extends Service {
     private String[] lightState = new String[4];
     private int[] lightTime = new int[4];
     // MAP
-    private LinkedList<MapInfo> maps = new LinkedList<>();
+    private ArrayList<MapInfo> maps = new ArrayList<>();
     private double lightLat, lightLng;
     // BSM
     private double currentLat, currentLng, oldLat, oldLng, speed, angle;
@@ -271,12 +272,12 @@ public class ComService extends Service {
                         oldOtherLng = otherLng;
                         double newLat = String8ToInt(messageBSM2.substring(14, 22)) / 1E7;
                         double newLng = String8ToInt(messageBSM2.substring(22, 30)) / 1E7;
-//                        /* if the distance is to small, ignore this movement */
-//                        if (Math.abs(newLat - oldLat) > 1e-6 && Math.abs(newLng - oldLng) > 1e-6) {
-                        otherLat = newLat;
-                        otherLng = newLng;
-                        otherAngle = AngleUtil.getAngle(oldOtherLng, oldOtherLat, currentLng, currentLat);
-//                        }
+//                        /* currently consider only one other car */
+                        if (Math.abs(newLat - oldLat) > 1e-6 && Math.abs(newLng - oldLng) > 1e-6) {
+                            otherLat = newLat;
+                            otherLng = newLng;
+                            otherAngle = AngleUtil.getAngle(oldOtherLng, oldOtherLat, currentLng, currentLat);
+                        }
                         otherSpeed = Integer.parseInt(messageBSM2.substring(42, 46), 16)
                                 % Integer.parseInt("10000000000000", 2) * 0.02;
                     }
@@ -294,7 +295,7 @@ public class ComService extends Service {
                     String effLightState = "init_effective_light_state",
                             tempMessage = "你好";
 
-                    if (angleTIM < 45 && distTIM < 200 && distTIM > 130) {
+                    if (angleTIM < 45 && distTIM < 200 && distTIM > 20) {
                         tempRoadStateEvent = RoadStateEvent.UNKNOWNSTATE;
                     }
                     MapInfo targetMap = new MapInfo();
@@ -303,7 +304,7 @@ public class ComService extends Service {
                                 iMap.mapLng, iMap.mapLat));
                         distMap = AngleUtil.getDistance(currentLng, currentLat,
                                 iMap.mapLng, iMap.mapLat);
-                        if (angleMap < 45 && distMap < 120 && distMap > 50) {
+                        if (angleMap < 45 && distMap < 140 && distMap > 20) {
                             targetMap = iMap;
                             break;
                         }
@@ -395,6 +396,16 @@ public class ComService extends Service {
                     }
 
 
+                    V2VEvent tempV2VEvent = V2VEvent.NOV2V;
+                    double otherDistance = AngleUtil.getDistance(currentLng, currentLat, otherLng, otherLat);
+                    if (Math.abs(angle - otherAngle) < 30 && otherDistance < 300 && otherSpeed < 0.6 * speed) {
+//                        ???
+                        if (speed * speed / 3 > otherDistance + 15) {
+                            tempV2VEvent = V2VEvent.FORWARDCRASH;
+                            tempMessage = getString(R.string.forward_crash_message);
+                        }
+                    }
+
                     MainActivity.lock.lock();
                     try {
                         messagePackage.setCurrentLat(currentLat);
@@ -407,9 +418,14 @@ public class ComService extends Service {
                         if (tempRoadStateEvent != RoadStateEvent.NOROADSTATE) {
                             messagePackage.setEffectiveLatR(obstacleLat);
                             messagePackage.setEffectiveLngR(obstacleLng);
-                        } else if (tempLightEvent != LightEvent.NOLIGHT) {
+                        }
+                        if (tempLightEvent != LightEvent.NOLIGHT) {
                             messagePackage.setEffectiveLatS(lightLat);
                             messagePackage.setEffectiveLngS(lightLng);
+                        }
+                        if (tempV2VEvent != V2VEvent.NOV2V) {
+                            messagePackage.setOtherLat(otherLat);
+                            messagePackage.setOtherLng(otherLng);
                         }
                     } finally {
                         MainActivity.lock.unlock();
