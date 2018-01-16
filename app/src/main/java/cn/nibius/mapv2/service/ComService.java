@@ -20,7 +20,6 @@ import java.util.Objects;
 import cn.nibius.mapv2.R;
 import cn.nibius.mapv2.activity.MainActivity;
 import cn.nibius.mapv2.util.AngleUtil;
-import cn.nibius.mapv2.util.CarInfo;
 import cn.nibius.mapv2.util.Constant.LightEvent;
 import cn.nibius.mapv2.util.Constant.RoadStateEvent;
 import cn.nibius.mapv2.util.MessagePackage;
