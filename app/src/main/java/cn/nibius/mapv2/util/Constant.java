@@ -14,6 +14,6 @@ public class Constant {
     }
 
     public enum V2VEvent{
-        NOV2V, INTERSECTIONCRASH, FORWARDCRASH, EMERBRAKE, UNKNOWNV2V
+        NOV2V, CROSSCRASH, FORWARDCRASH, EMERBRAKE, UNKNOWNV2V
     }
 }

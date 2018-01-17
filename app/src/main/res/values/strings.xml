@@ -30,4 +30,5 @@
     <string name="red_stop">秒，建议缓慢减速停车等候。</string>
     <string name="current_speed">当前车速：</string>
     <string name="forward_crash_message">请减速避免与前车碰撞！</string>
+    <string name="cross_crash_message">请减速避免与横向来车碰撞！</string>
 </resources>

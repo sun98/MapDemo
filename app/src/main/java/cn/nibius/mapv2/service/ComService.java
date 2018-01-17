@@ -398,6 +398,22 @@ public class ComService extends Service {
 
                     V2VEvent tempV2VEvent = V2VEvent.NOV2V;
                     double otherDistance = AngleUtil.getDistance(currentLng, currentLat, otherLng, otherLat);
+                    double vehicleAngle = Math.abs(angle - otherAngle);
+//
+                    vehicleAngle = (vehicleAngle > 180) ? (360 - vehicleAngle) : vehicleAngle;
+                    if (vehicleAngle > 45 && vehicleAngle < 135 && otherDistance > 50 && otherDistance < 200) {
+                        double angle1 = Math.abs(angle - AngleUtil.getAngle(oldLng, oldLat, otherLng, otherLat));
+                        angle1 = (angle1 > 180) ? (360 - angle1) : angle1;
+                        double angle2 = Math.abs(otherAngle - AngleUtil.getAngle(oldOtherLng, oldOtherLat, currentLng, currentLat));
+                        angle2 = (angle2 > 180) ? (360 - angle2) : angle2;
+                        double dis1 = otherDistance * Math.sin(Math.PI * angle1 / 180) / Math.sin(Math.PI * vehicleAngle / 180);
+                        double dis2 = otherDistance * Math.sin(Math.PI * angle2 / 180) / Math.sin(Math.PI * vehicleAngle / 180);
+                        if (Math.abs(dis2 / speed - dis1 / otherSpeed) < 1) {
+                            tempV2VEvent = V2VEvent.CROSSCRASH;
+                            tempMessage = getString(R.string.cross_crash_message);
+                        }
+                    }
+
                     if (Math.abs(angle - otherAngle) < 30 && otherDistance < 300 && otherSpeed < 0.6 * speed) {
 //                        ???
                         if (speed * speed / 3 > otherDistance + 15) {
