@@ -18,7 +18,7 @@
     <string name="error_5">Error: event=5 &amp;&amp; TIM state!=01 &amp;&amp; TIM state!=02</string>
     <string name="red_too_long">前方红灯时间较长。</string>
     <string name="green_too_long">前方绿灯时间较长，可原速通过。</string>
-    <string name="yellow">前方黄灯。</string>
+    <string name="yellow">前方黄灯，建议停车等待。</string>
     <string name="error_too_long">Error: lightTime=127 &amp;&amp; lightState!=01 &amp;&amp; lightState!=02</string>
     <string name="error_6">Error: event=6</string>
     <string name="green_remain">前方绿灯剩余</string>
@@ -31,4 +31,5 @@
     <string name="current_speed">当前车速：</string>
     <string name="forward_crash_message">请减速避免与前车碰撞！</string>
     <string name="cross_crash_message">请减速避免与横向来车碰撞！</string>
+    <string name="emergency_brake_message">前车正在减速，注意避免碰撞！</string>
 </resources>

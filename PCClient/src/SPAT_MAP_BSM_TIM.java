@@ -7,7 +7,7 @@ import java.util.Objects;
 /**
  * Created by Nibius on 2017/7/27.
  */
-public class ThisIsRealSignalSender {
+public class SPAT_MAP_BSM_TIM {
     public static void main(String[] args) throws IOException, InterruptedException {
         File f = new File("src/1514258737023.txt");
         DatagramSocket socket7 = new DatagramSocket(8887),
@@ -19,7 +19,6 @@ public class ThisIsRealSignalSender {
         while (true) {
             BufferedReader reader = new BufferedReader(new FileReader(f));
             while ((line = reader.readLine()) != null) {
-//            22,25
                 switch (line.substring(0, 4)) {
                     case "SPAT": {
                         String info = line.substring(5);
@@ -40,7 +39,6 @@ public class ThisIsRealSignalSender {
                         break;
                     }
                     case "BSM:": {
-//                    String info = "69419260c26270127e4e1c485f972d009e0d0b4000e12269bd7f000f07d181ff1a00002d014a";
                         String info = line.substring(5);
                         if (!Objects.equals(info, "null")) {
                             DatagramPacket packet = new DatagramPacket(info.getBytes(), info.getBytes().length, inetAddress, 8889);

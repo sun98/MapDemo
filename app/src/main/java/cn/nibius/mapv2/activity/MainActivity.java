@@ -188,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
         };
         mapUpdater = new Runnable() {
             float oldAngle = 0, currentAngle = 0;
-            double oldMyLat = 0, oldMyLng = 0;
+            double oldMyLat = 0, oldMyLng = 0, oldOtherLat = 0, oldOtherLng = 0;
             LatLng currentL;
 
             @Override
@@ -210,26 +210,29 @@ public class MainActivity extends AppCompatActivity {
                         currentRoadStateEvent = messagePackage.getCurrentRoadStateEvent();
                         currentMessage = messagePackage.getMessage();
                         currentSpeed = messagePackage.getCurrentSpeed();
+                        currentAngle = (float) messagePackage.getCurrentAngle();
                         if (currentRoadStateEvent != RoadStateEvent.NOROADSTATE) {
                             obsLat = messagePackage.getEffectiveLatR();
                             obsLng = messagePackage.getEffectiveLngR();
-                            Log.i(TAG, "run: event=5, obsLat=" + obsLat + ", obsLng=" + obsLng);
+//                            Log.i(TAG, "run: event=5, obsLat=" + obsLat + ", obsLng=" + obsLng);
                         }
                         if (currentLightEvent != LightEvent.NOLIGHT) {
                             lightLat = messagePackage.getEffectiveLatS();
                             lightLng = messagePackage.getEffectiveLngS();
 //                            Log.i(TAG, "run: event=" + currentEvent + ", lightLat=" + lightLat + ", lightLng=" + lightLng);
                         }
-                        if (currentV2VEvent != V2VEvent.NOV2V) {
-                            otherLat = messagePackage.getOtherLat();
-                            otherLng = messagePackage.getOtherLng();
-                        }
+//                        if (currentV2VEvent != V2VEvent.NOV2V) {
+                        oldOtherLat = otherLat;
+                        oldOtherLng = otherLng;
+                        otherLat = messagePackage.getOtherLat();
+                        otherLng = messagePackage.getOtherLng();
+//                        Log.i(TAG, "run: " + otherLat + " " + otherLng);
+//                        }
 
                         currentL = new LatLng(myLat, myLng);
                         markers[0].setPosition(currentL);
                         if (oldMyLat != 0 || oldMyLng != 0) {  //not initial state
-                            if (myLat != oldMyLat || myLng != oldMyLng) {// moving occurs
-                                currentAngle = (float) AngleUtil.getAngle(oldMyLng, oldMyLat, myLng, myLat);
+                            if (myLat != oldMyLat || myLng != oldMyLng) { // moving occurs
                                 float d = Math.abs(currentAngle - oldAngle);
                                 d = (d > 180) ? (360 - d) : d;
                                 if (d < 5)
@@ -244,7 +247,9 @@ public class MainActivity extends AppCompatActivity {
                         oldMyLng = myLng;
                         // handle event marker update
                         if (currentLightEvent == LightEvent.NOLIGHT &&
-                                currentRoadStateEvent == RoadStateEvent.NOROADSTATE) {
+                                currentRoadStateEvent == RoadStateEvent.NOROADSTATE
+//                                currentV2vEvent
+                                ) {
                             for (int i = 1; i < MAX_SOURCE; i++) {
                                 markers[i].setVisible(false);
                             }
@@ -257,6 +262,11 @@ public class MainActivity extends AppCompatActivity {
                             markers[2].setPosition(new LatLng(lightLat + latOffset, lightLng + lngOffset));
                             markers[2].setVisible(true);
                         }
+//                        if (currentV2VEvent != V2VEvent.NOV2V) {
+                        markers[1].setPosition(new LatLng(otherLat + latOffset, otherLng + lngOffset));
+//                        markers[1].setRotate((float) AngleUtil.getAngle(oldOtherLng, oldOtherLat, otherLng, otherLat));
+                        markers[1].setVisible(true);
+//                        }
                     } catch (Exception e) {
                         Log.i(TAG, "MapUpdater: " + e.toString());
                     }
@@ -339,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
         bitmapDescriptor = BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_black_24dp);
         OverlayOptions options = new MarkerOptions().position(position).icon(bitmapDescriptor);
         markers[0] = (Marker) baiduMap.addOverlay(options);
-        int resourceArray[] = {R.drawable.ic_add_location_black_24dp, R.drawable.ic_traffic_black_24dp, R.drawable.ic_warning_black_24dp};
+        int resourceArray[] = {R.drawable.ic_navigation_black_24dp, R.drawable.ic_traffic_black_24dp, R.drawable.ic_warning_black_24dp};
         for (int i = 1; i < MAX_SOURCE; ++i) {
             bitmapDescriptor = BitmapDescriptorFactory.fromResource(resourceArray[i - 1]);
             options = new MarkerOptions().position(position).icon(bitmapDescriptor); // 设置Overlay图标

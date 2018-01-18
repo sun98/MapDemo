@@ -24,6 +24,7 @@ import cn.nibius.mapv2.util.Constant.V2VEvent;
 import cn.nibius.mapv2.util.Constant.LightEvent;
 import cn.nibius.mapv2.util.Constant.RoadStateEvent;
 import cn.nibius.mapv2.util.MessagePackage;
+import cn.nibius.mapv2.util.V2VTester;
 
 public class ComService extends Service {
     private String TAG = "MAPV2";
@@ -54,7 +55,11 @@ public class ComService extends Service {
     private int distTIM;
     private String stateTIM;
     // BSM2
-    private double otherLat, otherLng, oldOtherLat, oldOtherLng, otherAngle, otherSpeed;
+    private double otherLat, otherLng, oldOtherLat, oldOtherLng, otherAngle, otherSpeed, oldOtherSpeed;
+//    private String otherID;
+
+//    I don't know where is the ID...
+//    private V2VTester vTester = new V2VTester();
 
     private FileOutputStream fos;
 
@@ -185,6 +190,8 @@ public class ComService extends Service {
                         }
                     }
                     if (messageBSM != null) {
+                        speed = Integer.parseInt(messageBSM.substring(42, 46), 16)
+                                % Integer.parseInt("10000000000000", 2) * 0.02;
                         oldLat = currentLat;
                         oldLng = currentLng;
                         double newLat = String8ToInt(messageBSM.substring(14, 22)) / 1E7;
@@ -195,8 +202,7 @@ public class ComService extends Service {
                             currentLng = newLng;
                             angle = AngleUtil.getAngle(oldLng, oldLat, currentLng, currentLat);
                         }
-                        speed = Integer.parseInt(messageBSM.substring(42, 46), 16)
-                                % Integer.parseInt("10000000000000", 2) * 0.02;
+//                        vTester.update(currentLat, currentLng, angle, speed);
                     }
                 }
             }
@@ -267,19 +273,22 @@ public class ComService extends Service {
                             }
                         }
                     }
+//                    Log.i(TAG, "run: BSM2:" + messageBSM2);
                     if (messageBSM2 != null) {
                         oldOtherLat = otherLat;
                         oldOtherLng = otherLng;
+                        oldOtherSpeed = otherSpeed;
                         double newLat = String8ToInt(messageBSM2.substring(14, 22)) / 1E7;
                         double newLng = String8ToInt(messageBSM2.substring(22, 30)) / 1E7;
 //                        /* currently consider only one other car */
-                        if (Math.abs(newLat - oldLat) > 1e-6 && Math.abs(newLng - oldLng) > 1e-6) {
+                        if (Math.abs(newLat - oldOtherLat) > 1e-6 && Math.abs(newLng - oldOtherLng) > 1e-6) {
                             otherLat = newLat;
                             otherLng = newLng;
-                            otherAngle = AngleUtil.getAngle(oldOtherLng, oldOtherLat, currentLng, currentLat);
+                            otherAngle = AngleUtil.getAngle(oldOtherLng, oldOtherLat, otherLng, otherLat);
                         }
                         otherSpeed = Integer.parseInt(messageBSM2.substring(42, 46), 16)
                                 % Integer.parseInt("10000000000000", 2) * 0.02;
+//                        otherID = ?
                     }
                 }
             }
@@ -389,7 +398,7 @@ public class ComService extends Service {
                                 }
                             } else {
                                 tempLightEvent = LightEvent.UNKNOWNLIGHT;
-                                Log.i(TAG, "run: Error: event=6");
+                                Log.i(TAG, "run: Error: unknown light");
 //                                    tempMessage = getString(R.string.error_6);
                             }
                         }
@@ -422,6 +431,16 @@ public class ComService extends Service {
                         }
                     }
 
+                    double otherAcce = (otherSpeed - oldOtherSpeed) / 0.1;
+                    double car2carAngle = AngleUtil.getAngle(currentLng, currentLat, otherLng, otherLat);
+                    if (Math.abs(car2carAngle - angle) < 30) {
+                        double reactTime = otherDistance / speed;
+                        if (reactTime < 5 && otherAcce < -0.5) {
+                            tempV2VEvent = V2VEvent.EMERBRAKE;
+                            tempMessage = getString(R.string.emergency_brake_message);
+                        }
+                    }
+
                     MainActivity.lock.lock();
                     try {
                         messagePackage.setCurrentLat(currentLat);
@@ -430,6 +449,7 @@ public class ComService extends Service {
                         messagePackage.setCurrentSpeed(speed);
                         messagePackage.setCurrentLightEvent(tempLightEvent);
                         messagePackage.setCurrentRoadStateEvent(tempRoadStateEvent);
+                        messagePackage.setCurrentV2VEvent(tempV2VEvent);
                         messagePackage.setMessage(tempMessage);
                         if (tempRoadStateEvent != RoadStateEvent.NOROADSTATE) {
                             messagePackage.setEffectiveLatR(obstacleLat);
@@ -439,10 +459,10 @@ public class ComService extends Service {
                             messagePackage.setEffectiveLatS(lightLat);
                             messagePackage.setEffectiveLngS(lightLng);
                         }
-                        if (tempV2VEvent != V2VEvent.NOV2V) {
-                            messagePackage.setOtherLat(otherLat);
-                            messagePackage.setOtherLng(otherLng);
-                        }
+//                        if (tempV2VEvent != V2VEvent.NOV2V) {
+                        messagePackage.setOtherLat(otherLat);
+                        messagePackage.setOtherLng(otherLng);
+//                        }
                     } finally {
                         MainActivity.lock.unlock();
                     }
@@ -468,7 +488,7 @@ public class ComService extends Service {
         }
 
         public void startListen() {
-            for (int i = 0; i < 4; i++) new Thread(networkRunnable[i]).start();
+            for (int i = 0; i < 5; i++) new Thread(networkRunnable[i]).start();
             new Thread(proThread).start();
         }
 
