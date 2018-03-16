@@ -336,14 +336,14 @@ public class MainActivity extends AppCompatActivity {
     private void initMap() {
 //        mapView.showScaleControl(false);
 //        mapView.showZoomControls(false); //隐藏地图的放大/缩小按钮，以及控制大小的拖动轴。
-        mapView.setLogoPosition(LogoPosition.logoPostionRightBottom);
-        MapStatusUpdate mapStatusUpdate;//max scale
+        mapView.setLogoPosition(LogoPosition.logoPostionRightBottom);   // logo position; can't be removed
+        MapStatusUpdate mapStatusUpdate;
         LatLng position = new LatLng(myLat, myLng);
-        mapStatusUpdate = MapStatusUpdateFactory.newLatLngZoom(position, 255);
+        mapStatusUpdate = MapStatusUpdateFactory.newLatLngZoom(position, 255);  //max scale
         baiduMap.setMapStatus(mapStatusUpdate);
         UiSettings uiSettings = baiduMap.getUiSettings();
-        uiSettings.setCompassEnabled(true);
-        uiSettings.setOverlookingGesturesEnabled(false);
+        uiSettings.setCompassEnabled(true);     // show compass
+        uiSettings.setOverlookingGesturesEnabled(false);    // unable overlooking gesture
 
         BitmapDescriptor bitmapDescriptor;
         bitmapDescriptor = BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_black_24dp);
@@ -361,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
         updaterHandler.post(mapUpdater);
     }
 
-    private void initLocation() {   // initialize location service
+    private void initLocation() {   // initialize location service for joy(when service not started)
         locationClient.registerLocationListener(myLocationListener);
         LocationClientOption option = new LocationClientOption();
         option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);

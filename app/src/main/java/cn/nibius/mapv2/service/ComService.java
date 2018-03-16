@@ -28,9 +28,9 @@ import cn.nibius.mapv2.util.V2VTester;
 
 public class ComService extends Service {
     private String TAG = "MAPV2";
-    private boolean record = false;
+    private boolean record = false;     // whether record messages while testing outside
 
-    private int[] ports = {8887, 8888, 8889, 8890, 8891};    // 4 ports to listen
+    private int[] ports = {8887, 8888, 8889, 8890, 8891};    // 5 ports to listen
     private boolean stop = false;
     private IBinder myBinder = new MyBinder();      // binder for MainActivity to get values
     private Runnable[] networkRunnable = new Runnable[5];
@@ -189,6 +189,7 @@ public class ComService extends Service {
                             }
                         }
                     }
+//                    Log.i(TAG, "BSM: "+messageBSM);
                     if (messageBSM != null) {
                         speed = Integer.parseInt(messageBSM.substring(42, 46), 16)
                                 % Integer.parseInt("10000000000000", 2) * 0.02;
@@ -256,6 +257,7 @@ public class ComService extends Service {
                 while (!stop) {
                     DatagramPacket packet = new DatagramPacket(new byte[2048], 2048);
                     try {
+//                        Log.i(TAG, "run: receiving");
                         sockets[4].receive(packet);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -273,7 +275,7 @@ public class ComService extends Service {
                             }
                         }
                     }
-//                    Log.i(TAG, "run: BSM2:" + messageBSM2);
+                    Log.i(TAG, "BSM2:" + messageBSM2);
                     if (messageBSM2 != null) {
                         oldOtherLat = otherLat;
                         oldOtherLng = otherLng;
@@ -398,7 +400,7 @@ public class ComService extends Service {
                                 }
                             } else {
                                 tempLightEvent = LightEvent.UNKNOWNLIGHT;
-                                Log.i(TAG, "run: Error: unknown light");
+//                                Log.i(TAG, "run: Error: unknown light");
 //                                    tempMessage = getString(R.string.error_6);
                             }
                         }
