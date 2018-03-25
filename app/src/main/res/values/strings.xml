@@ -26,7 +26,7 @@
     <string name="origin_speed">秒，建议保持原速通过。</string>
     <string name="green_stop">秒，无法通过路口，建议停车等待。</string>
     <string name="red_slow">秒，建议减速至</string>
-    <string name="kmh">km/h。</string>
+    <string name="kmh">&#160;km/h</string>
     <string name="red_stop">秒，建议缓慢减速停车等候。</string>
     <string name="current_speed">当前车速：</string>
     <string name="forward_crash_message">请减速避免与前车碰撞！</string>

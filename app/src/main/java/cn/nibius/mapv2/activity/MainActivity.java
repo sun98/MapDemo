@@ -232,14 +232,19 @@ public class MainActivity extends AppCompatActivity {
                         currentL = new LatLng(myLat, myLng);
                         markers[0].setPosition(currentL);
                         if (oldMyLat != 0 || oldMyLng != 0) {  //not initial state
+                            MapStatus.Builder builder = new MapStatus.Builder();
                             if (myLat != oldMyLat || myLng != oldMyLng) { // moving occurs
                                 float d = Math.abs(currentAngle - oldAngle);
                                 d = (d > 180) ? (360 - d) : d;
-                                if (d < 5)
-                                    currentAngle = oldAngle; // remain old angle to avoid frequently shake
+                                if (d > 5 && currentSpeed > 0.2) {
+                                    builder.rotate(currentAngle);
+                                } else {
+                                    currentAngle = oldAngle;
+                                }
                             }
-                            oldAngle = currentAngle; //update angle whatever
-                            MapStatus mapStatus = new MapStatus.Builder().target(currentL).rotate(currentAngle).build();
+                            builder.target(currentL);
+                            oldAngle = currentAngle;
+                            MapStatus mapStatus = builder.build();
                             MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mapStatus);
                             baiduMap.animateMapStatus(mapStatusUpdate);
                         }
@@ -264,7 +269,8 @@ public class MainActivity extends AppCompatActivity {
                         }
 //                        if (currentV2VEvent != V2VEvent.NOV2V) {
                         markers[1].setPosition(new LatLng(otherLat + latOffset, otherLng + lngOffset));
-//                        markers[1].setRotate((float) AngleUtil.getAngle(oldOtherLng, oldOtherLat, otherLng, otherLat));
+//                        float otherAngle = (float) AngleUtil.getAngle(oldOtherLng, oldOtherLat, otherLng, otherLat);
+//                        markers[1].setRotate(otherAngle-currentAngle);
                         markers[1].setVisible(true);
 //                        }
                     } catch (Exception e) {
@@ -349,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
         bitmapDescriptor = BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_black_24dp);
         OverlayOptions options = new MarkerOptions().position(position).icon(bitmapDescriptor);
         markers[0] = (Marker) baiduMap.addOverlay(options);
-        int resourceArray[] = {R.drawable.ic_navigation_black_24dp, R.drawable.ic_traffic_black_24dp, R.drawable.ic_warning_black_24dp};
+        int resourceArray[] = {R.drawable.ic_bullseye_black_24dp, R.drawable.ic_traffic_black_24dp, R.drawable.ic_warning_black_24dp};
         for (int i = 1; i < MAX_SOURCE; ++i) {
             bitmapDescriptor = BitmapDescriptorFactory.fromResource(resourceArray[i - 1]);
             options = new MarkerOptions().position(position).icon(bitmapDescriptor); // 设置Overlay图标

@@ -275,7 +275,7 @@ public class ComService extends Service {
                             }
                         }
                     }
-                    Log.i(TAG, "BSM2:" + messageBSM2);
+//                    Log.i(TAG, "BSM2:" + messageBSM2);
                     if (messageBSM2 != null) {
                         oldOtherLat = otherLat;
                         oldOtherLng = otherLng;
@@ -320,7 +320,7 @@ public class ComService extends Service {
                             break;
                         }
                     }
-                    if (Objects.equals(lightID, targetMap.mapID)) {
+                    if (Objects.equals(lightID, targetMap.mapID) && lightID != null) {
                         tempLightEvent = LightEvent.LONGLIGHT;
                         int minIndex = -1;
                         double deltaAngle[] = new double[4], minDelta = 360;
@@ -400,7 +400,7 @@ public class ComService extends Service {
                                 }
                             } else {
                                 tempLightEvent = LightEvent.UNKNOWNLIGHT;
-//                                Log.i(TAG, "run: Error: unknown light");
+                                Log.i(TAG, "run: Error: unknown light");
 //                                    tempMessage = getString(R.string.error_6);
                             }
                         }
