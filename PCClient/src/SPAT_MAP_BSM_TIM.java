@@ -9,14 +9,14 @@ import java.util.Objects;
  */
 public class SPAT_MAP_BSM_TIM {
     public static void main(String[] args) throws IOException, InterruptedException {
-//        File f = new File("src/1514258737023.txt");
-        File f = new File("src/1521172353529_useful");
+        File f = new File("src/1514258737023.txt");
+//        File f = new File("src/1521172353529_useful");
         DatagramSocket socket7 = new DatagramSocket(8887),
                 socket8 = new DatagramSocket(8888),
                 socket9 = new DatagramSocket(8889),
                 socket0 = new DatagramSocket(8890),
                 socket1=new DatagramSocket(8891);
-        InetAddress inetAddress = InetAddress.getByName("192.168.137.204");
+        InetAddress inetAddress = InetAddress.getByName("192.168.137.156");
         String line = "";
         while (true) {
             BufferedReader reader = new BufferedReader(new FileReader(f));
