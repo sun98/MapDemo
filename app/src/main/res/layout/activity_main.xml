@@ -32,11 +32,13 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:paddingTop="20dp">
+
                 <ImageView
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:contentDescription="@string/img_velocity_des"
                     android:src="@drawable/ic_speedometer_white_48dp" />
+
                 <ImageView
                     android:id="@+id/img_velocity"
                     android:layout_width="50dp"
@@ -60,6 +62,7 @@
                     android:layout_toEndOf="@id/img_velocity"
                     android:contentDescription="@string/img_traffic_des"
                     android:src="@drawable/ic_traffic_black_48dp" />
+
                 <ImageView
                     android:layout_width="50dp"
                     android:layout_height="50dp"
@@ -67,6 +70,7 @@
                     android:layout_toEndOf="@id/img_traffic"
                     android:contentDescription="@string/img_road_des"
                     android:src="@drawable/ic_warning_white_48dp" />
+
                 <ImageView
                     android:id="@+id/img_road"
                     android:layout_width="50dp"
@@ -75,6 +79,7 @@
                     android:layout_toEndOf="@id/img_traffic"
                     android:contentDescription="@string/img_road_des"
                     android:src="@drawable/ic_warning_black_48dp" />
+
                 <ImageView
                     android:layout_width="50dp"
                     android:layout_height="50dp"
@@ -82,6 +87,7 @@
                     android:layout_toEndOf="@id/img_road"
                     android:contentDescription="@string/img_v2v_des"
                     android:src="@drawable/ic_directions_car_white_48dp" />
+
                 <ImageView
                     android:id="@+id/img_v2v"
                     android:layout_width="50dp"
@@ -180,6 +186,15 @@
                 android:layout_alignStart="@+id/switch_special"
                 android:layout_below="@+id/switch_special"
                 android:layout_marginTop="20dp" />
+
+            <Button
+                android:id="@+id/btn_7100"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignEnd="@id/switch_test"
+                android:layout_below="@id/text_test"
+                android:layout_marginTop="20dp"
+                android:text="@string/test_7100" />
         </RelativeLayout>
 
     </android.support.constraint.ConstraintLayout>

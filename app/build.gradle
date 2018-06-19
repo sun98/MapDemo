@@ -25,6 +25,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.android.support:design:26.1.0'
     compile files('libs/BaiduLBS_Android.jar')
     compile files('libs/baidumapapi_radar_v3_6_1.jar')
     compile fileTree(include: ['*.jar'], dir: 'libs')

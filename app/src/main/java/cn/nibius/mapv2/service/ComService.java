@@ -26,6 +26,11 @@ import cn.nibius.mapv2.util.Constant.RoadStateEvent;
 import cn.nibius.mapv2.util.MessagePackage;
 import cn.nibius.mapv2.util.V2VTester;
 
+import static cn.nibius.mapv2.util.EnDecodeUtil.String4ToInt;
+import static cn.nibius.mapv2.util.EnDecodeUtil.String8ToInt;
+import static cn.nibius.mapv2.util.EnDecodeUtil.bytesToHexString;
+import static cn.nibius.mapv2.util.EnDecodeUtil.removeTail0;
+
 public class ComService extends Service {
     private String TAG = "MAPV2";
     private boolean record = false;     // whether record messages while testing outside
@@ -109,6 +114,7 @@ public class ComService extends Service {
                             }
                         }
                     }
+                    messageSPAT = removeTail0(messageSPAT);
                     if (messageSPAT != null) {
                         lightID = messageSPAT.substring(22, 26);
                         lightState[0] = messageSPAT.substring(50, 52);
@@ -153,6 +159,7 @@ public class ComService extends Service {
                             }
                         }
                     }
+                    messageMAP = removeTail0(messageMAP);
                     boolean exist = false;
                     if (messageMAP != null) {
                         for (MapInfo info : maps)
@@ -189,6 +196,7 @@ public class ComService extends Service {
                             }
                         }
                     }
+                    messageBSM = removeTail0(messageBSM);
 //                    Log.i(TAG, "BSM: "+messageBSM);
                     if (messageBSM != null) {
                         speed = Integer.parseInt(messageBSM.substring(42, 46), 16)
@@ -234,7 +242,7 @@ public class ComService extends Service {
                             }
                         }
                     }
-
+                    messageTIM = removeTail0(messageTIM);
                     if (messageTIM != null) {
                         obstacleLat = String8ToInt(messageTIM.substring(70, 78)) / 1E7;
                         obstacleLng = String8ToInt(messageTIM.substring(82, 90)) / 1E7;
@@ -275,6 +283,7 @@ public class ComService extends Service {
                             }
                         }
                     }
+                    messageBSM2 = removeTail0(messageBSM2);
 //                    Log.i(TAG, "BSM2:" + messageBSM2);
                     if (messageBSM2 != null) {
                         oldOtherLat = otherLat;
@@ -469,7 +478,7 @@ public class ComService extends Service {
                         MainActivity.lock.unlock();
                     }
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(10);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -490,6 +499,8 @@ public class ComService extends Service {
         }
 
         public void startListen() {
+            // TODO: may cause memory leak?
+            // consider using wait/notify method
             for (int i = 0; i < 5; i++) new Thread(networkRunnable[i]).start();
             new Thread(proThread).start();
         }
@@ -539,52 +550,13 @@ public class ComService extends Service {
         }
     }
 
-    public int String8ToInt(String s) {
-        byte[] latByte = hexString2Byte(s);
-        return (byte2Int(latByte));
-    }
 
-    private int byte2Int(byte[] b) {
-        int intValue = 0;
-        for (int i = 0; i < b.length; i++)
-            intValue += (b[i] & 0xFF) << (8 * (3 - i));
-        return intValue;
-    }
 
-    public int String4ToInt(String s) {
-        if (s.charAt(0) >= '0' && s.charAt(0) <= '8')
-            return String8ToInt("0000" + s);
-        else return String8ToInt("ffff" + s);
-    }
 
-    private byte[] hexString2Byte(String s) {
-        int len = s.length();
-        byte[] b = new byte[len / 2];
-        for (int i = 0; i < len; i += 2)
-            b[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i + 1), 16));
-        return b;
-    }
 
-    public String bytesToHexString(byte[] src) {
-        StringBuilder stringBuilder = new StringBuilder("");
-        if (src == null || src.length <= 0) return null;
-        for (byte aSrc : src) {
-            int v = aSrc & 0xFF;
-            String hv = Integer.toHexString(v);
-            if (hv.length() < 2) stringBuilder.append(0);
-            stringBuilder.append(hv);
-        }
-        return stringBuilder.toString();
-    }
 
-    public String removeTail0(String str) {
-        if (!str.substring(str.length() - 1).equals("0")) {
-            return str;
-        } else {
-            return removeTail0(str.substring(0, str.length() - 1));
-        }
-    }
+
+
 
     @Override
     public void onDestroy() {

@@ -32,4 +32,8 @@
     <string name="forward_crash_message">请减速避免与前车碰撞！</string>
     <string name="cross_crash_message">请减速避免与横向来车碰撞！</string>
     <string name="emergency_brake_message">前车正在减速，注意避免碰撞！</string>
+    <string name="title_activity_port7100">Port7100Activity</string>
+    <string name="test_7100">7100测试</string>
+    <string name="stop">停止</string>
+    <string name="start">开始</string>
 </resources>

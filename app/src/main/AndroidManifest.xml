@@ -41,13 +41,14 @@
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
             android:value="44E1v9W3RezOD1QrnCmGG1nLgzZxw1CI" />
-        <!--在这里改为你的key-->
+        <!-- 在这里改为你的key -->
 
         <activity
             android:name=".activity.MainActivity"
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -61,7 +62,12 @@
             android:enabled="true"
             android:process=":remote" />
 
+        <activity
+            android:name=".activity.Port7100Activity"
+            android:label="@string/title_activity_port7100"
+            android:screenOrientation="landscape">
 
+        </activity>
     </application>
 
 </manifest>

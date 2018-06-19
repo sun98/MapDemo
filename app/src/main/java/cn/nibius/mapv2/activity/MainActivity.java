@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private Runnable mapUpdater, messageUpdater;
     private TextView textTip;   // tip text
     private ImageView imgVelocity, imgTraffic, imgRoad, imgV2v;
-    private Button btnBind, btnMap;
+    private Button btnBind, btnMap, btn7100;
     private SwitchButton switchButton, switchTest;
     private boolean isUpdating = true;
     private View.OnClickListener startListen, stopListen, toggleUpdater;
@@ -161,6 +161,15 @@ public class MainActivity extends AppCompatActivity {
         btnBind.setOnClickListener(startListen);
         btnMap = findViewById(R.id.btn_map);
         btnMap.setOnClickListener(toggleUpdater);
+        btn7100 = findViewById(R.id.btn_7100);
+        btn7100.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                binder.stopListen();
+                Intent intent = new Intent(MainActivity.this, Port7100Activity.class);
+                startActivity(intent);
+            }
+        });
         baiduMap = mapView.getMap();
         locationClient = new LocationClient(getApplicationContext());
         textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
