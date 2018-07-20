@@ -273,17 +273,17 @@ public class ComService extends Service {
                         e.printStackTrace();
                     }
                     byte[] data7100 = packet.getData();
-                    if (MainActivity.test) message7100 = new String(data7100, 0, data7100.length);
-                    else {
-                        message7100 = bytesToHexString(data7100);
-                        if (record) {
-                            try {
-                                fos.write(("7100 " + removeTail0(message7100)).getBytes());
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+//                    if (MainActivity.test) message7100 = new String(data7100, 0, data7100.length);
+//                    else {
+                    message7100 = bytesToHexString(data7100);
+                    if (record) {
+                        try {
+                            fos.write(("7100 " + removeTail0(message7100)).getBytes());
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     }
+//                    }
                     message7100 = removeTail0(message7100);
                     if (message7100.startsWith("<ui_request>")) {
                         message7100 = message7100.substring(0, 317);
