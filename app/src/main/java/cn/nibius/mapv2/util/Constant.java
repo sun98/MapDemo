@@ -13,7 +13,7 @@ public class Constant {
         NOROADSTATE, ICE, OBSTACLE, UNKNOWNSTATE
     }
 
-    public enum V2VEvent{
-        NOV2V, CROSSCRASH, FORWARDCRASH, EMERBRAKE, UNKNOWNV2V
+    public enum V2VEvent {
+        NOV2V, CROSSCRASH, FORWARDCRASH, EMERBRAKE, SIDECRASH, CANCEL, UNKNOWNV2V
     }
 }

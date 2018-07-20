@@ -24,7 +24,7 @@ import cn.nibius.mapv2.util.Constant.V2VEvent;
 import cn.nibius.mapv2.util.Constant.LightEvent;
 import cn.nibius.mapv2.util.Constant.RoadStateEvent;
 import cn.nibius.mapv2.util.MessagePackage;
-import cn.nibius.mapv2.util.V2VTester;
+import cn.nibius.mapv2.util.RegexUtil;
 
 import static cn.nibius.mapv2.util.EnDecodeUtil.String4ToInt;
 import static cn.nibius.mapv2.util.EnDecodeUtil.String8ToInt;
@@ -35,11 +35,12 @@ public class ComService extends Service {
     private String TAG = "MAPV2";
     private boolean record = false;     // whether record messages while testing outside
 
-    private int[] ports = {8887, 8888, 8889, 8890, 8891};    // 5 ports to listen
+    private int numPorts = 5;
+    private int[] ports = {8887, 8888, 8889, 8890, 7100};    // 5 ports to listen
     private boolean stop = false;
     private IBinder myBinder = new MyBinder();      // binder for MainActivity to get values
-    private Runnable[] networkRunnable = new Runnable[5];
-    private DatagramSocket[] sockets = new DatagramSocket[5];
+    private Runnable[] networkRunnable = new Runnable[numPorts];
+    private DatagramSocket[] sockets = new DatagramSocket[numPorts];
     private Runnable proThread;
 
     // Package to be get by MainActivity
@@ -60,11 +61,12 @@ public class ComService extends Service {
     private int distTIM;
     private String stateTIM;
     // BSM2
-    private double otherLat, otherLng, oldOtherLat, oldOtherLng, otherAngle, otherSpeed, oldOtherSpeed;
-//    private String otherID;
+//    private double otherLat, otherLng, oldOtherLat, oldOtherLng, otherAngle, otherSpeed, oldOtherSpeed;
+    // 7100
+    private String textV2V;
+    private int idV2V;
+    private boolean cancel = false, hasEvent = false;
 
-//    I don't know where is the ID...
-//    private V2VTester vTester = new V2VTester();
 
     private FileOutputStream fos;
 
@@ -81,13 +83,12 @@ public class ComService extends Service {
                 e.printStackTrace();
             }
         }
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < numPorts; i++)
             try {
                 sockets[i] = new DatagramSocket(ports[i]);
             } catch (SocketException e) {
                 e.printStackTrace();
             }
-
 
         networkRunnable[0] = new Runnable() {   // SPAT thread
             String messageSPAT;
@@ -257,50 +258,57 @@ public class ComService extends Service {
             }
         };
 
-        networkRunnable[4] = new Runnable() {
-            String messageBSM2;
+        networkRunnable[4] = new Runnable() {     // 7100 port
+            String message7100;
+            String pText = "<text>(.+)</text>";
+            RegexUtil regexUtil = new RegexUtil();
 
             @Override
             public void run() {
                 while (!stop) {
                     DatagramPacket packet = new DatagramPacket(new byte[2048], 2048);
                     try {
-//                        Log.i(TAG, "run: receiving");
                         sockets[4].receive(packet);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    byte[] dataBSM = packet.getData();
-                    if (MainActivity.test) messageBSM2 = new String(dataBSM, 0, dataBSM.length);
+                    byte[] data7100 = packet.getData();
+                    if (MainActivity.test) message7100 = new String(data7100, 0, data7100.length);
                     else {
-                        messageBSM2 = bytesToHexString(dataBSM);
+                        message7100 = bytesToHexString(data7100);
                         if (record) {
                             try {
-                                String temp = removeTail0(messageBSM2);
-                                fos.write(("BSM2 " + temp + "\n").getBytes());
+                                fos.write(("7100 " + removeTail0(message7100)).getBytes());
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         }
                     }
-                    messageBSM2 = removeTail0(messageBSM2);
-//                    Log.i(TAG, "BSM2:" + messageBSM2);
-                    if (messageBSM2 != null) {
-                        oldOtherLat = otherLat;
-                        oldOtherLng = otherLng;
-                        oldOtherSpeed = otherSpeed;
-                        double newLat = String8ToInt(messageBSM2.substring(14, 22)) / 1E7;
-                        double newLng = String8ToInt(messageBSM2.substring(22, 30)) / 1E7;
-//                        /* currently consider only one other car */
-                        if (Math.abs(newLat - oldOtherLat) > 1e-6 && Math.abs(newLng - oldOtherLng) > 1e-6) {
-                            otherLat = newLat;
-                            otherLng = newLng;
-                            otherAngle = AngleUtil.getAngle(oldOtherLng, oldOtherLat, otherLng, otherLat);
-                        }
-                        otherSpeed = Integer.parseInt(messageBSM2.substring(42, 46), 16)
-                                % Integer.parseInt("10000000000000", 2) * 0.02;
-//                        otherID = ?
+                    message7100 = removeTail0(message7100);
+                    if (message7100.startsWith("<ui_request>")) {
+                        message7100 = message7100.substring(0, 317);
+                    } else {
+                        message7100 = message7100.substring(0, 255);
                     }
+//                    Log.i(TAG, "run: " + message7100);
+                    switch (message7100.charAt(20)) {
+                        case '1':
+                        case '2':
+                        case '3':
+                            cancel = false;
+                            hasEvent = true;
+                            textV2V = regexUtil.getMatch(message7100, pText);
+                            idV2V = message7100.charAt(20) - '0';
+                            break;
+                        case 't':
+                            cancel = true;
+                            hasEvent = true;
+                            break;
+                        default:
+                            hasEvent = false;
+                            break;
+                    }
+//                    Log.i(TAG, "run: " + textV2V);
                 }
             }
         };
@@ -313,7 +321,7 @@ public class ComService extends Service {
                     LightEvent tempLightEvent = LightEvent.NOLIGHT;
                     RoadStateEvent tempRoadStateEvent = RoadStateEvent.NOROADSTATE;
                     String effLightState = "init_effective_light_state",
-                            tempMessage = "你好";
+                            tempMessage = "欢迎使用";
 
                     if (angleTIM < 45 && distTIM < 200 && distTIM > 20) {
                         tempRoadStateEvent = RoadStateEvent.UNKNOWNSTATE;
@@ -417,40 +425,30 @@ public class ComService extends Service {
 
 
                     V2VEvent tempV2VEvent = V2VEvent.NOV2V;
-                    double otherDistance = AngleUtil.getDistance(currentLng, currentLat, otherLng, otherLat);
-                    double vehicleAngle = Math.abs(angle - otherAngle);
-//
-                    vehicleAngle = (vehicleAngle > 180) ? (360 - vehicleAngle) : vehicleAngle;
-                    if (vehicleAngle > 45 && vehicleAngle < 135 && otherDistance > 50 && otherDistance < 200) {
-                        double angle1 = Math.abs(angle - AngleUtil.getAngle(oldLng, oldLat, otherLng, otherLat));
-                        angle1 = (angle1 > 180) ? (360 - angle1) : angle1;
-                        double angle2 = Math.abs(otherAngle - AngleUtil.getAngle(oldOtherLng, oldOtherLat, currentLng, currentLat));
-                        angle2 = (angle2 > 180) ? (360 - angle2) : angle2;
-                        double dis1 = otherDistance * Math.sin(Math.PI * angle1 / 180) / Math.sin(Math.PI * vehicleAngle / 180);
-                        double dis2 = otherDistance * Math.sin(Math.PI * angle2 / 180) / Math.sin(Math.PI * vehicleAngle / 180);
-                        if (Math.abs(dis2 / speed - dis1 / otherSpeed) < 1) {
-                            tempV2VEvent = V2VEvent.CROSSCRASH;
-                            tempMessage = getString(R.string.cross_crash_message);
+                    if (hasEvent) {
+                        if (cancel)
+                            tempV2VEvent = V2VEvent.CANCEL;
+                        else {
+                            if (idV2V == 1) {
+                                tempV2VEvent = V2VEvent.FORWARDCRASH;
+                                tempMessage = getString(R.string.forward_crash_message);
+                            } else if (idV2V == 2) {
+                                tempV2VEvent = V2VEvent.EMERBRAKE;
+                                tempMessage = getString(R.string.emergency_brake_message);
+                            } else if (idV2V == 3) {
+                                tempV2VEvent = V2VEvent.SIDECRASH;
+                                if (textV2V.charAt(9) == 'R') {
+                                    tempMessage = getString(R.string.right_cross_crash_message);
+                                } else {
+                                    tempMessage = getString(R.string.left_cross_crash_message);
+                                }
+                            } else {
+                                tempV2VEvent = V2VEvent.UNKNOWNV2V;
+                                tempMessage = "";
+                            }
                         }
                     }
-
-                    if (Math.abs(angle - otherAngle) < 30 && otherDistance < 300 && otherSpeed < 0.6 * speed) {
-//                        ???
-                        if (speed * speed / 3 > otherDistance + 15) {
-                            tempV2VEvent = V2VEvent.FORWARDCRASH;
-                            tempMessage = getString(R.string.forward_crash_message);
-                        }
-                    }
-
-                    double otherAcce = (otherSpeed - oldOtherSpeed) / 0.1;
-                    double car2carAngle = AngleUtil.getAngle(currentLng, currentLat, otherLng, otherLat);
-                    if (Math.abs(car2carAngle - angle) < 30) {
-                        double reactTime = otherDistance / speed;
-                        if (reactTime < 5 && otherAcce < -0.5) {
-                            tempV2VEvent = V2VEvent.EMERBRAKE;
-                            tempMessage = getString(R.string.emergency_brake_message);
-                        }
-                    }
+//                    Log.i(TAG, "final: " + (tempV2VEvent == V2VEvent.NOV2V));
 
                     MainActivity.lock.lock();
                     try {
@@ -470,10 +468,6 @@ public class ComService extends Service {
                             messagePackage.setEffectiveLatS(lightLat);
                             messagePackage.setEffectiveLngS(lightLng);
                         }
-//                        if (tempV2VEvent != V2VEvent.NOV2V) {
-                        messagePackage.setOtherLat(otherLat);
-                        messagePackage.setOtherLng(otherLng);
-//                        }
                     } finally {
                         MainActivity.lock.unlock();
                     }
@@ -501,7 +495,7 @@ public class ComService extends Service {
         public void startListen() {
             // TODO: may cause memory leak?
             // consider using wait/notify method
-            for (int i = 0; i < 5; i++) new Thread(networkRunnable[i]).start();
+            for (int i = 0; i < numPorts; i++) new Thread(networkRunnable[i]).start();
             new Thread(proThread).start();
         }
 
@@ -549,13 +543,6 @@ public class ComService extends Service {
             }
         }
     }
-
-
-
-
-
-
-
 
 
     @Override

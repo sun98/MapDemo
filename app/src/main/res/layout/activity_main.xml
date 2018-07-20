@@ -102,7 +102,7 @@
             <TextView
                 android:id="@+id/tip_text"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_below="@id/img_layout"
                 android:layout_marginBottom="20dp"
                 android:layout_marginTop="10dp"
@@ -187,14 +187,6 @@
                 android:layout_below="@+id/switch_special"
                 android:layout_marginTop="20dp" />
 
-            <Button
-                android:id="@+id/btn_7100"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignEnd="@id/switch_test"
-                android:layout_below="@id/text_test"
-                android:layout_marginTop="20dp"
-                android:text="@string/test_7100" />
         </RelativeLayout>
 
     </android.support.constraint.ConstraintLayout>

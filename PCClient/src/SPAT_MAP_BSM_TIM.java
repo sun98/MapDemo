@@ -10,13 +10,12 @@ import java.util.Objects;
 public class SPAT_MAP_BSM_TIM {
     public static void main(String[] args) throws IOException, InterruptedException {
 //        File f = new File("src/1514258737023.txt");
-        File f = new File("src/1521172353529_useful");
+        File f = new File("src/1514258737023.txt");
         DatagramSocket socket7 = new DatagramSocket(8887),
                 socket8 = new DatagramSocket(8888),
                 socket9 = new DatagramSocket(8889),
-                socket0 = new DatagramSocket(8890),
-                socket1 = new DatagramSocket(8891);
-        InetAddress inetAddress = InetAddress.getByName("127.0.0.1");
+                socket0 = new DatagramSocket(8890);
+        InetAddress inetAddress = InetAddress.getByName("192.168.0.101");
         String line = "";
         while (true) {
             BufferedReader reader = new BufferedReader(new FileReader(f));
@@ -56,15 +55,6 @@ public class SPAT_MAP_BSM_TIM {
                             socket0.send(packet);
                         }
                         System.out.println("tim\t\t" + info);
-                        break;
-                    }
-                    case "BSM2": {
-                        String info = line.substring(5);
-                        if (!Objects.equals(info, "null")) {
-                            DatagramPacket packet = new DatagramPacket(info.getBytes(), info.getBytes().length, inetAddress, 8891);
-                            socket1.send(packet);
-                        }
-                        System.out.println("bsm2\t\t" + info);
                         break;
                     }
                     default:

@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private Runnable mapUpdater, messageUpdater;
     private TextView textTip;   // tip text
     private ImageView imgVelocity, imgTraffic, imgRoad, imgV2v;
-    private Button btnBind, btnMap, btn7100;
+    private Button btnBind, btnMap;
     private SwitchButton switchButton, switchTest;
     private boolean isUpdating = true;
     private View.OnClickListener startListen, stopListen, toggleUpdater;
@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
     private MyLocationListener myLocationListener = new MyLocationListener(); // interface of location service
 
     public static Lock lock = new ReentrantLock();
-    public static boolean test = false;
+    public static boolean test = false;         // whether using pc and pad to test or real practice
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,15 +161,6 @@ public class MainActivity extends AppCompatActivity {
         btnBind.setOnClickListener(startListen);
         btnMap = findViewById(R.id.btn_map);
         btnMap.setOnClickListener(toggleUpdater);
-        btn7100 = findViewById(R.id.btn_7100);
-        btn7100.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                binder.stopListen();
-                Intent intent = new Intent(MainActivity.this, Port7100Activity.class);
-                startActivity(intent);
-            }
-        });
         baiduMap = mapView.getMap();
         locationClient = new LocationClient(getApplicationContext());
         textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
@@ -217,9 +208,11 @@ public class MainActivity extends AppCompatActivity {
                         // IMPORTANT: get event here simultaneously to avoid error
                         currentLightEvent = messagePackage.getCurrentLightEvent();
                         currentRoadStateEvent = messagePackage.getCurrentRoadStateEvent();
+                        currentV2VEvent = messagePackage.getCurrentV2VEvent();
                         currentMessage = messagePackage.getMessage();
                         currentSpeed = messagePackage.getCurrentSpeed();
                         currentAngle = (float) messagePackage.getCurrentAngle();
+
                         if (currentRoadStateEvent != RoadStateEvent.NOROADSTATE) {
                             obsLat = messagePackage.getEffectiveLatR();
                             obsLng = messagePackage.getEffectiveLngR();
@@ -231,10 +224,10 @@ public class MainActivity extends AppCompatActivity {
 //                            Log.i(TAG, "run: event=" + currentEvent + ", lightLat=" + lightLat + ", lightLng=" + lightLng);
                         }
 //                        if (currentV2VEvent != V2VEvent.NOV2V) {
-                        oldOtherLat = otherLat;
-                        oldOtherLng = otherLng;
-                        otherLat = messagePackage.getOtherLat();
-                        otherLng = messagePackage.getOtherLng();
+//                        oldOtherLat = otherLat;
+//                        oldOtherLng = otherLng;
+//                        otherLat = messagePackage.getOtherLat();
+//                        otherLng = messagePackage.getOtherLng();
 //                        Log.i(TAG, "run: " + otherLat + " " + otherLng);
 //                        }
 
@@ -277,10 +270,10 @@ public class MainActivity extends AppCompatActivity {
                             markers[2].setVisible(true);
                         }
 //                        if (currentV2VEvent != V2VEvent.NOV2V) {
-                        markers[1].setPosition(new LatLng(otherLat + latOffset, otherLng + lngOffset));
+//                        markers[1].setPosition(new LatLng(otherLat + latOffset, otherLng + lngOffset));
 //                        float otherAngle = (float) AngleUtil.getAngle(oldOtherLng, oldOtherLat, otherLng, otherLat);
 //                        markers[1].setRotate(otherAngle-currentAngle);
-                        markers[1].setVisible(true);
+//                        markers[1].setVisible(true);
 //                        }
                     } catch (Exception e) {
                         Log.i(TAG, "MapUpdater: " + e.toString());
@@ -304,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
             int icons[] = {R.drawable.ic_add_location_black_24dp, R.drawable.ic_traffic_black_48dp, R.drawable.ic_warning_black_48dp};
             LightEvent oldLightEvent;
             RoadStateEvent oldStateEvent;
-            V2VEvent oldV2vEvent;
+            boolean isCanceled = true;
 
             @Override
             public void run() {
@@ -319,16 +312,20 @@ public class MainActivity extends AppCompatActivity {
                         String speedMessage = getString(R.string.current_speed) + (int) currentSpeed * 3.6 + getString(R.string.kmh);
                         textTip.setText(speedMessage);
                     } else {
+                        if (currentV2VEvent == V2VEvent.CANCEL) isCanceled = true;
                         if ((currentLightEvent != oldLightEvent
                                 || currentRoadStateEvent != oldStateEvent
-                                || currentV2VEvent != oldV2vEvent)
+                                || isCanceled)
                                 && !Objects.equals(currentMessage, "")) {
-                            textToSpeech.speak(currentMessage, TextToSpeech.QUEUE_FLUSH, null, null);
-                            oldLightEvent = currentLightEvent;
-                            oldStateEvent = currentRoadStateEvent;
-                            oldV2vEvent = currentV2VEvent;
+                            if (currentV2VEvent != V2VEvent.CANCEL) {
+                                Log.i(TAG, "speak?: " + currentMessage);
+                                textToSpeech.speak(currentMessage, TextToSpeech.QUEUE_FLUSH, null, null);
+                                oldLightEvent = currentLightEvent;
+                                oldStateEvent = currentRoadStateEvent;
+                                isCanceled = false;
+                            }
                         }
-                        if (!Objects.equals(currentMessage, "")) {
+                        if (!Objects.equals(currentMessage, "") && currentV2VEvent != V2VEvent.CANCEL) {
                             textTip.setText(currentMessage);
                         }
                         imgVelocity.setVisibility(View.INVISIBLE);
@@ -342,6 +339,7 @@ public class MainActivity extends AppCompatActivity {
                             imgRoad.setVisibility(View.VISIBLE);
                         else imgRoad.setVisibility(View.INVISIBLE);
                     }
+                    Log.i(TAG, "tip text: " + textTip.getText());
                 }
                 updaterHandler.postDelayed(this, 100);
             }
@@ -437,5 +435,32 @@ public class MainActivity extends AppCompatActivity {
 //        }
 //        int id = records.get(0).cityID;
         mOffline.start(289);
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.i(TAG, "onDestroy: ");
+        binder.stopListen();
+        isListening = false;
+        updaterHandler.removeCallbacks(mapUpdater);
+        updaterHandler.removeCallbacks(messageUpdater);
+        unbindService(connection);
+        super.onDestroy();
+        textToSpeech.shutdown();
+    }
+
+    @Override
+    protected void onPause() {
+        Log.i(TAG, "onPause: ");
+//        binder.stopListen();
+//        isListening = false;
+//        btnBind.setOnClickListener(startListen);
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        Log.i(TAG, "onResume: ");
+        super.onResume();
     }
 }

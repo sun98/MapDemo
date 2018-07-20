@@ -12,12 +12,15 @@ public class MessagePackage {
     private Constant.LightEvent currentLightEvent;   // 47
     private Constant.RoadStateEvent currentRoadStateEvent;
     private Constant.V2VEvent currentV2VEvent;
+    private boolean currentV2VCancel;
     private boolean currentMapFlag; // 48
     private double effectiveLatS, effectiveLngS;    // 49, 50; light position
     private boolean currentTimFlag; // 56
     private double effectiveLatR, effectiveLngR;    // 57, 58; obstacle position
     private double otherLat, otherLng;
     private String message; // message string
+
+    private String text7100;
 
     public MessagePackage() {
         this.currentLat = 0;
@@ -27,15 +30,13 @@ public class MessagePackage {
         this.currentLightEvent = Constant.LightEvent.NOLIGHT;
         this.currentRoadStateEvent = Constant.RoadStateEvent.NOROADSTATE;
         this.currentV2VEvent = Constant.V2VEvent.NOV2V;
+        this.currentV2VCancel = true;
         this.currentMapFlag = false;
         this.effectiveLatS = 0;
         this.effectiveLngS = 0;
         this.currentTimFlag = false;
         this.effectiveLatR = 0;
         this.effectiveLngR = 0;
-        this.otherLat = 0;
-        this.otherLng = 0;
-
         this.message = "NULL";
     }
 
@@ -47,14 +48,13 @@ public class MessagePackage {
             Constant.LightEvent currentLightEvent,
             Constant.RoadStateEvent currentRoadStateEvent,
             Constant.V2VEvent currentV2VEvent,
+            boolean currentV2VCancel,
             boolean currentMapFlag,
             double effectiveLatS,
             double effectiveLngS,
             boolean currentTimFlag,
             double effectiveLatR,
             double effectiveLngR,
-            double otherLat,
-            double otherLng,
             String message) {
         this.currentLat = currentLat;
         this.currentLng = currentLng;
@@ -63,14 +63,13 @@ public class MessagePackage {
         this.currentLightEvent = currentLightEvent;
         this.currentRoadStateEvent = currentRoadStateEvent;
         this.currentV2VEvent = currentV2VEvent;
+        this.currentV2VCancel = currentV2VCancel;
         this.currentMapFlag = currentMapFlag;
         this.effectiveLatS = effectiveLatS;
         this.effectiveLngS = effectiveLngS;
         this.currentTimFlag = currentTimFlag;
         this.effectiveLatR = effectiveLatR;
         this.effectiveLngR = effectiveLngR;
-        this.otherLat = otherLat;
-        this.otherLng = otherLng;
         this.message = message;
     }
 
@@ -182,23 +181,16 @@ public class MessagePackage {
         return currentSpeed;
     }
 
-    public double getOtherLat() {
-        return otherLat;
-    }
-
-    public void setOtherLat(double otherLat) {
-        this.otherLat = otherLat;
-    }
-
-    public double getOtherLng() {
-        return otherLng;
-    }
-
-    public void setOtherLng(double otherLng) {
-        this.otherLng = otherLng;
-    }
-
     public void setCurrentSpeed(double currentSpeed) {
         this.currentSpeed = currentSpeed;
     }
+
+    public boolean isCurrentV2VCancel() {
+        return currentV2VCancel;
+    }
+
+    public void setCurrentV2VCancel(boolean currentV2VCancel) {
+        this.currentV2VCancel = currentV2VCancel;
+    }
+
 }
