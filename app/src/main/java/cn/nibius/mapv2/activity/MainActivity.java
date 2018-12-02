@@ -53,7 +53,7 @@ import cn.nibius.mapv2.util.MyLocationListener;
 import cn.nibius.mapv2.util.ToastUtil;
 
 public class MainActivity extends AppCompatActivity {
-    private String TAG = "MAPV2";
+    private String TAG = "MainActivity";
     private Context context;
     private double latOffset = 0.0043953298, lngOffset = 0.0110212588;
     private double myLat = 31.0278622712, myLng = 121.4218843711; // my position with initial value
@@ -231,6 +231,7 @@ public class MainActivity extends AppCompatActivity {
 //                        Log.i(TAG, "run: " + otherLat + " " + otherLng);
 //                        }
 
+                        Log.i(TAG, "Now position: " + String.valueOf(myLat) + " " + String.valueOf(myLng));
                         currentL = new LatLng(myLat, myLng);
                         markers[0].setPosition(currentL);
                         if (oldMyLat != 0 || oldMyLng != 0) {  //not initial state
@@ -347,8 +348,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initMap() {
-//        mapView.showScaleControl(false);
-//        mapView.showZoomControls(false); //隐藏地图的放大/缩小按钮，以及控制大小的拖动轴。
+        mapView.showScaleControl(false);
+        mapView.showZoomControls(false); //隐藏地图的放大/缩小按钮，以及控制大小的拖动轴。
         mapView.setLogoPosition(LogoPosition.logoPostionRightBottom);   // logo position; can't be removed
         MapStatusUpdate mapStatusUpdate;
         LatLng position = new LatLng(myLat, myLng);
@@ -404,7 +405,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initOfflineMap() {
-        Log.i("nib", "initOfflineMap: ");
+        Log.i(TAG, "initOfflineMap: ");
         mOffline = new MKOfflineMap();
         // 设置监听
         mOffline.init(new MKOfflineMapListener() {

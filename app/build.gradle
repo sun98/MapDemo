@@ -6,12 +6,12 @@ android {
             storeFile file('C:/Users/Nibius/.android/debug.keystore')
         }
     }
-    compileSdkVersion 26
+    compileSdkVersion 28
     buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "cn.nibius.mapv2"
         minSdkVersion 21
-        targetSdkVersion 26
+        targetSdkVersion 20
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

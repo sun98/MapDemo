@@ -40,7 +40,7 @@
         android:theme="@style/AppTheme">
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
-            android:value="44E1v9W3RezOD1QrnCmGG1nLgzZxw1CI" />
+            android:value="tEBCoXSgSqrdwl1tbTjUGTovcr8R7Pax" />
         <!-- 在这里改为你的key -->
 
         <activity

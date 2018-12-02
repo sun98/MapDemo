@@ -7,6 +7,10 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -32,7 +36,7 @@ import static cn.nibius.mapv2.util.EnDecodeUtil.bytesToHexString;
 import static cn.nibius.mapv2.util.EnDecodeUtil.removeTail0;
 
 public class ComService extends Service {
-    private String TAG = "MAPV2";
+    private String TAG = "ComService";
     private boolean record = false;     // whether record messages while testing outside
 
     private int numPorts = 5;
@@ -55,7 +59,7 @@ public class ComService extends Service {
     private ArrayList<MapInfo> maps = new ArrayList<>();
     private double lightLat, lightLng;
     // BSM
-    private double currentLat, currentLng, oldLat, oldLng, speed, angle;
+    private double currentLat = 31.0278622712, currentLng = 121.4218843711, oldLat, oldLng, speed, angle;
     // TIM
     private double obstacleLat, obstacleLng, angleTIM, angleMap, distMap;
     private int distTIM;
@@ -103,6 +107,7 @@ public class ComService extends Service {
                         e.printStackTrace();
                     }
                     byte[] dataSPAT = packet.getData();
+                    /*
                     if (MainActivity.test) messageSPAT = new String(dataSPAT, 0, dataSPAT.length);
                     else {
                         messageSPAT = bytesToHexString(dataSPAT);
@@ -115,21 +120,33 @@ public class ComService extends Service {
                             }
                         }
                     }
-                    messageSPAT = removeTail0(messageSPAT);
-                    if (messageSPAT != null) {
-                        lightID = messageSPAT.substring(22, 26);
-                        lightState[0] = messageSPAT.substring(50, 52);
-                        lightState[1] = messageSPAT.substring(84, 86);
-                        lightState[2] = messageSPAT.substring(50, 52);
-                        lightState[3] = messageSPAT.substring(84, 86);
-//                        lightState[2] = messageSPAT.substring(118, 120);
-//                        lightState[3] = messageSPAT.substring(152, 154);
-                        lightTime[0] = Integer.parseInt(messageSPAT.substring(56, 58), 16);
-                        lightTime[1] = Integer.parseInt(messageSPAT.substring(90, 92), 16);
-                        lightTime[2] = Integer.parseInt(messageSPAT.substring(56, 58), 16);
-                        lightTime[3] = Integer.parseInt(messageSPAT.substring(90, 92), 16);
-//                        lightTime[2] = Integer.parseInt(messageSPAT.substring(124, 126), 16);
-//                        lightTime[3] = Integer.parseInt(messageSPAT.substring(158, 160), 16);
+                    */
+                    messageSPAT = new String(dataSPAT, 0, dataSPAT.length);
+                    try {
+                        JSONObject json = new JSONObject(messageSPAT);
+
+                        JSONArray json_inter_array = new JSONArray(json.getString("intersections"));
+                        JSONObject json_inter = json_inter_array.getJSONObject(0);
+                        lightID = json_inter.getString("id");
+
+                        //Log.i(TAG, "SPAT: id = " + lightID);
+
+                        JSONArray json_stat_array = new JSONArray(json_inter.getString("states"));
+                        JSONObject json_stat_0 = json_stat_array.getJSONObject(0);
+                        lightState[0] = json_stat_0.getString("currState");
+                        lightTime[0] = json_stat_0.getInt("timeToChange");
+                        JSONObject json_stat_1 = json_stat_array.getJSONObject(1);
+                        lightState[1] = json_stat_1.getString("currState");
+                        lightTime[1] = json_stat_1.getInt("timeToChange");
+                        JSONObject json_stat_2 = json_stat_array.getJSONObject(2);
+                        lightState[2] = json_stat_2.getString("currState");
+                        lightTime[2] = json_stat_2.getInt("timeToChange");
+                        JSONObject json_stat_3 = json_stat_array.getJSONObject(3);
+                        lightState[3] = json_stat_3.getString("currState");
+                        lightTime[3] = json_stat_3.getInt("timeToChange");
+
+                    }catch (JSONException e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -148,6 +165,7 @@ public class ComService extends Service {
                         e.printStackTrace();
                     }
                     byte[] dataMAP = packet.getData();
+                    /*
                     if (MainActivity.test) messageMAP = new String(dataMAP, 0, dataMAP.length);
                     else {
                         messageMAP = bytesToHexString(dataMAP);
@@ -160,11 +178,24 @@ public class ComService extends Service {
                             }
                         }
                     }
-                    messageMAP = removeTail0(messageMAP);
+                    */
+                    messageMAP = new String(dataMAP, 0, dataMAP.length);
+                    String thisID = "";
+                    try {
+                        JSONObject json = new JSONObject(messageMAP);
+                        JSONArray json_inter_array = new JSONArray(json.getString("intersections"));
+                        JSONObject json_inter = json_inter_array.getJSONObject(0);
+                        thisID = json_inter.getString("id");
+                        //Log.i(TAG, "MAP: id = " + thisID);
+
+                    }catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
                     boolean exist = false;
                     if (messageMAP != null) {
                         for (MapInfo info : maps)
-                            if (Objects.equals(info.mapID, messageMAP.substring(44, 48)))
+                            if (Objects.equals(info.mapID, thisID))
                                 exist = true;
                         if (!exist) maps.add(new MapInfo(messageMAP));
                     }
@@ -185,6 +216,7 @@ public class ComService extends Service {
                         e.printStackTrace();
                     }
                     byte[] dataBSM = packet.getData();
+                    /*
                     if (MainActivity.test) messageBSM = new String(dataBSM, 0, dataBSM.length);
                     else {
                         messageBSM = bytesToHexString(dataBSM);
@@ -197,22 +229,28 @@ public class ComService extends Service {
                             }
                         }
                     }
-                    messageBSM = removeTail0(messageBSM);
-//                    Log.i(TAG, "BSM: "+messageBSM);
-                    if (messageBSM != null) {
-                        speed = Integer.parseInt(messageBSM.substring(42, 46), 16)
-                                % Integer.parseInt("10000000000000", 2) * 0.02;
+                    */
+                    messageBSM = new String(dataBSM, 0, dataBSM.length);
+                    try {
+                        JSONObject json = new JSONObject(messageBSM);
+                        String blob1 = json.getString("blob1");
+                        //Log.i(TAG, "BSM: blob1 = " + blob1);
+
                         oldLat = currentLat;
                         oldLng = currentLng;
-                        double newLat = String8ToInt(messageBSM.substring(14, 22)) / 1E7;
-                        double newLng = String8ToInt(messageBSM.substring(22, 30)) / 1E7;
-//                        /* if the distance is to small, ignore this movement */
+                        double newLat = String8ToInt(blob1.substring(14,22)) / 1E7;
+                        double newLng = String8ToInt(blob1.substring(22,30)) / 1E7;
+                        speed = Integer.parseInt(blob1.substring(38,42), 16) % Integer.parseInt("10000000000000", 2) * 0.02;
+                        Log.i(TAG, "BSM: lat= "+String.valueOf(newLat)+" lng= "+String.valueOf(newLng)+" speed= "+String.valueOf(speed));
+
                         if (Math.abs(newLat - oldLat) > 1e-6 && Math.abs(newLng - oldLng) > 1e-6) {
                             currentLat = newLat;
                             currentLng = newLng;
                             angle = AngleUtil.getAngle(oldLng, oldLat, currentLng, currentLat);
                         }
-//                        vTester.update(currentLat, currentLng, angle, speed);
+
+                    }catch (JSONException e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -495,7 +533,8 @@ public class ComService extends Service {
         public void startListen() {
             // TODO: may cause memory leak?
             // consider using wait/notify method
-            for (int i = 0; i < numPorts; i++) new Thread(networkRunnable[i]).start();
+            //for (int i = 0; i < numPorts; i++) new Thread(networkRunnable[i]).start();
+            for (int i = 0; i < 3; i++) new Thread(networkRunnable[i]).start();
             new Thread(proThread).start();
         }
 
@@ -505,12 +544,6 @@ public class ComService extends Service {
     }
 
     private class MapInfo {
-        private int indexes[][][] = {
-                {{156, 160}, {172, 176}, {188, 192}},
-                {{272, 276}, {288, 292}, {304, 308}},
-                {{390, 394}, {406, 410}, {422, 426}},
-                {{506, 510}, {522, 526}, {538, 542}}
-        };
         private double tmpAngles[][];
         String mapID;
         double mapLat, mapLng;
@@ -520,26 +553,47 @@ public class ComService extends Service {
         }
 
         MapInfo(String messageMAP) {
-            tmpAngles = new double[4][4];
-            mapID = messageMAP.substring(44, 48);
-            mapLat = String8ToInt(messageMAP.substring(56, 64)) / 1E7;
-            mapLng = String8ToInt(messageMAP.substring(68, 76)) / 1E7;
-            for (int i = 0; i < 4; i++) {
-                int sum[] = {0, 0};
-                for (int j = 0; j < 3; j++) {
-                    sum[0] += String4ToInt(messageMAP.substring(indexes[i][j][0], indexes[i][j][0] + 4));
-                    sum[1] += String4ToInt(messageMAP.substring(indexes[i][j][1], indexes[i][j][1] + 4));
-                    tmpAngles[i][j] = AngleUtil.getAngleInt(0, 0, sum[0], sum[1]);
-                }
-                double result = 0;
-                int count = 0;
-                for (int j = 0; j < 3; j++) {
-                    if (!Double.isNaN(tmpAngles[i][j])) {
-                        result += tmpAngles[i][j];
-                        count++;
+            try {
+                tmpAngles = new double[4][4];
+
+                JSONObject json = new JSONObject(messageMAP);
+                JSONArray json_inter_array = new JSONArray(json.getString("intersections"));
+
+                JSONObject json_inter = json_inter_array.getJSONObject(0);
+                mapID = json_inter.getString("id");
+
+                JSONObject json_ref = new JSONObject(json_inter.getString("refPoint"));
+                mapLat = (double)json_ref.getInt("lat")/10000000;
+                mapLng = (double)json_ref.getInt("long")/10000000;
+
+                JSONArray json_approaches_array = new JSONArray(json_inter.getString("approaches"));
+
+                for (int i = 0; i < 4; i++) {
+                    JSONObject json_appr = json_approaches_array.getJSONObject(i);
+                    json_appr = new JSONObject(json_appr.getString("approach"));
+                    JSONArray json_driveLane_array = new JSONArray(json_appr.getString("drivingLanes"));
+                    JSONObject json_drive = json_driveLane_array.getJSONObject(0);
+                    JSONArray json_nodes_array = new JSONArray(json_drive.getString("nodeList"));
+
+                    int sum[] = {0, 0};
+                    for (int j = 0; j < 3; j++) {
+                        sum[0] += String4ToInt(json_nodes_array.getString(j).substring(0,4));
+                        sum[1] += String4ToInt(json_nodes_array.getString(j).substring(4,8));
+                        tmpAngles[i][j] = AngleUtil.getAngleInt(0, 0, sum[0], sum[1]);
                     }
+                    double result = 0;
+                    int count = 0;
+                    for (int j = 0; j < 3; j++) {
+                        if (!Double.isNaN(tmpAngles[i][j])) {
+                            result += tmpAngles[i][j];
+                            count++;
+                        }
+                    }
+                    branchAngles[i] = result / count;
                 }
-                branchAngles[i] = result / count;
+
+            }catch (JSONException e) {
+                e.printStackTrace();
             }
         }
     }
