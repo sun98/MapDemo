@@ -117,6 +117,8 @@ public class ComService extends Service {
 
                         intersections.put(newID, newData);
 
+                        Log.d(TAG,"SPAT ID now: "+String.valueOf(((Intersection) intersections.get(newID)).ID));
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -171,6 +173,7 @@ public class ComService extends Service {
                         }
 
                         intersections.put(newData.ID, newData);
+                        Log.d(TAG,"MAP ID now: "+String.valueOf(((Intersection) intersections.get(newData.ID)).ID));
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -222,6 +225,8 @@ public class ComService extends Service {
                         myCar.angle = angle;
                         myCar.speed = speed;
 
+                        Log.d(TAG,"BSM pos now: "+String.valueOf(myCar.currentLat)+" "+String.valueOf(myCar.currentLng));
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -240,7 +245,7 @@ public class ComService extends Service {
                 while (!stop) {
                     DatagramPacket packet = new DatagramPacket(new byte[2048], 2048);
                     try {
-                        sockets[4].receive(packet);
+                        sockets[3].receive(packet);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -321,7 +326,7 @@ public class ComService extends Service {
         }
 
         public void startListen() {
-            for (int i = 0; i < numPorts; i++) new Thread(networkRunnable[i]).start();
+            for (int i = 0; i < 3; i++) new Thread(networkRunnable[i]).start();
             new Thread(masterThread).start();
         }
 
