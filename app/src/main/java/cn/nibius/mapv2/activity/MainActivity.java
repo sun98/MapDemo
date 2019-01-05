@@ -205,32 +205,6 @@ public class MainActivity extends AppCompatActivity {
                         myLat = messagePackage.getCurrentLat() + latOffset;
                         myLng = messagePackage.getCurrentLng() + lngOffset;
 
-                        // IMPORTANT: get event here simultaneously to avoid error
-                        currentLightEvent = messagePackage.getCurrentLightEvent();
-                        currentRoadStateEvent = messagePackage.getCurrentRoadStateEvent();
-                        currentV2VEvent = messagePackage.getCurrentV2VEvent();
-                        currentMessage = messagePackage.getMessage();
-                        currentSpeed = messagePackage.getCurrentSpeed();
-                        currentAngle = (float) messagePackage.getCurrentAngle();
-
-                        if (currentRoadStateEvent != RoadStateEvent.NOROADSTATE) {
-                            obsLat = messagePackage.getEffectiveLatR();
-                            obsLng = messagePackage.getEffectiveLngR();
-//                            Log.i(TAG, "run: event=5, obsLat=" + obsLat + ", obsLng=" + obsLng);
-                        }
-                        if (currentLightEvent != LightEvent.NOLIGHT) {
-                            lightLat = messagePackage.getEffectiveLatS();
-                            lightLng = messagePackage.getEffectiveLngS();
-//                            Log.i(TAG, "run: event=" + currentEvent + ", lightLat=" + lightLat + ", lightLng=" + lightLng);
-                        }
-//                        if (currentV2VEvent != V2VEvent.NOV2V) {
-//                        oldOtherLat = otherLat;
-//                        oldOtherLng = otherLng;
-//                        otherLat = messagePackage.getOtherLat();
-//                        otherLng = messagePackage.getOtherLng();
-//                        Log.i(TAG, "run: " + otherLat + " " + otherLng);
-//                        }
-
                         Log.i(TAG, "Now position: " + String.valueOf(myLat) + " " + String.valueOf(myLng));
                         currentL = new LatLng(myLat, myLng);
                         markers[0].setPosition(currentL);
@@ -270,28 +244,21 @@ public class MainActivity extends AppCompatActivity {
                             markers[2].setPosition(new LatLng(lightLat + latOffset, lightLng + lngOffset));
                             markers[2].setVisible(true);
                         }
-//                        if (currentV2VEvent != V2VEvent.NOV2V) {
-//                        markers[1].setPosition(new LatLng(otherLat + latOffset, otherLng + lngOffset));
-//                        float otherAngle = (float) AngleUtil.getAngle(oldOtherLng, oldOtherLat, otherLng, otherLat);
-//                        markers[1].setRotate(otherAngle-currentAngle);
-//                        markers[1].setVisible(true);
-//                        }
+
                     } catch (Exception e) {
                         Log.i(TAG, "MapUpdater: " + e.toString());
                     }
                 } else { // service not started
                     currentL = myLocationListener.getLatLng();
-//                    Log.i(TAG, "run: currentL" + currentL);
                     MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newLatLng(currentL);
                     baiduMap.setMapStatus(mapStatusUpdate);
                     if (currentL != null)
                         markers[0].setPosition(currentL);
                     else {
-//                        ToastUtil.showShort(context, R.string.location_error);
                         markers[0].setPosition(new LatLng(myLat, myLng));
                     }
                 }
-                updaterHandler.postDelayed(this, 100);  // post self to recursive run
+                updaterHandler.postDelayed(this, 100);
             }
         };
         messageUpdater = new Runnable() {
@@ -349,15 +316,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void initMap() {
         mapView.showScaleControl(false);
-        mapView.showZoomControls(false); //隐藏地图的放大/缩小按钮，以及控制大小的拖动轴。
-        mapView.setLogoPosition(LogoPosition.logoPostionRightBottom);   // logo position; can't be removed
+        mapView.showZoomControls(false);
+        mapView.setLogoPosition(LogoPosition.logoPostionRightBottom);
         MapStatusUpdate mapStatusUpdate;
         LatLng position = new LatLng(myLat, myLng);
-        mapStatusUpdate = MapStatusUpdateFactory.newLatLngZoom(position, 255);  //max scale
+        mapStatusUpdate = MapStatusUpdateFactory.newLatLngZoom(position, 255);
         baiduMap.setMapStatus(mapStatusUpdate);
         UiSettings uiSettings = baiduMap.getUiSettings();
-        uiSettings.setCompassEnabled(true);     // show compass
-        uiSettings.setOverlookingGesturesEnabled(false);    // unable overlooking gesture
+        uiSettings.setCompassEnabled(true);
+        uiSettings.setOverlookingGesturesEnabled(false);
 
         BitmapDescriptor bitmapDescriptor;
         bitmapDescriptor = BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_black_24dp);
@@ -383,25 +350,18 @@ public class MainActivity extends AppCompatActivity {
         option.setCoorType("bd09ll");
         //可选，默认gcj02，设置返回的定位结果坐标系
         option.setScanSpan(1000);
-        //可选，默认0，即仅定位一次，设置发起定位请求的间隔需要大于等于1000ms才是有效的
         option.setIsNeedAddress(false);
-        //可选，设置是否需要地址信息，默认不需要
         option.setOpenGps(true);
         //可选，默认false,设置是否使用gps
         option.setLocationNotify(true);
-        //可选，默认false，设置是否当GPS有效时按照1S/1次频率输出GPS结果
         option.setIsNeedLocationDescribe(false);
-        //可选，默认false，设置是否需要位置语义化结果，可以在BDLocation.getLocationDescribe里得到，结果类似于“在北京天安门附近”
         option.setIsNeedLocationPoiList(false);
-        //可选，默认false，设置是否需要POI结果，可以在BDLocation.getPoiList里得到
         option.setIgnoreKillProcess(true);
-        //可选，默认true，定位SDK内部是一个SERVICE，并放到了独立进程，设置是否在stop的时候杀死这个进程，默认不杀死
         option.SetIgnoreCacheException(true);
-        //可选，默认false，设置是否收集CRASH信息，默认收集
         option.setEnableSimulateGps(false);
-        //可选，默认false，设置是否需要过滤GPS仿真结果，默认需要
+
         locationClient.setLocOption(option);
-        locationClient.start(); //start location service
+        locationClient.start();
     }
 
     private void initOfflineMap() {

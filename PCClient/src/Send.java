@@ -10,22 +10,21 @@ public class Send {
     public static void main(String[] args) throws IOException, InterruptedException {
 
         DatagramSocket datagramSocket = new DatagramSocket();
-        final DatagramPacket[] datagramPacket = {null,null,null,null};
+        final DatagramPacket[] datagramPacket = {null,null,null};
 
         //InetAddress inetAddress = InetAddress.getByName("192.168.1.104"); //Local PC
-        InetAddress inetAddress = InetAddress.getByName("192.168.1.103"); //Test Phone WLAN
+        InetAddress inetAddress = InetAddress.getByName("192.168.1.100"); //Test Phone WLAN
 
-        File file[] = {new File("broad0.txt"),new File("broad1.txt"),new File("broad2.txt"),new File("broad3.txt")};
+        File file[] = {new File("broad0.txt"),new File("broad1.txt"),new File("broad2.txt")};
         BufferedReader reader[] = {new BufferedReader(new FileReader(file[0])),new BufferedReader(new FileReader(file[1])),
-            new BufferedReader(new FileReader(file[2])),new BufferedReader(new FileReader(file[3]))};
+            new BufferedReader(new FileReader(file[2]))};
 
         String msg0 = reader[0].readLine();
         String msg1 = reader[1].readLine();
         String msg2 = reader[2].readLine();
-        String msg3 = reader[3].readLine();
 
-        Timer timer[] = {new Timer(),new Timer(),new Timer(),new Timer()};
-        TimerTask task[] = new TimerTask[4];
+        Timer timer[] = {new Timer(),new Timer(),new Timer()};
+        TimerTask task[] = new TimerTask[3];
 
         task[0] = new TimerTask() {  // SPAT
             @Override
@@ -48,7 +47,7 @@ public class Send {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                System.out.println(message);
+                System.out.println("SPAT");
             }
         };
 
@@ -73,7 +72,7 @@ public class Send {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                System.out.println(message);
+                System.out.println("MAP");
             }
         };
 
@@ -98,35 +97,12 @@ public class Send {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                System.out.println(message);
-            }
-        };
-
-        task[3] = new TimerTask() { // TIM
-            @Override
-            public void run() {
-
-                String message = null;
-                try {
-                    message = reader[3].readLine();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                byte[] bytes = message.getBytes();
-                datagramPacket[3] = new DatagramPacket(bytes, bytes.length, inetAddress, 8890);
-                try {
-                    datagramSocket.send(datagramPacket[3]);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                System.out.println(message);
+                System.out.println("BSM");
             }
         };
 
         timer[0].schedule(task[0], 0, 100);
         timer[1].schedule(task[1], 0, 100);
         timer[2].schedule(task[2], 0, 100);
-        //timer[3].schedule(task[3], 0, 100);
     }
 }

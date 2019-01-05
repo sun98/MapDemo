@@ -7,7 +7,7 @@ import java.util.Map;
  * Created by Tinsmore on 2019/1/5.
  */
 
-public class intersectionData {
+public class Intersection {
 
     public String ID;
     public double centerLat, centerLng;
