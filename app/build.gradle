@@ -10,8 +10,8 @@ android {
     buildToolsVersion '28.0.0'
     defaultConfig {
         applicationId "cn.nibius.mapv2"
-        minSdkVersion 21
-        targetSdkVersion 20
+        minSdkVersion 20
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
