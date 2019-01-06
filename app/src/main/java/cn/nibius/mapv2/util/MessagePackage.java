@@ -26,11 +26,7 @@ public class MessagePackage {
         this.myCar = myCar;
     }
 
-    public double getCurrentLat(){
-        return myCar.currentLat;
-    }
+    public Map getIntersections() { return intersections; }
 
-    public double getCurrentLng(){
-        return myCar.currentLng;
-    }
+    public Viechle getMyCar() { return myCar; }
 }

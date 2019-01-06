@@ -116,7 +116,7 @@
         <RelativeLayout
             android:id="@+id/button_set"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="50dp"
             android:gravity="center"
             app:layout_constraintBottom_toTopOf="@id/special"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -145,7 +145,7 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:gravity="center"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/information"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@id/button_set"
@@ -168,24 +168,25 @@
                 android:layout_marginStart="60dp"
                 android:layout_toEndOf="@id/text_special" />
 
-            <TextView
-                android:id="@+id/text_test"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignStart="@+id/text_special"
-                android:layout_below="@+id/text_special"
-                android:layout_marginTop="20dp"
-                android:text="@string/test"
-                android:textSize="20sp" />
+        </RelativeLayout>
 
-            <com.suke.widget.SwitchButton
-                android:id="@+id/switch_test"
+        <RelativeLayout
+            android:id="@+id/information"
+            android:layout_width="0dp"
+            android:layout_height="65dp"
+            android:gravity="left"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/special"
+            app:layout_constraintVertical_weight="2">
+
+            <TextView
+                android:id="@+id/text_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignBottom="@+id/text_test"
-                android:layout_alignStart="@+id/switch_special"
-                android:layout_below="@+id/switch_special"
-                android:layout_marginTop="20dp" />
+                android:text="未收到消息"
+                android:textSize="9sp" />
 
         </RelativeLayout>
 

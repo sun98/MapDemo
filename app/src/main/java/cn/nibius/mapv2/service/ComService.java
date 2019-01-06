@@ -117,7 +117,7 @@ public class ComService extends Service {
 
                         intersections.put(newID, newData);
 
-                        Log.d(TAG,"SPAT ID now: "+String.valueOf(((Intersection) intersections.get(newID)).ID));
+                        //Log.d(TAG,"SPAT ID now: "+String.valueOf(((Intersection) intersections.get(newID)).ID));
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -173,7 +173,7 @@ public class ComService extends Service {
                         }
 
                         intersections.put(newData.ID, newData);
-                        Log.d(TAG,"MAP ID now: "+String.valueOf(((Intersection) intersections.get(newData.ID)).ID));
+                        //Log.d(TAG,"MAP ID now: "+String.valueOf(((Intersection) intersections.get(newData.ID)).ID));
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -225,7 +225,7 @@ public class ComService extends Service {
                         myCar.angle = angle;
                         myCar.speed = speed;
 
-                        Log.d(TAG,"BSM pos now: "+String.valueOf(myCar.currentLat)+" "+String.valueOf(myCar.currentLng));
+                        //Log.d(TAG,"BSM pos now: "+String.valueOf(myCar.currentLat)+" "+String.valueOf(myCar.currentLng));
 
                     } catch (JSONException e) {
                         e.printStackTrace();

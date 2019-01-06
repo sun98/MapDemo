@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.baidu.lbsapi.panoramaview.TextMarker;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.SDKInitializer;
@@ -29,6 +30,8 @@ import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
+import com.baidu.mapapi.map.Text;
+import com.baidu.mapapi.map.TextOptions;
 import com.baidu.mapapi.map.UiSettings;
 import com.baidu.mapapi.map.offline.MKOLSearchRecord;
 import com.baidu.mapapi.map.offline.MKOLUpdateElement;
@@ -38,6 +41,8 @@ import com.baidu.mapapi.model.LatLng;
 import com.suke.widget.SwitchButton;
 
 import java.util.Locale;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -48,44 +53,46 @@ import cn.nibius.mapv2.util.AngleUtil;
 import cn.nibius.mapv2.util.Constant.V2VEvent;
 import cn.nibius.mapv2.util.Constant.RoadStateEvent;
 import cn.nibius.mapv2.util.Constant.LightEvent;
+import cn.nibius.mapv2.util.Intersection;
 import cn.nibius.mapv2.util.MessagePackage;
 import cn.nibius.mapv2.util.MyLocationListener;
 import cn.nibius.mapv2.util.ToastUtil;
+import cn.nibius.mapv2.util.Viechle;
 
 public class MainActivity extends AppCompatActivity {
     private String TAG = "MainActivity";
     private Context context;
     private double latOffset = 0.0043953298, lngOffset = 0.0110212588;
     private double myLat = 31.0278622712, myLng = 121.4218843711; // my position with initial value
-    private double obsLat = 0, obsLng = 0, lightLat = 0, lightLng = 0, otherLat = 0, otherLng = 0;
+    private Viechle myCar;
+    private Map intersections;
+
     private MessagePackage messagePackage;
-    private LightEvent currentLightEvent = LightEvent.NOLIGHT;
-    private RoadStateEvent currentRoadStateEvent = RoadStateEvent.NOROADSTATE;
-    private V2VEvent currentV2VEvent = V2VEvent.NOV2V;
-    private String currentMessage = "";
-    private double currentSpeed = 0;
     private TextToSpeech textToSpeech;
     private MKOfflineMap mOffline;
-    private int MAX_SOURCE = 4; // max number of markers
-    private Marker[] markers = new Marker[MAX_SOURCE];  // markers
+
+    private int MAX_SOURCE = 4;
+    private Marker[] markers = new Marker[MAX_SOURCE];
+    private int MAX_TEXT = 4;
+    private TextOptions[] textOptions = new TextOptions[MAX_TEXT];
+
     private Handler updaterHandler = new Handler(); // main handler
     private Runnable mapUpdater, messageUpdater;
-    private TextView textTip;   // tip text
     private ImageView imgVelocity, imgTraffic, imgRoad, imgV2v;
     private Button btnBind, btnMap;
     private SwitchButton switchButton, switchTest;
     private boolean isUpdating = true;
     private View.OnClickListener startListen, stopListen, toggleUpdater;
-    private MapView mapView; // mapView object
-    private BaiduMap baiduMap;  // map object
-    private ComService.MyBinder binder; // binder to the ComService
-    private boolean isListening = false; // whether service is bound
+    private MapView mapView;
+    private BaiduMap baiduMap;
+    private ComService.MyBinder binder;
+    private boolean isListening = false;
     private ServiceConnection connection;
-    private LocationClient locationClient = null; // core class of location service
-    private MyLocationListener myLocationListener = new MyLocationListener(); // interface of location service
+    private LocationClient locationClient = null;
+    private MyLocationListener myLocationListener = new MyLocationListener();
 
     public static Lock lock = new ReentrantLock();
-    public static boolean test = false;         // whether using pc and pad to test or real practice
+    public static boolean test = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     private void initVariables() {
         context = getApplicationContext();
         mapView = findViewById(R.id.bmap);
-        textTip = findViewById(R.id.tip_text);
+        //textTip = findViewById(R.id.tip_text);
         imgVelocity = findViewById(R.id.img_velocity);
         imgTraffic = findViewById(R.id.img_traffic);
         imgRoad = findViewById(R.id.img_road);
@@ -119,13 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 markers[0].setIcon(bitmap);
             }
         });
-        switchTest = findViewById(R.id.switch_test);
-        switchTest.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(SwitchButton view, boolean isChecked) {
-                test = isChecked;
-            }
-        });
+
         startListen = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -157,10 +158,12 @@ public class MainActivity extends AppCompatActivity {
                 isUpdating = !isUpdating;
             }
         };
+
         btnBind = findViewById(R.id.btn_service);
         btnBind.setOnClickListener(startListen);
         btnMap = findViewById(R.id.btn_map);
         btnMap.setOnClickListener(toggleUpdater);
+
         baiduMap = mapView.getMap();
         locationClient = new LocationClient(getApplicationContext());
         textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
@@ -174,6 +177,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+
         connection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -186,14 +191,15 @@ public class MainActivity extends AppCompatActivity {
                 binder = null;
             }
         };
+
+
         mapUpdater = new Runnable() {
-            float oldAngle = 0, currentAngle = 0;
-            double oldMyLat = 0, oldMyLng = 0, oldOtherLat = 0, oldOtherLng = 0;
             LatLng currentL;
+            int last_time = 0,last_state = 0;
 
             @Override
             public void run() {
-                if (isListening) { // service started
+                if (isListening) {
                     try {
                         lock.lock();
                         try {
@@ -201,57 +207,73 @@ public class MainActivity extends AppCompatActivity {
                         } finally {
                             lock.unlock();
                         }
-                        // handle map position update
-                        myLat = messagePackage.getCurrentLat() + latOffset;
-                        myLng = messagePackage.getCurrentLng() + lngOffset;
 
-                        Log.i(TAG, "Now position: " + String.valueOf(myLat) + " " + String.valueOf(myLng));
-                        currentL = new LatLng(myLat, myLng);
+                        myCar = messagePackage.getMyCar();
+                        intersections = messagePackage.getIntersections();
+
+                        TextView showInfo = findViewById(R.id.text_info);
+                        String showOff = "";
+
+                        currentL = new LatLng(myCar.currentLat + latOffset, myCar.currentLng + lngOffset);
                         markers[0].setPosition(currentL);
-                        if (oldMyLat != 0 || oldMyLng != 0) {  //not initial state
-                            MapStatus.Builder builder = new MapStatus.Builder();
-                            if (myLat != oldMyLat || myLng != oldMyLng) { // moving occurs
-                                float d = Math.abs(currentAngle - oldAngle);
-                                d = (d > 180) ? (360 - d) : d;
-                                if (d > 5 && currentSpeed > 0.2) {
-                                    builder.rotate(currentAngle);
-                                } else {
-                                    currentAngle = oldAngle;
-                                }
-                            }
-                            builder.target(currentL);
-                            oldAngle = currentAngle;
-                            MapStatus mapStatus = builder.build();
-                            MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mapStatus);
-                            baiduMap.animateMapStatus(mapStatusUpdate);
-                        }
-                        oldMyLat = myLat;
-                        oldMyLng = myLng;
-                        // handle event marker update
-                        if (currentLightEvent == LightEvent.NOLIGHT &&
-                                currentRoadStateEvent == RoadStateEvent.NOROADSTATE
-//                                currentV2vEvent
-                                ) {
-                            for (int i = 1; i < MAX_SOURCE; i++) {
-                                markers[i].setVisible(false);
-                            }
-                        }
-                        if (currentRoadStateEvent != RoadStateEvent.NOROADSTATE) {
-                            markers[3].setPosition(new LatLng(obsLat + latOffset, obsLng + lngOffset));
-                            markers[3].setVisible(true);
-                        }
-                        if (currentLightEvent != LightEvent.NOLIGHT) {
-                            markers[2].setPosition(new LatLng(lightLat + latOffset, lightLng + lngOffset));
+
+                        MapStatus msu = new MapStatus.Builder(baiduMap.getMapStatus()).target(currentL).rotate((float)myCar.angle).build();
+                        MapStatusUpdate msus = MapStatusUpdateFactory.newMapStatus(msu);
+                        baiduMap.animateMapStatus(msus);
+
+                        showOff += "本车位置: "+String.valueOf(myCar.currentLat + latOffset)+" "+String.valueOf(myCar.currentLng + lngOffset);
+                        showOff += "\n速度: "+String.valueOf(myCar.speed)+" 方向角: "+String.valueOf(myCar.angle);
+
+                        for(Object i : intersections.values()){
+                            Intersection inter = (Intersection)i;
+                            LatLng lightPos = new LatLng(inter.centerLat + latOffset,inter.centerLng + lngOffset);
+                            markers[2].setPosition(lightPos);
                             markers[2].setVisible(true);
+
+                            showOff += "\n收到的路口标识符: "+inter.ID;
+                            showOff += "\n路口位置: "+String.valueOf(inter.centerLat + latOffset)+" "+String.valueOf(inter.centerLng + lngOffset);
+
+                            int time = -1, state = -1;
+                            for(Object t : inter.timeToChange.values()){
+                                time = (int)t;
+                                break;
+                            }
+                            for(Object s : inter.currentState.values()){
+                                state = (int)s;
+                                break;
+                            }
+
+                            if(state != -1){
+                                showOff += "\n信号灯状态: "+String.valueOf(state);
+                                last_state = state;
+                            }
+                            else {
+                                showOff += "\n信号灯状态: "+String.valueOf(last_state);
+                            }
+
+                            if(time != -1){
+                                textOptions[0].text(String.valueOf(time)).position(lightPos);
+                                baiduMap.addOverlay(textOptions[0]);
+                                showOff += "\n信号灯剩余时间: "+String.valueOf(time);
+                                last_time = time;
+                            }
+                            else {
+                                showOff += "\n信号灯剩余时间: "+String.valueOf(last_time);
+                            }
+                            break;
                         }
+
+                        showInfo.setText(showOff);
 
                     } catch (Exception e) {
                         Log.i(TAG, "MapUpdater: " + e.toString());
                     }
-                } else { // service not started
+                } else {     // Service not started
                     currentL = myLocationListener.getLatLng();
                     MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newLatLng(currentL);
                     baiduMap.setMapStatus(mapStatusUpdate);
+
+                    markers[2].setVisible(false);
                     if (currentL != null)
                         markers[0].setPosition(currentL);
                     else {
@@ -261,53 +283,17 @@ public class MainActivity extends AppCompatActivity {
                 updaterHandler.postDelayed(this, 100);
             }
         };
+
+
         messageUpdater = new Runnable() {
-            int icons[] = {R.drawable.ic_add_location_black_24dp, R.drawable.ic_traffic_black_48dp, R.drawable.ic_warning_black_48dp};
-            LightEvent oldLightEvent;
-            RoadStateEvent oldStateEvent;
-            boolean isCanceled = true;
 
             @Override
             public void run() {
                 if (isListening) {
-                    if (currentLightEvent == LightEvent.NOLIGHT
-                            && currentRoadStateEvent == RoadStateEvent.NOROADSTATE
-                            && currentV2VEvent == V2VEvent.NOV2V) {
-                        imgTraffic.setVisibility(View.INVISIBLE);
-                        imgRoad.setVisibility(View.INVISIBLE);
-                        imgV2v.setVisibility(View.INVISIBLE);
-                        imgVelocity.setVisibility(View.VISIBLE);
-                        String speedMessage = getString(R.string.current_speed) + (int) currentSpeed * 3.6 + getString(R.string.kmh);
-                        textTip.setText(speedMessage);
-                    } else {
-                        if (currentV2VEvent == V2VEvent.CANCEL) isCanceled = true;
-                        if ((currentLightEvent != oldLightEvent
-                                || currentRoadStateEvent != oldStateEvent
-                                || isCanceled)
-                                && !Objects.equals(currentMessage, "")) {
-                            if (currentV2VEvent != V2VEvent.CANCEL) {
-                                Log.i(TAG, "speak?: " + currentMessage);
-                                textToSpeech.speak(currentMessage, TextToSpeech.QUEUE_FLUSH, null, null);
-                                oldLightEvent = currentLightEvent;
-                                oldStateEvent = currentRoadStateEvent;
-                                isCanceled = false;
-                            }
-                        }
-                        if (!Objects.equals(currentMessage, "") && currentV2VEvent != V2VEvent.CANCEL) {
-                            textTip.setText(currentMessage);
-                        }
-                        imgVelocity.setVisibility(View.INVISIBLE);
-                        if (currentLightEvent != LightEvent.NOLIGHT)
-                            imgTraffic.setVisibility(View.VISIBLE);
-                        else imgTraffic.setVisibility(View.INVISIBLE);
-                        if (currentV2VEvent != V2VEvent.NOV2V)
-                            imgV2v.setVisibility(View.VISIBLE);
-                        else imgV2v.setVisibility(View.INVISIBLE);
-                        if (currentRoadStateEvent != RoadStateEvent.NOROADSTATE)
-                            imgRoad.setVisibility(View.VISIBLE);
-                        else imgRoad.setVisibility(View.INVISIBLE);
-                    }
-                    Log.i(TAG, "tip text: " + textTip.getText());
+                    imgVelocity.setVisibility(View.VISIBLE);
+                    imgTraffic.setVisibility(View.VISIBLE);
+                    imgRoad.setVisibility(View.INVISIBLE);
+                    imgV2v.setVisibility(View.INVISIBLE);
                 }
                 updaterHandler.postDelayed(this, 100);
             }
@@ -330,14 +316,19 @@ public class MainActivity extends AppCompatActivity {
         bitmapDescriptor = BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_black_24dp);
         OverlayOptions options = new MarkerOptions().position(position).icon(bitmapDescriptor);
         markers[0] = (Marker) baiduMap.addOverlay(options);
+        markers[0].setVisible(true);
+
         int resourceArray[] = {R.drawable.ic_bullseye_black_24dp, R.drawable.ic_traffic_black_24dp, R.drawable.ic_warning_black_24dp};
-        for (int i = 1; i < MAX_SOURCE; ++i) {
+        for (int i = 1; i < MAX_SOURCE; i++) {
             bitmapDescriptor = BitmapDescriptorFactory.fromResource(resourceArray[i - 1]);
             options = new MarkerOptions().position(position).icon(bitmapDescriptor); // 设置Overlay图标
             markers[i] = (Marker) (baiduMap.addOverlay(options)); // 将Marker添加到地图上。
             markers[i].setVisible(false);    //  先将Marker隐藏。在获得对应位置信息的时候再行显示。
         }
-        markers[0].setVisible(true);
+
+        LatLng tmp = new LatLng(0,0);
+        textOptions[0] = new TextOptions().text("empty").position(tmp).fontSize(60);
+
         updaterHandler.post(messageUpdater);
         updaterHandler.post(mapUpdater);
     }
@@ -389,12 +380,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-//        localMapList = mOffline.getAllUpdateInfo();
-//        ArrayList<MKOLSearchRecord> records=mOffline.searchCity("上海");
-//        if (records == null || records.size() != 1) {
-//            Log.i("nib", "cannot find sh offline");
-//        }
-//        int id = records.get(0).cityID;
+
         mOffline.start(289);
     }
 

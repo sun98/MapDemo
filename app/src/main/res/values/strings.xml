@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MapV2</string>
+    <string name="app_name">车路协同系统</string>
     <string name="welcome">欢迎使用车路协同系统！</string>
     <string name="action_settings">设置</string>
     <string name="special_car">特殊车辆</string>
