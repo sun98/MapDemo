@@ -6,6 +6,6 @@ package cn.nibius.mapv2.util;
 
 public class Viechle {
 
-    public double currentLat, currentLng, speed, angle;
-    public int bumpers_frnt, bumpers_rear;
+    public double currentLat, currentLng, speed, heading;
+
 }

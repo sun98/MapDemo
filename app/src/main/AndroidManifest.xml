@@ -62,12 +62,6 @@
             android:enabled="true"
             android:process=":remote" />
 
-        <activity
-            android:name=".activity.Port7100Activity"
-            android:label="@string/title_activity_port7100"
-            android:screenOrientation="landscape">
-
-        </activity>
     </application>
 
 </manifest>

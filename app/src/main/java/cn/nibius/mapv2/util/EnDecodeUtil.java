@@ -4,29 +4,6 @@ package cn.nibius.mapv2.util;
  * Created by Nibius at 2018/6/19 14:06.
  */
 public class EnDecodeUtil {
-    public static String removeTail0(String str) {
-//        if (!str.substring(str.length() - 1).equals("0")) {
-//            return str;
-//        } else {
-//            return removeTail0(str.substring(0, str.length() - 1));
-//        }
-        while (str.endsWith("0")) {
-            str = str.substring(0, str.length() - 1);
-        }
-        return str;
-    }
-
-    public static String bytesToHexString(byte[] src) {
-        StringBuilder stringBuilder = new StringBuilder("");
-        if (src == null || src.length <= 0) return null;
-        for (byte aSrc : src) {
-            int v = aSrc & 0xFF;
-            String hv = Integer.toHexString(v);
-            if (hv.length() < 2) stringBuilder.append(0);
-            stringBuilder.append(hv);
-        }
-        return stringBuilder.toString();
-    }
 
     public static byte[] hexString2Byte(String s) {
         int len = s.length();

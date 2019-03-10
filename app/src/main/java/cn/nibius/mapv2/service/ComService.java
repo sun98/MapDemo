@@ -22,44 +22,33 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cn.nibius.mapv2.activity.MainActivity;
-import cn.nibius.mapv2.util.AngleUtil;
 import cn.nibius.mapv2.util.MessagePackage;
-import cn.nibius.mapv2.util.RegexUtil;
 import cn.nibius.mapv2.util.Intersection;
 import cn.nibius.mapv2.util.Approach;
 import cn.nibius.mapv2.util.Viechle;
 
 import static cn.nibius.mapv2.util.EnDecodeUtil.String8ToInt;
-import static cn.nibius.mapv2.util.EnDecodeUtil.bytesToHexString;
-import static cn.nibius.mapv2.util.EnDecodeUtil.removeTail0;
+import static cn.nibius.mapv2.util.EnDecodeUtil.String4ToInt;
+
 
 public class ComService extends Service {
+
     private String TAG = "ComService";
     private boolean record = false;
-
-    private int numPorts = 4;
-    private int[] ports = {8887, 8888, 8889, 7100};
+    private int numPorts = 3;
+    private int[] ports = {8887, 8888, 8889};
     private boolean stop = false;
     private IBinder myBinder = new MyBinder();
     private Runnable[] networkRunnable = new Runnable[numPorts];
     private DatagramSocket[] sockets = new DatagramSocket[numPorts];
-
     private Runnable masterThread;
     private MessagePackage messagePackage = new MessagePackage();
-
-    // MAPData
-    private Map intersections =  new HashMap();
-
-    // BSM
-    private double currentLat = 31.0278622712, currentLng = 121.4218843711, oldLat, oldLng, speed, angle;
-    private Viechle myCar= new Viechle();
-
-    // 7100
-    private String textV2V;
-    private int idV2V;
-    private boolean cancel = false, hasEvent = false;
-
     private FileOutputStream fos;
+
+    // MAPData & SPAT
+    private Map intersections =  new HashMap();
+    // BSM
+    private Viechle myCar= new Viechle();
 
 
     @Override
@@ -202,89 +191,16 @@ public class ComService extends Service {
                         JSONObject json = new JSONObject(messageBSM);
                         String blob1 = json.getString("blob1");
 
-                        JSONObject json_status = new JSONObject(json.getString("status"));
-                        JSONObject json_viechleData = new JSONObject(json_status.getString("vehicleData"));
-                        JSONObject json_bumpers = new JSONObject(json_viechleData.getString("bumpers"));
-                        myCar.bumpers_frnt = json_bumpers.getInt("frnt");
-                        myCar.bumpers_rear = json_bumpers.getInt("rear");
+                        myCar.currentLat = (double)String8ToInt(blob1.substring(14, 22)) / 1E7;
+                        myCar.currentLng = (double)String8ToInt(blob1.substring(22, 30)) / 1E7;
+                        myCar.speed = Integer.parseInt(blob1.substring(42, 46),16);
+                        myCar.heading = (double)String4ToInt(blob1.substring(46, 50)) / 1E2;
 
-                        oldLat = currentLat;
-                        oldLng = currentLng;
-                        double newLat = String8ToInt(blob1.substring(14, 22)) / 1E7;
-                        double newLng = String8ToInt(blob1.substring(22, 30)) / 1E7;
-                        speed = Integer.parseInt(blob1.substring(38, 42), 16) % Integer.parseInt("10000000000000", 2) * 0.02;
-
-                        if (Math.abs(newLat - oldLat) > 1e-6 && Math.abs(newLng - oldLng) > 1e-6) {
-                            currentLat = newLat;
-                            currentLng = newLng;
-                            angle = AngleUtil.getAngle(oldLng, oldLat, currentLng, currentLat);
-                        }
-
-                        myCar.currentLat = currentLat;
-                        myCar.currentLng = currentLng;
-                        myCar.angle = angle;
-                        myCar.speed = speed;
-
-                        //Log.d(TAG,"BSM pos now: "+String.valueOf(myCar.currentLat)+" "+String.valueOf(myCar.currentLng));
+                        //Log.d(TAG,"BSM : "+String.valueOf(myCar.speed)+" "+String.valueOf(myCar.heading));
 
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                }
-            }
-        };
-
-
-        networkRunnable[3] = new Runnable() {     // 7100 port
-            String message7100;
-            String pText = "<text>(.+)</text>";
-            RegexUtil regexUtil = new RegexUtil();
-
-            @Override
-            public void run() {
-                while (!stop) {
-                    DatagramPacket packet = new DatagramPacket(new byte[2048], 2048);
-                    try {
-                        sockets[3].receive(packet);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    byte[] data7100 = packet.getData();
-
-                    message7100 = bytesToHexString(data7100);
-                    if (record) {
-                        try {
-                            fos.write(("7100 " + removeTail0(message7100)).getBytes());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-//                    }
-                    message7100 = removeTail0(message7100);
-                    if (message7100.startsWith("<ui_request>")) {
-                        message7100 = message7100.substring(0, 317);
-                    } else {
-                        message7100 = message7100.substring(0, 255);
-                    }
-
-                    switch (message7100.charAt(20)) {
-                        case '1':
-                        case '2':
-                        case '3':
-                            cancel = false;
-                            hasEvent = true;
-                            textV2V = regexUtil.getMatch(message7100, pText);
-                            idV2V = message7100.charAt(20) - '0';
-                            break;
-                        case 't':
-                            cancel = true;
-                            hasEvent = true;
-                            break;
-                        default:
-                            hasEvent = false;
-                            break;
-                    }
-
                 }
             }
         };
@@ -320,13 +236,14 @@ public class ComService extends Service {
         return myBinder;
     }
 
+
     public class MyBinder extends Binder {
         public MessagePackage getPackage() {
             return messagePackage;
         }
 
         public void startListen() {
-            for (int i = 0; i < 3; i++) new Thread(networkRunnable[i]).start();
+            for (int i = 0; i < numPorts; i++) new Thread(networkRunnable[i]).start();
             new Thread(masterThread).start();
         }
 

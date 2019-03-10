@@ -12,8 +12,11 @@ public class Send {
         DatagramSocket datagramSocket = new DatagramSocket();
         final DatagramPacket[] datagramPacket = {null,null,null};
 
-        //InetAddress inetAddress = InetAddress.getByName("192.168.1.104"); //Local PC
-        InetAddress inetAddress = InetAddress.getByName("192.168.1.100"); //Test Phone WLAN
+        File ip = new File("ip.txt");
+        BufferedReader ip_reader = new BufferedReader(new FileReader(ip));
+        String ip_text = ip_reader.readLine();
+        InetAddress inetAddress = InetAddress.getByName(ip_text); //Test Phone LAN
+        
 
         File file[] = {new File("broad0.txt"),new File("broad1.txt"),new File("broad2.txt")};
         BufferedReader reader[] = {new BufferedReader(new FileReader(file[0])),new BufferedReader(new FileReader(file[1])),
@@ -47,7 +50,7 @@ public class Send {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                System.out.println("SPAT");
+                System.out.println("-> "+ip_text+": SPAT");
             }
         };
 
@@ -72,7 +75,7 @@ public class Send {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                System.out.println("MAP");
+                System.out.println("-> "+ip_text+": MAP");
             }
         };
 
@@ -97,7 +100,7 @@ public class Send {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                System.out.println("BSM");
+                System.out.println("-> "+ip_text+": BSM");
             }
         };
 
