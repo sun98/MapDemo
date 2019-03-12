@@ -26,6 +26,7 @@ import cn.nibius.mapv2.util.MessagePackage;
 import cn.nibius.mapv2.util.Intersection;
 import cn.nibius.mapv2.util.Approach;
 import cn.nibius.mapv2.util.Viechle;
+import cn.nibius.mapv2.util.ViewController;
 
 import static cn.nibius.mapv2.util.EnDecodeUtil.String8ToInt;
 import static cn.nibius.mapv2.util.EnDecodeUtil.String4ToInt;
@@ -215,6 +216,8 @@ public class ComService extends Service {
                     try {
                         messagePackage.setIntersections(intersections);
                         messagePackage.setMyCar(myCar);
+                        ViewController v = new ViewController();
+                        messagePackage.setChangeView(v.isTimeToChangeView(myCar));
 
                     } finally {
                         MainActivity.lock.unlock();

@@ -17,7 +17,6 @@ public class Send {
         String ip_text = ip_reader.readLine();
         InetAddress inetAddress = InetAddress.getByName(ip_text); //Test Phone LAN
         
-
         File file[] = {new File("broad0.txt"),new File("broad1.txt"),new File("broad2.txt")};
         BufferedReader reader[] = {new BufferedReader(new FileReader(file[0])),new BufferedReader(new FileReader(file[1])),
             new BufferedReader(new FileReader(file[2]))};

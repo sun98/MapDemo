@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.Handler;
@@ -38,7 +39,6 @@ import com.baidu.mapapi.map.offline.MKOLUpdateElement;
 import com.baidu.mapapi.map.offline.MKOfflineMap;
 import com.baidu.mapapi.map.offline.MKOfflineMapListener;
 import com.baidu.mapapi.model.LatLng;
-import com.suke.widget.SwitchButton;
 
 import java.util.Locale;
 import java.util.Map;
@@ -75,19 +75,19 @@ public class MainActivity extends AppCompatActivity {
     private Runnable mapUpdater, messageUpdater;
     private ImageView imgVelocity, imgTraffic, imgRoad, imgV2v;
     private Button btnBind, btnMap;
-    private SwitchButton switchButton;
+
     private boolean isUpdating = false;
     private View.OnClickListener startListen, stopListen, toggleUpdater;
     private MapView mapView;
     private BaiduMap baiduMap;
     private ComService.MyBinder binder;
-    private boolean isListening = true;
+    private boolean isListening = false;
     private ServiceConnection connection;
     private LocationClient locationClient = null;
     private MyLocationListener myLocationListener = new MyLocationListener();
 
     private ImageView canvasView;
-    private Bitmap baseBitmap;
+    private Bitmap baseBitmap, mapBitmap, carBitmap;
     private Canvas canvas;
     private Paint paint;
 
@@ -114,19 +114,10 @@ public class MainActivity extends AppCompatActivity {
         imgTraffic = findViewById(R.id.img_traffic);
         imgRoad = findViewById(R.id.img_road);
         imgV2v = findViewById(R.id.img_v2v);
-        switchButton = findViewById(R.id.switch_special);
 
-        switchButton.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(SwitchButton view, boolean isChecked) {
-                BitmapDescriptor bitmap;
-                if (isChecked)
-                    bitmap = BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_red_24dp);
-                else
-                    bitmap = BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_black_24dp);
-                markers[0].setIcon(bitmap);
-            }
-        });
+        baseBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.lotus);
+        carBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.ic_directions_car_black_48dp);
+        paint = new Paint();
 
         startListen = new View.OnClickListener() {
             @Override
@@ -136,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
                 view.setOnClickListener(stopListen);
             }
         };
+
         stopListen = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -144,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
                 view.setOnClickListener(startListen);
             }
         };
+
         toggleUpdater = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -167,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
         baiduMap = mapView.getMap();
         locationClient = new LocationClient(getApplicationContext());
+
         textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int i) {
@@ -194,10 +188,9 @@ public class MainActivity extends AppCompatActivity {
         };
 
 
-        mapUpdater = new Runnable() { // main thread updating map
+        mapUpdater = new Runnable() { // main thread updating view
             LatLng currentL;
             int last_time = 0,last_state = 0;
-            int ct = 0;
 
             @Override
             public void run() {
@@ -211,13 +204,14 @@ public class MainActivity extends AppCompatActivity {
                             lock.unlock();
                         }
 
-                        // testing view change
-                        ct ++;
-                        Log.d(TAG,"ct now: "+String.valueOf(ct));
-                        if (ct == 200) {
+                        // view change
+                        if (messagePackage.isChangeView()){
                             mapView.setVisibility(View.GONE);
+                            mapBitmap = baseBitmap.copy(Bitmap.Config.ARGB_8888, true);
+                            canvas = new Canvas(mapBitmap);
+                            canvas.drawBitmap(carBitmap,200,200,paint);
+                            canvasView.setImageBitmap(mapBitmap);
                             canvasView.setVisibility(View.VISIBLE);
-                            Log.d(TAG,"canvas set");
                         }
 
                         myCar = messagePackage.getMyCar();
@@ -297,12 +291,11 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void run() {
-                if (isListening) {
-                    imgVelocity.setVisibility(View.INVISIBLE);
-                    imgTraffic.setVisibility(View.INVISIBLE);
-                    imgRoad.setVisibility(View.INVISIBLE);
-                    imgV2v.setVisibility(View.INVISIBLE);
-                }
+                imgVelocity.setVisibility(View.VISIBLE);
+                imgTraffic.setVisibility(View.VISIBLE);
+                imgRoad.setVisibility(View.VISIBLE);
+                imgV2v.setVisibility(View.VISIBLE);
+
                 updaterHandler.postDelayed(this, 100);
             }
         };
@@ -334,23 +327,18 @@ public class MainActivity extends AppCompatActivity {
             markers[i].setVisible(false);    //  先将Marker隐藏。在获得对应位置信息的时候再行显示。
         }
 
-        LatLng tmp = new LatLng(0,0);
-        textOptions[0] = new TextOptions().text("empty").position(tmp).fontSize(60);
-
         updaterHandler.post(messageUpdater);
         updaterHandler.post(mapUpdater);
     }
 
-    private void initLocation() {   // initialize location service for joy(when service not started)
+    private void initLocation() {
         locationClient.registerLocationListener(myLocationListener);
         LocationClientOption option = new LocationClientOption();
         option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);
         option.setCoorType("bd09ll");
-        //可选，默认gcj02，设置返回的定位结果坐标系
         option.setScanSpan(1000);
         option.setIsNeedAddress(false);
         option.setOpenGps(true);
-        //可选，默认false,设置是否使用gps
         option.setLocationNotify(true);
         option.setIsNeedLocationDescribe(false);
         option.setIsNeedLocationPoiList(false);
