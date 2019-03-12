@@ -18,7 +18,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.baidu.lbsapi.panoramaview.TextMarker;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.SDKInitializer;
@@ -33,10 +32,8 @@ import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
-import com.baidu.mapapi.map.Text;
 import com.baidu.mapapi.map.TextOptions;
 import com.baidu.mapapi.map.UiSettings;
-import com.baidu.mapapi.map.offline.MKOLSearchRecord;
 import com.baidu.mapapi.map.offline.MKOLUpdateElement;
 import com.baidu.mapapi.map.offline.MKOfflineMap;
 import com.baidu.mapapi.map.offline.MKOfflineMapListener;
@@ -89,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
     private LocationClient locationClient = null;
     private MyLocationListener myLocationListener = new MyLocationListener();
 
-    private ImageView iv_canvas;
+    private ImageView canvasView;
     private Bitmap baseBitmap;
     private Canvas canvas;
     private Paint paint;
@@ -112,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
     private void initVariables() {
         context = getApplicationContext();
         mapView = findViewById(R.id.bmap);
+        canvasView = findViewById(R.id.view_canvas);
         imgVelocity = findViewById(R.id.img_velocity);
         imgTraffic = findViewById(R.id.img_traffic);
         imgRoad = findViewById(R.id.img_road);
@@ -199,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
         mapUpdater = new Runnable() { // main thread updating map
             LatLng currentL;
             int last_time = 0,last_state = 0;
+            int ct = 0;
 
             @Override
             public void run() {
@@ -211,6 +210,16 @@ public class MainActivity extends AppCompatActivity {
                         } finally {
                             lock.unlock();
                         }
+
+                        // testing view change
+                        ct ++;
+                        Log.d(TAG,"ct now: "+String.valueOf(ct));
+                        if (ct == 200) {
+                            mapView.setVisibility(View.GONE);
+                            canvasView.setVisibility(View.VISIBLE);
+                            Log.d(TAG,"canvas set");
+                        }
+
                         myCar = messagePackage.getMyCar();
                         intersections = messagePackage.getIntersections();
 
