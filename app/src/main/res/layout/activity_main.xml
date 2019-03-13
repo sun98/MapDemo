@@ -10,7 +10,7 @@
         android:layout_height="0dp"
         android:padding="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_weight="4"
+        app:layout_constraintHorizontal_weight="3"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/right_part"
         app:layout_constraintTop_toTopOf="parent">
@@ -155,7 +155,7 @@
                 android:layout_height="match_parent"
                 android:gravity="start"
                 android:layout_marginStart="50dp"
-                android:text="未收到消息"
+                android:text="@string/info"
                 android:textSize="16sp" />
 
         </RelativeLayout>

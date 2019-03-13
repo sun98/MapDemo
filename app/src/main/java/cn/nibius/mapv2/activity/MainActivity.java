@@ -52,6 +52,7 @@ import cn.nibius.mapv2.util.MessagePackage;
 import cn.nibius.mapv2.util.MyLocationListener;
 import cn.nibius.mapv2.util.ToastUtil;
 import cn.nibius.mapv2.util.Viechle;
+import cn.nibius.mapv2.util.ViewController;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -87,9 +88,10 @@ public class MainActivity extends AppCompatActivity {
     private MyLocationListener myLocationListener = new MyLocationListener();
 
     private ImageView canvasView;
-    private Bitmap baseBitmap, mapBitmap, carBitmap;
+    private Bitmap xCrossBitmap, tCrossBitmap, mapBitmap, carBitmap;
     private Canvas canvas;
     private Paint paint;
+    private TextView tipView;
 
     public static Lock lock = new ReentrantLock();
     public static boolean test = false;
@@ -114,8 +116,10 @@ public class MainActivity extends AppCompatActivity {
         imgTraffic = findViewById(R.id.img_traffic);
         imgRoad = findViewById(R.id.img_road);
         imgV2v = findViewById(R.id.img_v2v);
+        tipView = findViewById(R.id.tip_text);
 
-        baseBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.lotus);
+        xCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.xcross);
+        tCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.tcross);
         carBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.ic_directions_car_black_48dp);
         paint = new Paint();
 
@@ -204,18 +208,41 @@ public class MainActivity extends AppCompatActivity {
                             lock.unlock();
                         }
 
+                        myCar = messagePackage.getMyCar();
+                        intersections = messagePackage.getIntersections();
+
                         // view change
-                        if (messagePackage.isChangeView()){
+                        ViewController vc = new ViewController();
+                        if (vc.toChangeView(myCar) == 1){
+                            tipView.setText(R.string.cross);
                             mapView.setVisibility(View.GONE);
-                            mapBitmap = baseBitmap.copy(Bitmap.Config.ARGB_8888, true);
+                            mapBitmap = xCrossBitmap.copy(Bitmap.Config.ARGB_8888, true);
+                            canvas = new Canvas(mapBitmap);
+
+                            double x = vc.tgetViewLeft(31.027853,121.421893);
+                            double y = vc.tgetViewTop(31.027853,121.421893);
+
+                            Log.d(TAG,"x: "+String.valueOf(x)+" y: "+String.valueOf(y));
+
+                            canvas.drawBitmap(carBitmap,(float) x*canvas.getWidth()/1920-24,
+                                    (float) y*canvas.getHeight()/1080-24, paint);
+                            canvasView.setImageBitmap(mapBitmap);
+                            canvasView.setVisibility(View.VISIBLE);
+                        } else if (vc.toChangeView(myCar) == 2){
+                            tipView.setText(R.string.cross);
+                            mapView.setVisibility(View.GONE);
+                            mapBitmap = tCrossBitmap.copy(Bitmap.Config.ARGB_8888, true);
                             canvas = new Canvas(mapBitmap);
                             canvas.drawBitmap(carBitmap,200,200,paint);
                             canvasView.setImageBitmap(mapBitmap);
                             canvasView.setVisibility(View.VISIBLE);
+                        } else {
+                            tipView.setText(R.string.welcome);
+                            canvasView.setVisibility(View.GONE);
+                            mapView.setVisibility(View.VISIBLE);
+                            canvas = null;
+                            mapBitmap = null;
                         }
-
-                        myCar = messagePackage.getMyCar();
-                        intersections = messagePackage.getIntersections();
 
                         // updating map
                         currentL = new LatLng(myCar.currentLat, myCar.currentLng);

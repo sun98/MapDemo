@@ -38,4 +38,6 @@
     <string name="stop">停止</string>
     <string name="start">开始</string>
     <string name="_7100_port_text">7100 Port Text</string>
+    <string name="info">未收到消息</string>
+    <string name="cross">您已进入路口</string>
 </resources>

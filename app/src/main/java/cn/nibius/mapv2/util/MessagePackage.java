@@ -12,7 +12,6 @@ public class MessagePackage {
 
     private Map intersections;
     private Viechle myCar;
-    private boolean changeView = false;
 
     public MessagePackage() {
         intersections =  new HashMap();
@@ -30,8 +29,4 @@ public class MessagePackage {
     public Map getIntersections() { return intersections; }
 
     public Viechle getMyCar() { return myCar; }
-
-    public void setChangeView(boolean change) { changeView = change; }
-
-    public boolean isChangeView() { return changeView; }
 }

@@ -216,9 +216,6 @@ public class ComService extends Service {
                     try {
                         messagePackage.setIntersections(intersections);
                         messagePackage.setMyCar(myCar);
-                        ViewController v = new ViewController();
-                        messagePackage.setChangeView(v.isTimeToChangeView(myCar));
-
                     } finally {
                         MainActivity.lock.unlock();
                     }
