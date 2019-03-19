@@ -1,8 +1,6 @@
 package cn.nibius.mapv2.util;
 
-/**
- * Created by Nibius at 2018/6/19 14:06.
- */
+
 public class EnDecodeUtil {
 
     public static byte[] hexString2Byte(String s) {

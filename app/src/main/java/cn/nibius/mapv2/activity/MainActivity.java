@@ -40,6 +40,11 @@ import com.baidu.mapapi.map.offline.MKOfflineMap;
 import com.baidu.mapapi.map.offline.MKOfflineMapListener;
 import com.baidu.mapapi.model.LatLng;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -96,6 +101,29 @@ public class MainActivity extends AppCompatActivity {
     public static Lock lock = new ReentrantLock();
     public static boolean test = false;
 
+
+    public static String getIP(Context context){
+
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();)
+                {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress() && (inetAddress instanceof Inet4Address))
+                    {
+                        return inetAddress.getHostAddress().toString();
+                    }
+                }
+            }
+        }
+        catch (SocketException ex){
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -118,10 +146,13 @@ public class MainActivity extends AppCompatActivity {
         imgV2v = findViewById(R.id.img_v2v);
         tipView = findViewById(R.id.tip_text);
 
-        xCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.xcross);
+        xCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.xcross_m);
         tCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.tcross);
         carBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.ic_directions_car_black_48dp);
         paint = new Paint();
+
+        TextView showInfo = findViewById(R.id.text_info);
+        showInfo.setText("本机LAN IP: " + getIP(context));
 
         startListen = new View.OnClickListener() {
             @Override
@@ -212,30 +243,32 @@ public class MainActivity extends AppCompatActivity {
                         intersections = messagePackage.getIntersections();
 
                         // view change
-                        ViewController vc = new ViewController();
-                        if (vc.toChangeView(myCar) == 1){
+                        ViewController vc = new ViewController(myCar);
+
+                        if (vc.toChangeView() == 1){
                             tipView.setText(R.string.cross);
                             mapView.setVisibility(View.GONE);
                             mapBitmap = xCrossBitmap.copy(Bitmap.Config.ARGB_8888, true);
                             canvas = new Canvas(mapBitmap);
 
-                            double x = vc.tgetViewLeft(31.027853,121.421893);
-                            double y = vc.tgetViewTop(31.027853,121.421893);
+                            canvas.drawBitmap(carBitmap,(float) vc.getViewLeft()*canvas.getWidth()-24,
+                                    (float) vc.getViewTop()*canvas.getHeight()-24, paint);
 
-                            Log.d(TAG,"x: "+String.valueOf(x)+" y: "+String.valueOf(y));
-
-                            canvas.drawBitmap(carBitmap,(float) x*canvas.getWidth()/1920-24,
-                                    (float) y*canvas.getHeight()/1080-24, paint);
                             canvasView.setImageBitmap(mapBitmap);
                             canvasView.setVisibility(View.VISIBLE);
-                        } else if (vc.toChangeView(myCar) == 2){
+
+                        } else if (vc.toChangeView() == 2){
                             tipView.setText(R.string.cross);
                             mapView.setVisibility(View.GONE);
                             mapBitmap = tCrossBitmap.copy(Bitmap.Config.ARGB_8888, true);
                             canvas = new Canvas(mapBitmap);
-                            canvas.drawBitmap(carBitmap,200,200,paint);
+
+                            canvas.drawBitmap(carBitmap,(float) vc.getViewLeft()*canvas.getWidth()-24,
+                                    (float) vc.getViewTop()*canvas.getHeight()-24, paint);
+
                             canvasView.setImageBitmap(mapBitmap);
                             canvasView.setVisibility(View.VISIBLE);
+
                         } else {
                             tipView.setText(R.string.welcome);
                             canvasView.setVisibility(View.GONE);
@@ -254,9 +287,9 @@ public class MainActivity extends AppCompatActivity {
 
                         // show info from message
                         TextView showInfo = findViewById(R.id.text_info);
-                        String showOff = "";
+                        String showOff = "本机LAN IP: " + getIP(context);
 
-                        showOff += "本车位置: "+String.valueOf(myCar.currentLat)+" "+String.valueOf(myCar.currentLng);
+                        showOff += "\n本车位置: "+String.valueOf(myCar.currentLat)+" "+String.valueOf(myCar.currentLng);
                         showOff += "\n速度: "+String.valueOf(myCar.speed)+" 方向角: "+String.valueOf(myCar.heading);
 
                         for(Object i : intersections.values()){

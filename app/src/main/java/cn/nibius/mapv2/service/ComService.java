@@ -46,9 +46,7 @@ public class ComService extends Service {
     private MessagePackage messagePackage = new MessagePackage();
     private FileOutputStream fos;
 
-    // MAPData & SPAT
     private Map intersections =  new HashMap();
-    // BSM
     private Viechle myCar= new Viechle();
 
 
@@ -163,7 +161,6 @@ public class ComService extends Service {
                         }
 
                         intersections.put(newData.ID, newData);
-                        //Log.d(TAG,"MAP ID now: "+String.valueOf(((Intersection) intersections.get(newData.ID)).ID));
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -196,8 +193,6 @@ public class ComService extends Service {
                         myCar.currentLng = (double)String8ToInt(blob1.substring(22, 30)) / 1E7;
                         myCar.speed = Integer.parseInt(blob1.substring(42, 46),16);
                         myCar.heading = (double)String4ToInt(blob1.substring(46, 50)) / 1E2;
-
-                        //Log.d(TAG,"BSM : "+String.valueOf(myCar.speed)+" "+String.valueOf(myCar.heading));
 
                     } catch (JSONException e) {
                         e.printStackTrace();

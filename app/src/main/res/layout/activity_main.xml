@@ -155,7 +155,6 @@
                 android:layout_height="match_parent"
                 android:gravity="start"
                 android:layout_marginStart="50dp"
-                android:text="@string/info"
                 android:textSize="16sp" />
 
         </RelativeLayout>
