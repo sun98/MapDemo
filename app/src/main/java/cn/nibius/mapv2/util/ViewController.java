@@ -1,6 +1,9 @@
 package cn.nibius.mapv2.util;
 
 
+import android.location.Location;
+import android.util.Log;
+
 public class ViewController {
     private Viechle myCar;
 
@@ -26,8 +29,19 @@ public class ViewController {
         xk2 = (B*X - A*Y)/(A*A + B*B);
     }
 
+
     public int toChangeView(){
-        cross = 1;
+        //Log.d("view","Distance: "+String.valueOf(getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng)));
+        if(getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng) <= 200){
+            cross = 1;
+        }
+        else if(getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng) <= 200){
+            cross = 2;
+        }
+        else {
+            cross = 0;
+        }
+
         return cross;
     }
 
@@ -55,5 +69,12 @@ public class ViewController {
         else {
             return 0;
         }
+    }
+
+
+    private double getDistance(double lat1, double lng1, double lat2, double lng2) {
+        float[] results=new float[1];
+        Location.distanceBetween(lat1, lng1, lat2, lng2, results);
+        return results[0];
     }
 }

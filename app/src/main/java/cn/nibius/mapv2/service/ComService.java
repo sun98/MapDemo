@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -41,6 +42,7 @@ public class ComService extends Service {
     private boolean stop = false;
     private IBinder myBinder = new MyBinder();
     private Runnable[] networkRunnable = new Runnable[numPorts];
+    private Handler updaterHandler = new Handler();
     private DatagramSocket[] sockets = new DatagramSocket[numPorts];
     private Runnable masterThread;
     private MessagePackage messagePackage = new MessagePackage();
@@ -189,15 +191,19 @@ public class ComService extends Service {
                         JSONObject json = new JSONObject(messageBSM);
                         String blob1 = json.getString("blob1");
 
-                        myCar.currentLat = (double)String8ToInt(blob1.substring(14, 22)) / 1E7;
-                        myCar.currentLng = (double)String8ToInt(blob1.substring(22, 30)) / 1E7;
+                        myCar.update((double)String8ToInt(blob1.substring(14, 22)) / 1E7,
+                                (double)String8ToInt(blob1.substring(22, 30)) / 1E7);
+
+                        /*
                         myCar.speed = Integer.parseInt(blob1.substring(42, 46),16);
                         myCar.heading = (double)String4ToInt(blob1.substring(46, 50)) / 1E2;
+                        */
 
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
+                updaterHandler.postDelayed(this, 100);
             }
         };
 
@@ -214,13 +220,8 @@ public class ComService extends Service {
                     } finally {
                         MainActivity.lock.unlock();
                     }
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                 }
-
+                updaterHandler.postDelayed(this, 100);
             }
         };
     }
