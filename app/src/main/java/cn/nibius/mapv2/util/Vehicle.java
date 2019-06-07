@@ -6,14 +6,15 @@ import android.location.Location;
  * Created by Tinsmore on 2019/1/5.
  */
 
-public class Viechle {
+public class Vehicle {
 
     public double currentLat = -1, currentLng = -1, speed = 0, heading = 0;
     public double lastLat = -1, lastLng = -1;
     private final double timeGap = 0.1;
+    public int safetyMessage = 0;
 
 
-    public void update(double lat, double lng){
+    public void updatePosition(double lat, double lng){
         lastLat = currentLat;
         lastLng = currentLng;
         currentLat = lat;
@@ -24,6 +25,10 @@ public class Viechle {
         }
         speed = getDistance(lastLat, lastLng, currentLat, currentLng)/timeGap;
         heading = getAngle(lastLng, lastLat, currentLng, currentLat);
+    }
+
+    public void updateSafety(int message){
+        safetyMessage = message;
     }
 
 

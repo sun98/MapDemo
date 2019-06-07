@@ -11,22 +11,22 @@ import java.util.Map;
 public class MessagePackage {
 
     private Map intersections;
-    private Viechle myCar;
+    private Vehicle myCar;
 
     public MessagePackage() {
         intersections =  new HashMap();
-        myCar = new Viechle();
+        myCar = new Vehicle();
     }
 
     public void setIntersections(Map intersections) {
         this.intersections = intersections;
     }
 
-    public void setMyCar(Viechle myCar) {
+    public void setMyCar(Vehicle myCar) {
         this.myCar = myCar;
     }
 
     public Map getIntersections() { return intersections; }
 
-    public Viechle getMyCar() { return myCar; }
+    public Vehicle getMyCar() { return myCar; }
 }

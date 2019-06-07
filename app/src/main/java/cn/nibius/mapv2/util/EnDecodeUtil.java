@@ -4,11 +4,6 @@ package cn.nibius.mapv2.util;
 public class EnDecodeUtil {
 
     public static String removeTail0(String str) {
-//        if (!str.substring(str.length() - 1).equals("0")) {
-//            return str;
-//        } else {
-//            return removeTail0(str.substring(0, str.length() - 1));
-//        }
         while (str.endsWith("0")) {
             str = str.substring(0, str.length() - 1);
         }

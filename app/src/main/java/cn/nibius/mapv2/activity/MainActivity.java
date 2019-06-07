@@ -56,7 +56,7 @@ import cn.nibius.mapv2.util.Intersection;
 import cn.nibius.mapv2.util.MessagePackage;
 import cn.nibius.mapv2.util.MyLocationListener;
 import cn.nibius.mapv2.util.ToastUtil;
-import cn.nibius.mapv2.util.Viechle;
+import cn.nibius.mapv2.util.Vehicle;
 import cn.nibius.mapv2.util.ViewController;
 
 
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private Context context;
 
     private double myLat = 31.0278622712, myLng = 121.4218843711;
-    private Viechle myCar;
+    private Vehicle myCar;
     private Map intersections;
 
     private MessagePackage messagePackage;
@@ -146,8 +146,10 @@ public class MainActivity extends AppCompatActivity {
         imgV2v = findViewById(R.id.img_v2v);
         tipView = findViewById(R.id.tip_text);
 
-        xCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.xcross_m);
-        tCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.tcross_new);
+        xCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.xcross);
+        tCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.tcross);
+        xCrossBitmap  = Bitmap.createScaledBitmap(xCrossBitmap, xCrossBitmap.getWidth()/2, xCrossBitmap.getHeight()/2, false);
+        tCrossBitmap  = Bitmap.createScaledBitmap(tCrossBitmap, tCrossBitmap.getWidth()/2, tCrossBitmap.getHeight()/2, false);
         carBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.ic_directions_car_black_48dp);
         paint = new Paint();
 

@@ -3,7 +3,6 @@ package cn.nibius.mapv2.service;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
@@ -12,8 +11,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -26,19 +23,15 @@ import cn.nibius.mapv2.activity.MainActivity;
 import cn.nibius.mapv2.util.MessagePackage;
 import cn.nibius.mapv2.util.Intersection;
 import cn.nibius.mapv2.util.Approach;
-import cn.nibius.mapv2.util.Viechle;
-import cn.nibius.mapv2.util.ViewController;
+import cn.nibius.mapv2.util.Vehicle;
 
 import static cn.nibius.mapv2.util.EnDecodeUtil.String8ToInt;
-import static cn.nibius.mapv2.util.EnDecodeUtil.String4ToInt;
-import static cn.nibius.mapv2.util.EnDecodeUtil.bytesToHexString;
 import static cn.nibius.mapv2.util.EnDecodeUtil.removeTail0;
 
 
 public class ComService extends Service {
 
     private String TAG = "ComService";
-    private boolean record = false;
     private int numPorts = 4;
     private int[] ports = {8887, 8888, 8889, 7100};
     private boolean stop = false;
@@ -48,24 +41,15 @@ public class ComService extends Service {
     private DatagramSocket[] sockets = new DatagramSocket[numPorts];
     private Runnable masterThread;
     private MessagePackage messagePackage = new MessagePackage();
-    private FileOutputStream fos;
 
     private Map intersections =  new HashMap();
-    private Viechle myCar= new Viechle();
+    private Vehicle myCar= new Vehicle();
 
 
     @Override
     public void onCreate() {
         super.onCreate();
-        if (record) {
-            String time = String.valueOf(System.currentTimeMillis());
-            File file = new File(Environment.getExternalStorageDirectory(), time);
-            try {
-                fos = new FileOutputStream(file);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
+
         for (int i = 0; i < numPorts; i++)
             try {
                 sockets[i] = new DatagramSocket(ports[i]);
@@ -109,12 +93,11 @@ public class ComService extends Service {
 
                         intersections.put(newID, newData);
 
-                        Log.d(TAG,"SPAT ID now: "+String.valueOf(((Intersection) intersections.get(newID)).ID));
-
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
+                updaterHandler.postDelayed(this, 100);
             }
         };
 
@@ -170,6 +153,7 @@ public class ComService extends Service {
                         e.printStackTrace();
                     }
                 }
+                updaterHandler.postDelayed(this, 100);
             }
         };
 
@@ -190,17 +174,11 @@ public class ComService extends Service {
 
                     messageBSM = new String(dataBSM, 0, dataBSM.length);
                     try {
-                        Log.d(TAG,"BSM: "+messageBSM);
                         JSONObject json = new JSONObject(messageBSM);
                         String blob1 = json.getString("blob1");
 
-                        myCar.update((double)String8ToInt(blob1.substring(14, 22)) / 1E7,
+                        myCar.updatePosition((double)String8ToInt(blob1.substring(14, 22)) / 1E7,
                                 (double)String8ToInt(blob1.substring(22, 30)) / 1E7);
-
-                        /*
-                        myCar.speed = Integer.parseInt(blob1.substring(42, 46),16);
-                        myCar.heading = (double)String4ToInt(blob1.substring(46, 50)) / 1E2;
-                        */
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -226,52 +204,40 @@ public class ComService extends Service {
                         e.printStackTrace();
                     }
                     byte[] data7100 = packet.getData();
-//                    if (MainActivity.test) message7100 = new String(data7100, 0, data7100.length);
-//                    else {
-                    message7100 = bytesToHexString(data7100);
 
-                    Log.d(TAG,"7100: "+message7100);
-                    /*
-                    if (record) {
-                        try {
-                            fos.write(("7100 " + removeTail0(message7100)).getBytes());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    */
-//                    }
+                    message7100 = new String(data7100, 0, data7100.length);
+                    //Log.d(TAG,"7100: "+message7100);
                     message7100 = removeTail0(message7100);
+
                     if (message7100.startsWith("<ui_request>")) {
                         message7100 = message7100.substring(0, 317);
                     } else {
                         message7100 = message7100.substring(0, 255);
                     }
-//                    Log.i(TAG, "run: " + message7100);
+
                     Log.d(TAG,"7100 at 20: "+message7100.charAt(20));
                     switch (message7100.charAt(20)) {
-                        case '1':
-                        case '2':
-                        case '3':
+                        case '1': // forward crash
+                            myCar.updateSafety(1);
+                            break;
+                        case '2': // emergency break
+                            myCar.updateSafety(2);
+                            break;
+                        case '3': // side crash
                             /*
-                            cancel = false;
-                            hasEvent = true;
                             textV2V = regexUtil.getMatch(message7100, pText);
                             idV2V = message7100.charAt(20) - '0';
                             */
+                            myCar.updateSafety(3);
                             break;
                         case 't':
-                            /*
-                            cancel = true;
-                            hasEvent = true;
-                            */
+                            myCar.updateSafety(0);
                             break;
                         default:
-                            //hasEvent = false;
                             break;
                     }
-//                    Log.i(TAG, "run: " + textV2V);
                 }
+                updaterHandler.postDelayed(this, 100);
             }
         };
 
@@ -320,12 +286,5 @@ public class ComService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (record) {
-            try {
-                fos.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }

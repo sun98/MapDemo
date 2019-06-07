@@ -5,24 +5,24 @@ import android.location.Location;
 import android.util.Log;
 
 public class ViewController {
-    private Viechle myCar;
+    private Vehicle myCar;
 
     private double xCenterLat = 31.027853, xCenterLng = 121.421893;
-    private double xRefeLat = 31.027845, xRefeLng = 121.421729;
-    private double xCenterLeft = 0.4444, xCenterTop = 0.5;
-    private double xRefeLeft = 0.3148, xRefeTop = 0.4375;
+    private double xRefeLat = 31.02754, xRefeLng = 121.4221;
+    private double xCenterLeft = 0.28125, xCenterTop = 0.5011;
+    private double xRefeLeft = 0.32958, xRefeTop = 0.9809;
 
     private double tCenterLat = 31.0290921, tCenterLng = 121.4257313;
-    private double tRefeLat = 31.02901, tRefeLng = 121.425636;
-    private double tCenterLeft = 0.608235, tCenterTop = 0.121376;
-    private double tRefeLeft = 0.51154, tRefeTop = 0.19757;
+    private double tRefeLat = 31.0277, tRefeLng = 121.426278;
+    private double tCenterLeft = 0.62136, tCenterTop = 0.0582298;
+    private double tRefeLeft = 0.5962, tRefeTop = 0.9982;
 
     private double xk1 = 0, xk2 = 0, tk1 = 0, tk2 = 0;
     private int cross = 0;
     // 0 - not in  1 - xcross, 2 - tcross
 
 
-    public ViewController(Viechle car){
+    public ViewController(Vehicle car){
         myCar = car;
 
         double Ax = xRefeLat-xCenterLat, Bx = xRefeLng-xCenterLng, Xx = xRefeLeft-xCenterLeft, Yx = xRefeTop-xCenterTop;
@@ -38,10 +38,10 @@ public class ViewController {
     public int toChangeView(){
         //Log.d("view","Distance x: "+String.valueOf(getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng)));
         //Log.d("view","Distance t: "+String.valueOf(getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng)));
-        if(getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng) <= 200){
+        if(getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng) <= 400){
             cross = 1;
         }
-        else if(getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng) <= 200){
+        else if(getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng) <= 400){
             cross = 2;
         }
         else {
@@ -54,10 +54,20 @@ public class ViewController {
 
     public double getViewLeft(){
         if (cross == 1){
-            return xCenterLeft + xk1*(myCar.currentLat - xCenterLat) + xk2*(myCar.currentLng - xCenterLng);
+            double result = xCenterLeft + xk1*(myCar.currentLat - xCenterLat) + xk2*(myCar.currentLng - xCenterLng);
+            if (result > 1)
+                result = 1;
+            if (result < 0)
+                result = 0;
+            return result;
         }
         else if (cross == 2){
-            return tCenterLeft + tk1*(myCar.currentLat - tCenterLat) + tk2*(myCar.currentLng - tCenterLng);
+            double result = tCenterLeft + tk1*(myCar.currentLat - tCenterLat) + tk2*(myCar.currentLng - tCenterLng);
+            if (result > 1)
+                result = 1;
+            if (result < 0)
+                result = 0;
+            return result;
         }
         else {
             return 0;
@@ -67,10 +77,20 @@ public class ViewController {
 
     public double getViewTop(){
         if (cross == 1){
-            return xCenterTop + xk1*(myCar.currentLng - xCenterLng) - xk2*(myCar.currentLat - xCenterLat);
+            double result = xCenterTop + xk1*(myCar.currentLng - xCenterLng) - xk2*(myCar.currentLat - xCenterLat);
+            if (result > 1)
+                result = 1;
+            if (result < 0)
+                result = 0;
+            return result;
         }
         else if (cross == 2){
-            return tCenterTop + tk1*(myCar.currentLng - tCenterLng) - tk2*(myCar.currentLat - tCenterLat);
+            double result = tCenterTop + tk1*(myCar.currentLng - tCenterLng) - tk2*(myCar.currentLat - tCenterLat);
+            if (result > 1)
+                result = 1;
+            if (result < 0)
+                result = 0;
+            return result;
         }
         else {
             return 0;
