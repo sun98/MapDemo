@@ -12,10 +12,10 @@ public class ViewController {
     private double xCenterLeft = 0.4444, xCenterTop = 0.5;
     private double xRefeLeft = 0.3148, xRefeTop = 0.4375;
 
-    private double tCenterLat = 31.029086, tCenterLng = 121.425732;
-    private double tRefeLat = 0, tRefeLng = 0;
-    private double tCenterLeft = 0.4444, tCenterTop = 0.5;
-    private double tRefeLeft = 0.3148, tRefeTop = 0.4375;
+    private double tCenterLat = 31.0290921, tCenterLng = 121.4257313;
+    private double tRefeLat = 31.02901, tRefeLng = 121.425636;
+    private double tCenterLeft = 0.608235, tCenterTop = 0.121376;
+    private double tRefeLeft = 0.51154, tRefeTop = 0.19757;
 
     private double xk1 = 0, xk2 = 0, tk1 = 0, tk2 = 0;
     private int cross = 0;
@@ -24,14 +24,20 @@ public class ViewController {
 
     public ViewController(Viechle car){
         myCar = car;
-        double A = xRefeLat-xCenterLat, B = xRefeLng-xCenterLng, X = xRefeLeft-xCenterLeft, Y = xRefeTop-xCenterTop;
-        xk1 = (A*X + B*Y)/(A*A + B*B);
-        xk2 = (B*X - A*Y)/(A*A + B*B);
+
+        double Ax = xRefeLat-xCenterLat, Bx = xRefeLng-xCenterLng, Xx = xRefeLeft-xCenterLeft, Yx = xRefeTop-xCenterTop;
+        xk1 = (Ax*Xx + Bx*Yx)/(Ax*Ax + Bx*Bx);
+        xk2 = (Bx*Xx - Ax*Yx)/(Ax*Ax + Bx*Bx);
+
+        double At = tRefeLat-tCenterLat, Bt = tRefeLng-tCenterLng, Xt = tRefeLeft-tCenterLeft, Yt = tRefeTop-tCenterTop;
+        tk1 = (At*Xt + Bt*Yt)/(At*At + Bt*Bt);
+        tk2 = (Bt*Xt - At*Yt)/(At*At + Bt*Bt);
     }
 
 
     public int toChangeView(){
-        //Log.d("view","Distance: "+String.valueOf(getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng)));
+        //Log.d("view","Distance x: "+String.valueOf(getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng)));
+        //Log.d("view","Distance t: "+String.valueOf(getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng)));
         if(getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng) <= 200){
             cross = 1;
         }
@@ -51,7 +57,7 @@ public class ViewController {
             return xCenterLeft + xk1*(myCar.currentLat - xCenterLat) + xk2*(myCar.currentLng - xCenterLng);
         }
         else if (cross == 2){
-            return 0;
+            return tCenterLeft + tk1*(myCar.currentLat - tCenterLat) + tk2*(myCar.currentLng - tCenterLng);
         }
         else {
             return 0;
@@ -64,7 +70,7 @@ public class ViewController {
             return xCenterTop + xk1*(myCar.currentLng - xCenterLng) - xk2*(myCar.currentLat - xCenterLat);
         }
         else if (cross == 2){
-            return 0;
+            return tCenterTop + tk1*(myCar.currentLng - tCenterLng) - tk2*(myCar.currentLat - tCenterLat);
         }
         else {
             return 0;

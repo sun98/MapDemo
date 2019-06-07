@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
         tipView = findViewById(R.id.tip_text);
 
         xCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.xcross_m);
-        tCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.tcross);
+        tCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.tcross_new);
         carBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.ic_directions_car_black_48dp);
         paint = new Paint();
 

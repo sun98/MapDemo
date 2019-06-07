@@ -3,6 +3,18 @@ package cn.nibius.mapv2.util;
 
 public class EnDecodeUtil {
 
+    public static String removeTail0(String str) {
+//        if (!str.substring(str.length() - 1).equals("0")) {
+//            return str;
+//        } else {
+//            return removeTail0(str.substring(0, str.length() - 1));
+//        }
+        while (str.endsWith("0")) {
+            str = str.substring(0, str.length() - 1);
+        }
+        return str;
+    }
+
     public static byte[] hexString2Byte(String s) {
         int len = s.length();
         byte[] b = new byte[len / 2];
@@ -28,5 +40,17 @@ public class EnDecodeUtil {
         if (s.charAt(0) >= '0' && s.charAt(0) <= '8')
             return String8ToInt("0000" + s);
         else return String8ToInt("ffff" + s);
+    }
+
+    public static String bytesToHexString(byte[] src) {
+        StringBuilder stringBuilder = new StringBuilder("");
+        if (src == null || src.length <= 0) return null;
+        for (byte aSrc : src) {
+            int v = aSrc & 0xFF;
+            String hv = Integer.toHexString(v);
+            if (hv.length() < 2) stringBuilder.append(0);
+            stringBuilder.append(hv);
+        }
+        return stringBuilder.toString();
     }
 }

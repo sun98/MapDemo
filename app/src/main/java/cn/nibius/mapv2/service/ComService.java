@@ -31,14 +31,16 @@ import cn.nibius.mapv2.util.ViewController;
 
 import static cn.nibius.mapv2.util.EnDecodeUtil.String8ToInt;
 import static cn.nibius.mapv2.util.EnDecodeUtil.String4ToInt;
+import static cn.nibius.mapv2.util.EnDecodeUtil.bytesToHexString;
+import static cn.nibius.mapv2.util.EnDecodeUtil.removeTail0;
 
 
 public class ComService extends Service {
 
     private String TAG = "ComService";
     private boolean record = false;
-    private int numPorts = 3;
-    private int[] ports = {8887, 8888, 8889};
+    private int numPorts = 4;
+    private int[] ports = {8887, 8888, 8889, 7100};
     private boolean stop = false;
     private IBinder myBinder = new MyBinder();
     private Runnable[] networkRunnable = new Runnable[numPorts];
@@ -107,7 +109,7 @@ public class ComService extends Service {
 
                         intersections.put(newID, newData);
 
-                        //Log.d(TAG,"SPAT ID now: "+String.valueOf(((Intersection) intersections.get(newID)).ID));
+                        Log.d(TAG,"SPAT ID now: "+String.valueOf(((Intersection) intersections.get(newID)).ID));
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -188,6 +190,7 @@ public class ComService extends Service {
 
                     messageBSM = new String(dataBSM, 0, dataBSM.length);
                     try {
+                        Log.d(TAG,"BSM: "+messageBSM);
                         JSONObject json = new JSONObject(messageBSM);
                         String blob1 = json.getString("blob1");
 
@@ -204,6 +207,71 @@ public class ComService extends Service {
                     }
                 }
                 updaterHandler.postDelayed(this, 100);
+            }
+        };
+
+
+        networkRunnable[3] = new Runnable() {     // 7100 port
+            String message7100;
+            String pText = "<text>(.+)</text>";
+            //RegexUtil regexUtil = new RegexUtil();
+
+            @Override
+            public void run() {
+                while (!stop) {
+                    DatagramPacket packet = new DatagramPacket(new byte[2048], 2048);
+                    try {
+                        sockets[3].receive(packet);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    byte[] data7100 = packet.getData();
+//                    if (MainActivity.test) message7100 = new String(data7100, 0, data7100.length);
+//                    else {
+                    message7100 = bytesToHexString(data7100);
+
+                    Log.d(TAG,"7100: "+message7100);
+                    /*
+                    if (record) {
+                        try {
+                            fos.write(("7100 " + removeTail0(message7100)).getBytes());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    */
+//                    }
+                    message7100 = removeTail0(message7100);
+                    if (message7100.startsWith("<ui_request>")) {
+                        message7100 = message7100.substring(0, 317);
+                    } else {
+                        message7100 = message7100.substring(0, 255);
+                    }
+//                    Log.i(TAG, "run: " + message7100);
+                    Log.d(TAG,"7100 at 20: "+message7100.charAt(20));
+                    switch (message7100.charAt(20)) {
+                        case '1':
+                        case '2':
+                        case '3':
+                            /*
+                            cancel = false;
+                            hasEvent = true;
+                            textV2V = regexUtil.getMatch(message7100, pText);
+                            idV2V = message7100.charAt(20) - '0';
+                            */
+                            break;
+                        case 't':
+                            /*
+                            cancel = true;
+                            hasEvent = true;
+                            */
+                            break;
+                        default:
+                            //hasEvent = false;
+                            break;
+                    }
+//                    Log.i(TAG, "run: " + textV2V);
+                }
             }
         };
 
