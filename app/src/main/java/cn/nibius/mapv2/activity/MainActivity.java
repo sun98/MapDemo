@@ -82,12 +82,12 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imgVelocity, imgTraffic, imgRoad, imgV2v;
     private Button btnBind, btnMap;
 
-    private boolean isUpdating = false;
+    private boolean isUpdating = true;
     private View.OnClickListener startListen, stopListen, toggleUpdater;
     private MapView mapView;
     private BaiduMap baiduMap;
     private ComService.MyBinder binder;
-    private boolean isListening = false;
+    private boolean isListening = true;
     private ServiceConnection connection;
     private LocationClient locationClient = null;
     private MyLocationListener myLocationListener = new MyLocationListener();
