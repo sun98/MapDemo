@@ -39,7 +39,7 @@ public class Vehicle {
     }
 
 
-    public static double getAngle(double long_A, double lat_A, double long_B, double lat_B) {
+    public double getAngle(double long_A, double lat_A, double long_B, double lat_B) {
         MyLatLng A = new MyLatLng(long_A, lat_A);
         MyLatLng B = new MyLatLng(long_B, lat_B);
         double dx = (B.m_RadLo - A.m_RadLo) * A.Ed;
@@ -59,7 +59,7 @@ public class Vehicle {
     }
 
 
-    static class MyLatLng {
+    class MyLatLng {
         final static double Rc = 6378137;
         final static double Rj = 6356725;
         double m_LoDeg, m_LoMin, m_LoSec;

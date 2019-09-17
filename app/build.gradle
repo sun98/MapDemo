@@ -3,7 +3,13 @@ apply plugin: 'com.android.application'
 android {
     signingConfigs {
         config {
-            storeFile file('C:/Users/Nibius/.android/debug.keystore')
+            storeFile file('C:/Users/Tinsm/.android/debug.keystore')
+        }
+        myconfig {
+            keyAlias 'Mykey'
+            keyPassword 'keyadmin'
+            storeFile file('C:/Users/Tinsm/.android/mykey.jks')
+            storePassword 'keyadmin'
         }
     }
     compileSdkVersion 28
@@ -15,12 +21,19 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.myconfig
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.myconfig
         }
+        debug {
+            signingConfig signingConfigs.myconfig
+        }
+    }
+    productFlavors {
     }
 }
 

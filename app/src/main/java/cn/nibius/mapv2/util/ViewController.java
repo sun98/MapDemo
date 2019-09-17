@@ -1,8 +1,8 @@
 package cn.nibius.mapv2.util;
 
-
 import android.location.Location;
-import android.util.Log;
+import java.util.Map;
+
 
 public class ViewController {
     private Vehicle myCar;
@@ -36,12 +36,14 @@ public class ViewController {
 
 
     public int toChangeView(){
-        //Log.d("view","Distance x: "+String.valueOf(getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng)));
-        //Log.d("view","Distance t: "+String.valueOf(getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng)));
-        if(getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng) <= 400){
+        double distance_xcross, distance_tcross;
+        distance_xcross = getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng);
+        distance_tcross = getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng);
+
+        if(distance_xcross <= 100 && distance_xcross < distance_tcross){
             cross = 1;
         }
-        else if(getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng) <= 400){
+        else if(distance_tcross <= 100){
             cross = 2;
         }
         else {
@@ -49,6 +51,49 @@ public class ViewController {
         }
 
         return cross;
+    }
+
+
+    public String closestIntersection(Map intersections){
+        String targetID = null;
+        double minDist = 9999;
+        for(Object i : intersections.values()) {
+            Intersection inter = (Intersection) i;
+            double distance = getDistance(myCar.currentLat, myCar.currentLng, inter.centerLat, inter.centerLng);
+            if (distance < minDist){
+                targetID = inter.ID;
+                minDist = distance;
+            }
+        }
+
+        return targetID;
+    }
+
+
+    public String pointedIntersection(Map intersections){
+        String targetID = null;
+        double minAngle = 360;
+        for(Object i : intersections.values()) {
+            Intersection inter = (Intersection) i;
+            double angle = myCar.getAngle(myCar.currentLng, myCar.currentLat, inter.centerLng, inter.centerLat);
+            double angle_diff = Math.abs(angle - myCar.heading);
+            if (angle < minAngle){
+                targetID = inter.ID;
+                minAngle = angle;
+            }
+        }
+
+        return targetID;
+    }
+
+
+    public int pointedLane(Intersection intersection){
+        double angle = myCar.getAngle(myCar.currentLng, myCar.currentLat, intersection.centerLng, intersection.centerLat);
+        for(Object lane : intersection.approaches.values()) {
+            break;
+        }
+
+        return 0;
     }
 
 

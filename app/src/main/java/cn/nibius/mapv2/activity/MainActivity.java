@@ -63,43 +63,36 @@ import cn.nibius.mapv2.util.ViewController;
 public class MainActivity extends AppCompatActivity {
     private String TAG = "MainActivity";
     private Context context;
-
     private double myLat = 31.0278622712, myLng = 121.4218843711;
     private Vehicle myCar;
     private Map intersections;
-
     private MessagePackage messagePackage;
     private TextToSpeech textToSpeech;
     private MKOfflineMap mOffline;
-
     private int MAX_SOURCE = 4;
     private Marker[] markers = new Marker[MAX_SOURCE];
     private int MAX_TEXT = 4;
     private TextOptions[] textOptions = new TextOptions[MAX_TEXT];
-
     private Handler updaterHandler = new Handler();
     private Runnable mapUpdater, messageUpdater;
     private ImageView imgVelocity, imgTraffic, imgRoad, imgV2v;
-    private Button btnBind, btnMap;
-
-    private boolean isUpdating = true;
-    private View.OnClickListener startListen, stopListen, toggleUpdater;
+    private Button btnMap;
+    private boolean isListening = false;
+    private View.OnClickListener toggleUpdater;
     private MapView mapView;
     private BaiduMap baiduMap;
     private ComService.MyBinder binder;
-    private boolean isListening = true;
     private ServiceConnection connection;
     private LocationClient locationClient = null;
     private MyLocationListener myLocationListener = new MyLocationListener();
-
     private ImageView canvasView;
     private Bitmap xCrossBitmap, tCrossBitmap, mapBitmap, carBitmap;
     private Canvas canvas;
     private Paint paint;
     private TextView tipView;
 
+
     public static Lock lock = new ReentrantLock();
-    public static boolean test = false;
 
 
     public static String getIP(Context context){
@@ -136,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
         bindService(new Intent(context, ComService.class), connection, BIND_AUTO_CREATE);
     }
 
+
     private void initVariables() {
         context = getApplicationContext();
         mapView = findViewById(R.id.bmap);
@@ -156,42 +150,23 @@ public class MainActivity extends AppCompatActivity {
         TextView showInfo = findViewById(R.id.text_info);
         showInfo.setText("本机LAN IP: " + getIP(context));
 
-        startListen = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                binder.startListen();
-                isListening = true;
-                view.setOnClickListener(stopListen);
-            }
-        };
-
-        stopListen = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                binder.stopListen();
-                isListening = false;
-                view.setOnClickListener(startListen);
-            }
-        };
-
         toggleUpdater = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (isUpdating) {
-                    updaterHandler.removeCallbacks(mapUpdater);
-                    updaterHandler.removeCallbacks(messageUpdater);
+                if (isListening) {
+                    binder.stopListen();
+                    isListening = false;
                     view.setBackgroundResource(R.drawable.play_icon);
+                    Log.i(TAG, "stop listen");
                 } else {
-                    updaterHandler.post(mapUpdater);
-                    updaterHandler.post(messageUpdater);
+                    binder.startListen();
+                    isListening = true;
                     view.setBackgroundResource(R.drawable.pause_icon);
+                    Log.i(TAG, "start listen");
                 }
-                isUpdating = !isUpdating;
             }
         };
 
-        btnBind = findViewById(R.id.btn_service);
-        btnBind.setOnClickListener(startListen);
         btnMap = findViewById(R.id.btn_map);
         btnMap.setOnClickListener(toggleUpdater);
 
@@ -225,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
 
-        mapUpdater = new Runnable() { // main thread updating view
+        mapUpdater = new Runnable() {
             LatLng currentL;
             int last_time = 0,last_state = 0;
 
@@ -233,61 +208,58 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 if (isListening) {
                     try {
-                        // get message from binder
                         lock.lock();
                         try {
                             messagePackage = binder.getPackage();
                         } finally {
                             lock.unlock();
                         }
-
                         myCar = messagePackage.getMyCar();
                         intersections = messagePackage.getIntersections();
 
-                        // view change
                         ViewController vc = new ViewController(myCar);
 
                         if (vc.toChangeView() == 1){
-                            tipView.setText(R.string.cross);
-                            mapView.setVisibility(View.GONE);
                             mapBitmap = xCrossBitmap.copy(Bitmap.Config.ARGB_8888, true);
                             canvas = new Canvas(mapBitmap);
-
-                            canvas.drawBitmap(carBitmap,(float) vc.getViewLeft()*canvas.getWidth()-24,
-                                    (float) vc.getViewTop()*canvas.getHeight()-24, paint);
-
+                            canvas.drawBitmap(carBitmap,(float) vc.getViewLeft()*canvas.getWidth(),
+                                    (float) vc.getViewTop()*canvas.getHeight(), paint);
                             canvasView.setImageBitmap(mapBitmap);
-                            canvasView.setVisibility(View.VISIBLE);
+                            if(canvasView.getVisibility() == View.GONE)
+                                canvasView.setVisibility(View.VISIBLE);
+                            if(mapView.getVisibility() == View.VISIBLE)
+                                mapView.setVisibility(View.GONE);
 
                         } else if (vc.toChangeView() == 2){
-                            tipView.setText(R.string.cross);
-                            mapView.setVisibility(View.GONE);
                             mapBitmap = tCrossBitmap.copy(Bitmap.Config.ARGB_8888, true);
                             canvas = new Canvas(mapBitmap);
-
-                            canvas.drawBitmap(carBitmap,(float) vc.getViewLeft()*canvas.getWidth()-24,
-                                    (float) vc.getViewTop()*canvas.getHeight()-24, paint);
-
+                            canvas.drawBitmap(carBitmap,(float) vc.getViewLeft()*canvas.getWidth(),
+                                    (float) vc.getViewTop()*canvas.getHeight(), paint);
                             canvasView.setImageBitmap(mapBitmap);
-                            canvasView.setVisibility(View.VISIBLE);
+                            if(canvasView.getVisibility() == View.GONE)
+                                canvasView.setVisibility(View.VISIBLE);
+                            if(mapView.getVisibility() == View.VISIBLE)
+                                mapView.setVisibility(View.GONE);
 
                         } else {
-                            tipView.setText(R.string.welcome);
-                            canvasView.setVisibility(View.GONE);
-                            mapView.setVisibility(View.VISIBLE);
+                            if(canvasView.getVisibility() == View.VISIBLE)
+                                canvasView.setVisibility(View.GONE);
+                            if(mapView.getVisibility() == View.GONE)
+                                mapView.setVisibility(View.VISIBLE);
                             canvas = null;
                             mapBitmap = null;
+
+                            currentL = new LatLng(myCar.currentLat, myCar.currentLng);
+                            Log.i(TAG, "Loc: "+String.valueOf(currentL));
+                            /*
+                            markers[0].setPosition(currentL);
+                            MapStatus msu = new MapStatus.Builder(baiduMap.getMapStatus()).target(currentL).rotate((float)myCar.heading).build();
+                            MapStatusUpdate msus = MapStatusUpdateFactory.newMapStatus(msu);
+                            baiduMap.animateMapStatus(msus);
+                            markers[2].setVisible(false);
+                            */
                         }
 
-                        // updating map
-                        currentL = new LatLng(myCar.currentLat, myCar.currentLng);
-                        markers[0].setPosition(currentL);
-
-                        MapStatus msu = new MapStatus.Builder(baiduMap.getMapStatus()).target(currentL).rotate((float)myCar.heading).build();
-                        MapStatusUpdate msus = MapStatusUpdateFactory.newMapStatus(msu);
-                        baiduMap.animateMapStatus(msus);
-
-                        // show info from message
                         TextView showInfo = findViewById(R.id.text_info);
                         String showOff = "本机LAN IP: " + getIP(context);
 
@@ -332,8 +304,10 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         Log.i(TAG, "MapUpdater: " + e.toString());
                     }
-                } else {     // Service not started
+
+                } else {
                     currentL = myLocationListener.getLatLng();
+                    Log.i(TAG, "currentLoc: "+String.valueOf(currentL));
                     MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newLatLng(currentL);
                     baiduMap.setMapStatus(mapStatusUpdate);
 
@@ -353,11 +327,87 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void run() {
-                imgVelocity.setVisibility(View.VISIBLE);
-                imgTraffic.setVisibility(View.VISIBLE);
-                imgRoad.setVisibility(View.VISIBLE);
-                imgV2v.setVisibility(View.VISIBLE);
+                if (isListening && myCar != null && intersections != null) {
+                    /*
+                    imgVelocity.setVisibility(View.INVISIBLE);
+                    imgTraffic.setVisibility(View.INVISIBLE);
+                    imgRoad.setVisibility(View.INVISIBLE);
+                    imgV2v.setVisibility(View.INVISIBLE);
+                    */
 
+                    ViewController vc = new ViewController(myCar);
+                    boolean emergency = false;
+
+                    switch (myCar.safetyMessage) {
+                        case 1: // forward crash
+                            imgRoad.setVisibility(View.VISIBLE);
+                            imgV2v.setVisibility(View.VISIBLE);
+                            tipView.setText("前方碰撞预警！");
+                            emergency = true;
+                            break;
+                        case 2: // emergency break
+                            imgRoad.setVisibility(View.VISIBLE);
+                            imgV2v.setVisibility(View.VISIBLE);
+                            tipView.setText("请紧急制动！");
+                            emergency = true;
+                            break;
+                        case 3: // right side crash
+                            imgRoad.setVisibility(View.VISIBLE);
+                            imgV2v.setVisibility(View.VISIBLE);
+                            tipView.setText("右侧碰撞预警！");
+                            emergency = true;
+                            break;
+                        case 4: // left side crash
+                            imgRoad.setVisibility(View.VISIBLE);
+                            imgV2v.setVisibility(View.VISIBLE);
+                            tipView.setText("左侧碰撞预警！");
+                            emergency = true;
+                            break;
+                        case 0:
+                            imgRoad.setVisibility(View.INVISIBLE);
+                            imgV2v.setVisibility(View.INVISIBLE);
+                            emergency = false;
+                            break;
+                        default:
+                            imgRoad.setVisibility(View.INVISIBLE);
+                            imgV2v.setVisibility(View.INVISIBLE);
+                            emergency = false;
+                            break;
+                    }
+
+                    try {
+                        if (!emergency && vc.toChangeView() == 1) {
+                            imgTraffic.setVisibility(View.VISIBLE);
+                            tipView.setText(R.string.cross);
+
+                        } else if (!emergency && vc.toChangeView() == 2) {
+                            imgTraffic.setVisibility(View.VISIBLE);
+                            tipView.setText(R.string.cross);
+
+                            Log.i(TAG, "inter: " + vc.pointedIntersection(intersections));
+                            Intersection nextInter = (Intersection) intersections.get(
+                                    vc.pointedIntersection(intersections));
+                            int currentLane = vc.pointedLane(nextInter);
+                            Log.i(TAG, "currentLane: " + String.valueOf(currentLane));
+                            int currentState = (int) nextInter.currentState.get(currentLane);
+                            int timeToChange = (int) nextInter.timeToChange.get(currentLane);
+                            tipView.setText("前方红绿灯状态：" + String.valueOf(currentState)
+                                    + "剩余时间：" + String.valueOf(timeToChange) + "秒");
+
+                        } else if (!emergency) {
+                            Intersection nextInter = (Intersection) intersections.get(
+                                    vc.pointedIntersection(intersections));
+                            int currentLane = vc.pointedLane(nextInter);
+                            int currentState = (int) nextInter.currentState.get(currentLane);
+                            int timeToChange = (int) nextInter.timeToChange.get(currentLane);
+                            imgTraffic.setVisibility(View.INVISIBLE);
+                            tipView.setText("前方红绿灯状态：" + String.valueOf(currentState)
+                                    + "剩余时间：" + String.valueOf(timeToChange) + "秒");
+                        }
+                    } catch (Exception e) {
+                        Log.i(TAG, "MessageUpdater: " + e.toString());
+                    }
+                }
                 updaterHandler.postDelayed(this, 100);
             }
         };
@@ -454,7 +504,6 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "onPause: ");
         binder.stopListen();
         isListening = false;
-        btnBind.setOnClickListener(startListen);
         super.onPause();
     }
 

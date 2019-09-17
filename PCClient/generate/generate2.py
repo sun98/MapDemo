@@ -31,4 +31,4 @@ def encodeNum(num):
     return res
 
 # 31.029091  121.425871
-print(getStr(31.029091, 121.425871, 0, 0))
+print(getStr(31.027771, 121.421761, 0, 0))
