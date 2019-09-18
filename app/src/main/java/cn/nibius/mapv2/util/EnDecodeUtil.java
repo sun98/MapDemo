@@ -1,6 +1,9 @@
 package cn.nibius.mapv2.util;
 
 
+import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.utils.CoordinateConverter;
+
 public class EnDecodeUtil {
 
     public static String removeTail0(String str) {
@@ -47,5 +50,27 @@ public class EnDecodeUtil {
             stringBuilder.append(hv);
         }
         return stringBuilder.toString();
+    }
+
+    public static double stringLatTODouble(String coor) {
+        String dd = coor.substring(0,2);
+        String mm = coor.substring(2,coor.length());
+
+        return Double.parseDouble(dd) + Double.parseDouble(mm)/60;
+    }
+
+    public static double stringLngTODouble(String coor) {
+        String dd = coor.substring(0,3);
+        String mm = coor.substring(3,coor.length());
+
+        return Double.parseDouble(dd) + Double.parseDouble(mm)/60;
+    }
+
+    public static LatLng coorConvert(LatLng sourceLatLng){
+        CoordinateConverter converter  = new CoordinateConverter();
+        converter.from(com.baidu.mapapi.utils.CoordinateConverter.CoordType.GPS);
+        converter.coord(sourceLatLng);
+
+        return converter.convert();
     }
 }

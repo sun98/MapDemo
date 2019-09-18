@@ -101,7 +101,7 @@
             <TextView
                 android:id="@+id/tip_text"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="100dp"
                 android:layout_below="@id/img_layout"
                 android:layout_marginTop="10dp"
                 android:gravity="center"
@@ -126,7 +126,6 @@
                 android:id="@+id/btn_map"
                 android:layout_width="150dp"
                 android:layout_height="150dp"
-                android:layout_marginStart="30dp"
 
                 android:background="@drawable/play_icon" />
 
@@ -141,7 +140,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/button_set"
-        app:layout_constraintVertical_weight="3">
+        app:layout_constraintVertical_weight="1">
 
         <TextView
             android:id="@+id/text_info"

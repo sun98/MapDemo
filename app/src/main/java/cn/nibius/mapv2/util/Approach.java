@@ -11,6 +11,6 @@ public class Approach {
 
     public int selfID;
     public String selfName;
-    public Map lanewidth = new HashMap();
 
+    public Map lanesNodesList =  new HashMap();
 }

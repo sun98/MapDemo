@@ -9,17 +9,27 @@ import android.location.Location;
 public class Vehicle {
 
     public double currentLat = -1, currentLng = -1, speed = 0, heading = 0;
-    public double lastLat = -1, lastLng = -1;
-    private final double timeGap = 0.1;
     public int safetyMessage = 0;
+    private double lastLat = -1, lastLng = -1;
+    private final double timeGap = 0.1;
+    private int consectiveCount = 0;
+    private static int maxCount = 5;
 
 
-    public void updatePosition(double lat, double lng){
+    public void updatePosition(double lat, double lng, int newData){
+        if (newData == 0) {
+            consectiveCount++;
+            if (consectiveCount > maxCount)
+                consectiveCount = maxCount;
+        }
+        else
+            consectiveCount = 0;
+        if (consectiveCount < maxCount && newData == 0)
+            return;
         lastLat = currentLat;
         lastLng = currentLng;
         currentLat = lat;
         currentLng = lng;
-
         if (lastLat == -1 || lastLng == -1){
             return;
         }
@@ -55,6 +65,8 @@ public class Vehicle {
         } else if (dLo < 0 && dLa >= 0) {
             angle = (90. - angle) + 270;
         }
+        if (Double.isNaN(angle))
+            angle = 0.0;
         return angle;
     }
 

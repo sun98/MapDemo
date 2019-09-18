@@ -30,6 +30,7 @@ public class MyLocationListener implements BDLocationListener {
         this.latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
         //获取定位结果
+        /*
         StringBuffer sb = new StringBuffer(256);
 
         sb.append("time : ");
@@ -115,6 +116,7 @@ public class MyLocationListener implements BDLocationListener {
                 sb.append(p.getId() + " " + p.getName() + " " + p.getRank());
             }
         }
+        */
     }
 
     @Override

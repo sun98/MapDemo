@@ -26,6 +26,8 @@ import cn.nibius.mapv2.util.Vehicle;
 
 import static cn.nibius.mapv2.util.EnDecodeUtil.String8ToInt;
 import static cn.nibius.mapv2.util.EnDecodeUtil.removeTail0;
+import static cn.nibius.mapv2.util.EnDecodeUtil.stringLatTODouble;
+import static cn.nibius.mapv2.util.EnDecodeUtil.stringLngTODouble;
 
 
 public class ComService extends Service {
@@ -74,17 +76,21 @@ public class ComService extends Service {
 
                         JSONArray json_inter_array = new JSONArray(json.getString("intersections"));
                         JSONObject json_inter = json_inter_array.getJSONObject(0);
-                        String newID = json_inter.getString("id");
-                        if (!intersections.containsKey(newID)) {
+                        String interID = json_inter.getString("id");
+                        if (!intersections.containsKey(interID)) {
                             continue;
                         }
-                        Intersection newData = (Intersection) intersections.get(newID);
+                        Intersection inter = (Intersection) intersections.get(interID);
                         JSONArray json_stat_array = new JSONArray(json_inter.getString("states"));
-                        JSONObject json_stat_0 = json_stat_array.getJSONObject(0);
-                        String lane = json_stat_0.getString("laneSet");
-                        newData.currentState.put(lane, json_stat_0.getInt("currState"));
-                        newData.timeToChange.put(lane, json_stat_0.getInt("timeToChange"));
-                        intersections.put(newID, newData);
+                        for (int i = 0; i < json_stat_array.length(); i++) {
+                            JSONObject json_laneset = json_stat_array.getJSONObject(i);
+                            String lane = json_laneset.getString("laneSet");
+                            if (lane.equals("FF"))
+                                continue;
+                            inter.currentState.put(lane, json_laneset.getInt("currState"));
+                            inter.timeToChange.put(lane, json_laneset.getInt("timeToChange"));
+                        }
+                        intersections.put(interID, inter);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -110,26 +116,33 @@ public class ComService extends Service {
                     try {
                         JSONObject json = new JSONObject(messageMAP);
                         JSONArray json_inter_array = new JSONArray(json.getString("intersections"));
-                        JSONObject json_inter = json_inter_array.getJSONObject(0);
-                        Intersection newData = new Intersection();
-                        newData.ID = json_inter.getString("id");
-                        JSONObject json_ref = new JSONObject(json_inter.getString("refPoint"));
-                        newData.centerLat = (double) json_ref.getInt("lat") / 10000000;
-                        newData.centerLng = (double) json_ref.getInt("long") / 10000000;
-                        JSONArray json_approaches_array = new JSONArray(json_inter.getString("approaches"));
-                        for (int i = 0; i < 4; i++) {
-                            JSONObject json_appr = json_approaches_array.getJSONObject(i);
-                            json_appr = new JSONObject(json_appr.getString("approach"));
-                            int id_tmp = json_appr.getInt("id");
-                            Approach newApp = new Approach();
-                            newApp.selfID = id_tmp;
-                            newApp.selfName = json_appr.getString("name");
-                            JSONArray json_driveLane_array = new JSONArray(json_appr.getString("drivingLanes"));
-                            JSONObject json_drive = json_driveLane_array.getJSONObject(0);
-                            newApp.lanewidth.put(json_drive.getString("laneNumber"), json_drive.getInt("laneWidth"));
-                            newData.approaches.put(id_tmp, newApp);
+                        for (int k = 0; k < json_inter_array.length(); k++) {
+                            JSONObject json_inter = json_inter_array.getJSONObject(k);
+                            if (intersections.containsKey(json_inter.getString("id"))) {
+                                continue;
+                            }
+                            Intersection newData = new Intersection();
+                            newData.ID = json_inter.getString("id");
+                            JSONObject json_ref = new JSONObject(json_inter.getString("refPoint"));
+                            newData.centerLat = (double) json_ref.getInt("lat") / 10000000;
+                            newData.centerLng = (double) json_ref.getInt("long") / 10000000;
+                            JSONArray json_approaches_array = new JSONArray(json_inter.getString("approaches"));
+                            for (int i = 0; i < json_approaches_array.length(); i++) {
+                                JSONObject json_appr = json_approaches_array.getJSONObject(i);
+                                json_appr = new JSONObject(json_appr.getString("approach"));
+                                Approach newApp = new Approach();
+                                newApp.selfID = json_appr.getInt("id");
+                                newApp.selfName = json_appr.getString("name");
+                                JSONArray json_driveLane_array = new JSONArray(json_appr.getString("drivingLanes"));
+                                for (int j = 0; j < json_driveLane_array.length(); j++) {
+                                    JSONObject json_lane = json_driveLane_array.getJSONObject(j);
+                                    newApp.lanesNodesList.put(json_lane.getString("laneNumber"), json_lane.getString("nodeList"));
+                                }
+                                newData.approaches.put(newApp.selfID, newApp);
+                            }
+                            intersections.put(newData.ID, newData);
                         }
-                        intersections.put(newData.ID, newData);
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -156,8 +169,8 @@ public class ComService extends Service {
                         JSONObject json = new JSONObject(messageBSM);
                         String blob1 = json.getString("blob1");
                         myCar.updatePosition((double)String8ToInt(blob1.substring(14, 22)) / 1E7,
-                                (double)String8ToInt(blob1.substring(22, 30)) / 1E7);
-
+                                            (double)String8ToInt(blob1.substring(22, 30)) / 1E7,
+                                            0);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -170,7 +183,6 @@ public class ComService extends Service {
         networkRunnable[3] = new Runnable() {     // 7100 port
             String message7100;
             String pText = "<text>(.+)</text>";
-            //RegexUtil regexUtil = new RegexUtil();
 
             @Override
             public void run() {
@@ -227,17 +239,19 @@ public class ComService extends Service {
                 while (!stop) {
                     DatagramPacket packet = new DatagramPacket(new byte[2048], 2048);
                     try {
-                        sockets[1].receive(packet);
+                        sockets[4].receive(packet);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    byte[] dataMAP = packet.getData();
-
-                    messageMAP = new String(dataMAP, 0, dataMAP.length);
-                    try {
-                        JSONObject json = new JSONObject(messageMAP);
-                        } catch (JSONException e) {
-                        e.printStackTrace();
+                    byte[] dataNew = packet.getData();
+                    messageMAP = new String(dataNew, 0, dataNew.length);
+                    if (messageMAP.contains("GPGGA")) {
+                        String info[] = messageMAP.split(",");
+                        Log.i(TAG, "GPGGA: " + messageMAP);
+                        Log.i(TAG, "lat: " + info[2]);
+                        myCar.updatePosition(stringLatTODouble(info[2]),
+                                            stringLngTODouble(info[4]),
+                                            1);
                     }
                 }
                 updaterHandler.postDelayed(this, 100);

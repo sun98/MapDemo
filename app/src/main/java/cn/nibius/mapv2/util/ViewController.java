@@ -2,10 +2,12 @@ package cn.nibius.mapv2.util;
 
 import android.location.Location;
 import java.util.Map;
+import android.util.Log;
 
 
 public class ViewController {
     private Vehicle myCar;
+    private Map inters;
 
     private double xCenterLat = 31.027853, xCenterLng = 121.421893;
     private double xRefeLat = 31.02754, xRefeLng = 121.4221;
@@ -19,11 +21,12 @@ public class ViewController {
 
     private double xk1 = 0, xk2 = 0, tk1 = 0, tk2 = 0;
     private int cross = 0;
-    // 0 - not in  1 - xcross, 2 - tcross
+    // 0 - not in,  1 - xcross, 2 - tcross, 3 - other cross
 
 
-    public ViewController(Vehicle car){
+    public ViewController(Vehicle car, Map intersections){
         myCar = car;
+        inters = intersections;
 
         double Ax = xRefeLat-xCenterLat, Bx = xRefeLng-xCenterLng, Xx = xRefeLeft-xCenterLeft, Yx = xRefeTop-xCenterTop;
         xk1 = (Ax*Xx + Bx*Yx)/(Ax*Ax + Bx*Bx);
@@ -46,6 +49,9 @@ public class ViewController {
         else if(distance_tcross <= 100){
             cross = 2;
         }
+        else if(closeFactor() < 500){
+            cross = 3;
+        }
         else {
             cross = 0;
         }
@@ -54,32 +60,35 @@ public class ViewController {
     }
 
 
-    public String closestIntersection(Map intersections){
-        String targetID = null;
-        double minDist = 9999;
-        for(Object i : intersections.values()) {
-            Intersection inter = (Intersection) i;
-            double distance = getDistance(myCar.currentLat, myCar.currentLng, inter.centerLat, inter.centerLng);
-            if (distance < minDist){
-                targetID = inter.ID;
-                minDist = distance;
-            }
-        }
+    private double closeFactor(){
+        double minAngleDist = 9999;
 
-        return targetID;
-    }
-
-
-    public String pointedIntersection(Map intersections){
-        String targetID = null;
-        double minAngle = 360;
-        for(Object i : intersections.values()) {
+        for(Object i : inters.values()) {
             Intersection inter = (Intersection) i;
             double angle = myCar.getAngle(myCar.currentLng, myCar.currentLat, inter.centerLng, inter.centerLat);
             double angle_diff = Math.abs(angle - myCar.heading);
-            if (angle < minAngle){
+            double distance = getDistance(myCar.currentLat, myCar.currentLng, inter.centerLat, inter.centerLng);
+            if (angle_diff*distance < minAngleDist){
+                minAngleDist = angle_diff*distance;
+            }
+        }
+
+        return minAngleDist;
+    }
+
+
+    public String nextIntersection(){
+        String targetID = null;
+        double minAngleDist = 9999;
+
+        for(Object i : inters.values()) {
+            Intersection inter = (Intersection) i;
+            double angle = myCar.getAngle(myCar.currentLng, myCar.currentLat, inter.centerLng, inter.centerLat);
+            double angle_diff = Math.abs(angle - myCar.heading);
+            double distance = getDistance(myCar.currentLat, myCar.currentLng, inter.centerLat, inter.centerLng);
+            if (angle_diff*distance < minAngleDist){
                 targetID = inter.ID;
-                minAngle = angle;
+                minAngleDist = angle_diff*distance;
             }
         }
 
@@ -87,13 +96,19 @@ public class ViewController {
     }
 
 
-    public int pointedLane(Intersection intersection){
-        double angle = myCar.getAngle(myCar.currentLng, myCar.currentLat, intersection.centerLng, intersection.centerLat);
-        for(Object lane : intersection.approaches.values()) {
+    public String currentLane(String interID){
+        String currentLane = null;
+        Intersection intersection = (Intersection) inters.get(interID);
+        for (Object obj : intersection.approaches.values()) {
+            Approach appr = (Approach) obj;
+            for (Object lane : appr.lanesNodesList.keySet()){
+                currentLane = (String)lane;
+                break;
+            }
             break;
         }
 
-        return 0;
+        return currentLane;
     }
 
 
