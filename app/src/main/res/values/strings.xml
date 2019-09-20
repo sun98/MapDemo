@@ -5,7 +5,7 @@
     <string name="img_traffic_des">信号灯</string>
     <string name="img_road_des">路况信息</string>
     <string name="img_v2v_des">车辆信息</string>
-    <string name="download_offline">正在下载 “上海市” 离线地图：</string>
+    <string name="download_offline">正在下载上海市离线地图：</string>
     <string name="lang_not_support">不支持的语言</string>
     <string name="location_error">定位服务不可用</string>
     <string name="current_speed">当前车速：</string>

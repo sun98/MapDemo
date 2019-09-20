@@ -1,6 +1,6 @@
-def getStr(lat, lng, speed, heading):
+def getStr(lat, lng):
     
-    blob = 'f'*14 + encodeCor(lat) + encodeCor(lng) + 'f'*12 + encodeNum(speed) + encodeNum(heading) + 'f'*26
+    blob = 'f'*14 + encodeCor(lat) + encodeCor(lng) + 'f'*12 + encodeNum(0) + encodeNum(0) + 'f'*26
 
     str = '''{"msgID":"basicSafetyMessage","blob1":"'''
     str += blob
@@ -32,4 +32,8 @@ def encodeNum(num):
 
 # 31.029091, 121.425871
 # 31.027771, 121.421761
-print(getStr(31.027771, 121.421761, 0, 0))
+#out = getStr(31.027771, 121.425)
+out = getStr(31.027771, 121.421761)
+f = open('broad2.txt', 'w')
+f.write(out)
+f.close()

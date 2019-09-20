@@ -8,12 +8,13 @@ import android.location.Location;
 
 public class Vehicle {
 
-    public double currentLat = -1, currentLng = -1, speed = 0, heading = 0;
+    public double currentLat = 31.0278622712, currentLng = 121.4218843711, speed = 0, heading = 0;
     public int safetyMessage = 0;
     private double lastLat = -1, lastLng = -1;
     private final double timeGap = 0.1;
     private int consecutiveCount = 0;
     private static int maxCount = 5;
+    private boolean updated = false;
 
 
     public void updatePosition(double lat, double lng, int newData){
@@ -30,7 +31,8 @@ public class Vehicle {
         lastLng = currentLng;
         currentLat = lat;
         currentLng = lng;
-        if (lastLat == -1 || lastLng == -1){
+        if (!updated){
+            updated = true;
             return;
         }
         speed = getDistance(lastLat, lastLng, currentLat, currentLng)/timeGap;

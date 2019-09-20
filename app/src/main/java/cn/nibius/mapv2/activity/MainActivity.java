@@ -65,12 +65,13 @@ public class MainActivity extends AppCompatActivity {
     private String TAG = "MainActivity";
     private Context context;
     private double myLat = 31.0278622712, myLng = 121.4218843711;
+    private LatLng currentL, interL;
     private Vehicle myCar;
     private Map intersections;
     private MessagePackage messagePackage;
     private TextToSpeech textToSpeech;
     private MKOfflineMap mOffline;
-    private int MAX_SOURCE = 4;
+    private int MAX_SOURCE = 2;
     private Marker[] markers = new Marker[MAX_SOURCE];
     private Handler updaterHandler = new Handler();
     private Runnable mapUpdater, messageUpdater;
@@ -90,11 +91,11 @@ public class MainActivity extends AppCompatActivity {
     private Paint paint;
     private TextView velocityView, warningView, tipView;
     private ViewController vc;
-    private boolean gotMessage = false, welcome = false;
+    private boolean gotMessage = false;
     private DecimalFormat df;
     public static Lock lock = new ReentrantLock();
 
-    public static String getIP(Context context){
+    private static String getIP(){
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
                 NetworkInterface intf = en.nextElement();
@@ -114,6 +115,12 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
+    private void speak(TextToSpeech textToSpeech, String text){
+        if (textToSpeech != null && !textToSpeech.isSpeaking()) {
+            textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -124,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
         initMap();
         initOfflineMap();
         bindService(new Intent(context, ComService.class), connection, BIND_AUTO_CREATE);
+        //speak(textToSpeech, "欢迎使用车路协同系统");
     }
 
     private void initVariables() {
@@ -138,7 +146,6 @@ public class MainActivity extends AppCompatActivity {
         warningView = findViewById(R.id.warning_text);
         tipView = findViewById(R.id.tip_text);
         warningView.setTextColor(0xffff0000);
-
         xCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.xcross);
         tCrossBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.tcross);
         xCrossBitmap  = Bitmap.createScaledBitmap(xCrossBitmap, xCrossBitmap.getWidth()/2, xCrossBitmap.getHeight()/2, false);
@@ -147,8 +154,7 @@ public class MainActivity extends AppCompatActivity {
         paint = new Paint();
 
         TextView showInfo = findViewById(R.id.text_info);
-        showInfo.setText("本机LAN IP: " + getIP(context));
-
+        showInfo.setText("本机LAN IP: " + getIP());
         myCar = new Vehicle();
         df = new DecimalFormat("#####0.0");
 
@@ -163,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        textToSpeech.setPitch(1.0f);
 
         toggleUpdater = new View.OnClickListener() {
             @Override
@@ -171,14 +178,12 @@ public class MainActivity extends AppCompatActivity {
                     binder.stopListen();
                     isListening = false;
                     view.setBackgroundResource(R.drawable.play_icon);
-                    textToSpeech.speak("监听已停止", TextToSpeech.QUEUE_ADD, null);
-                    Log.i(TAG, "stop listen");
+                    speak(textToSpeech, "监听已停止");
                 } else {
                     binder.startListen();
                     isListening = true;
                     view.setBackgroundResource(R.drawable.pause_icon);
-                    textToSpeech.speak("监听已开始", TextToSpeech.QUEUE_ADD, null);
-                    Log.i(TAG, "start listen");
+                    speak(textToSpeech, "监听已开始");
                 }
             }
         };
@@ -202,7 +207,6 @@ public class MainActivity extends AppCompatActivity {
         };
 
         mapUpdater = new Runnable() {
-            LatLng currentL;
             @Override
             public void run() {
                 if (isListening) {
@@ -219,7 +223,6 @@ public class MainActivity extends AppCompatActivity {
 
                         vc = new ViewController(myCar, intersections);
                         if (vc.toChangeView() == 1){
-                            Log.i(TAG, "MapUpdater: enter cross 1");
                             currentL = new LatLng(myCar.currentLat, myCar.currentLng);
                             mapBitmap = xCrossBitmap.copy(Bitmap.Config.ARGB_8888, true);
                             canvas = new Canvas(mapBitmap);
@@ -232,7 +235,6 @@ public class MainActivity extends AppCompatActivity {
                                 mapView.setVisibility(View.GONE);
 
                         } else if (vc.toChangeView() == 2){
-                            Log.i(TAG, "MapUpdater: enter cross 2");
                             currentL = new LatLng(myCar.currentLat, myCar.currentLng);
                             mapBitmap = tCrossBitmap.copy(Bitmap.Config.ARGB_8888, true);
                             canvas = new Canvas(mapBitmap);
@@ -245,44 +247,49 @@ public class MainActivity extends AppCompatActivity {
                                 mapView.setVisibility(View.GONE);
 
                         } else {
-                            Log.i(TAG, "MapUpdater: not in cross");
-                            currentL = new LatLng(myCar.currentLat, myCar.currentLng);
                             if(canvasView.getVisibility() == View.VISIBLE)
                                 canvasView.setVisibility(View.GONE);
                             if(mapView.getVisibility() == View.GONE)
                                 mapView.setVisibility(View.VISIBLE);
                             canvas = null;
                             mapBitmap = null;
+
+                            currentL = new LatLng(myCar.currentLat, myCar.currentLng);
                             currentL = EnDecodeUtil.coorConvert(currentL);
                             MapStatus mapStatus = new MapStatus.Builder(baiduMap.getMapStatus()).target(currentL).rotate((float)myCar.heading).build();
                             MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mapStatus);
                             baiduMap.animateMapStatus(mapStatusUpdate);
-                            if (currentL != null)
-                                markers[0].setPosition(currentL);
-                            else
-                                markers[0].setPosition(new LatLng(myLat, myLng));
-                            markers[0].setVisible(true);
-                            markers[2].setVisible(false);
 
+                            markers[0].setPosition(currentL);
+                            if (vc.toChangeView() == 3){
+                                Intersection nextInter = (Intersection) intersections.get(vc.nextIntersection());
+                                interL = new LatLng(nextInter.centerLat, nextInter.centerLng);
+                                interL = EnDecodeUtil.coorConvert(interL);
+                                markers[1].setPosition(interL);
+                                markers[1].setVisible(true);
+                            }
+                            else
+                                markers[1].setVisible(false);
                         }
                     } catch (Exception e) {
                         Log.i(TAG, "MapUpdater: " + e.toString());
                     }
 
                 } else {
+                    if(canvasView.getVisibility() == View.VISIBLE)
+                        canvasView.setVisibility(View.GONE);
+                    if(mapView.getVisibility() == View.GONE)
+                        mapView.setVisibility(View.VISIBLE);
                     currentL = myLocationListener.getLatLng();
-                    //myCar.updatePosition(currentL.latitude, currentL.longitude, -1);
                     MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newLatLng(currentL);
                     baiduMap.animateMapStatus(mapStatusUpdate);
                     if (currentL != null)
                         markers[0].setPosition(currentL);
                     else
                         markers[0].setPosition(new LatLng(myLat, myLng));
-                    markers[0].setVisible(true);
-                    markers[2].setVisible(false);
+                    markers[1].setVisible(false);
                 }
-                //Log.i(TAG, "Locate: "+String.valueOf(currentL));
-
+                Log.i(TAG, "Locate: "+String.valueOf(currentL));
                 updaterHandler.postDelayed(this, 100);
             }
         };
@@ -303,25 +310,25 @@ public class MainActivity extends AppCompatActivity {
                                 imgRoad.setVisibility(View.VISIBLE);
                                 imgV2v.setVisibility(View.VISIBLE);
                                 warningView.setText(getString(R.string.forward_crash_message));
-                                textToSpeech.speak(getString(R.string.forward_crash_message), TextToSpeech.QUEUE_ADD, null);
+                                speak(textToSpeech, getString(R.string.forward_crash_message));
                                 break;
                             case 2: // emergency break
                                 imgRoad.setVisibility(View.VISIBLE);
                                 imgV2v.setVisibility(View.VISIBLE);
                                 warningView.setText(getString(R.string.emergency_brake_message));
-                                textToSpeech.speak(getString(R.string.emergency_brake_message), TextToSpeech.QUEUE_ADD, null);
+                                speak(textToSpeech, getString(R.string.emergency_brake_message));
                                 break;
                             case 3: // right side crash
                                 imgRoad.setVisibility(View.VISIBLE);
                                 imgV2v.setVisibility(View.VISIBLE);
                                 warningView.setText(getString(R.string.right_cross_crash_message));
-                                textToSpeech.speak(getString(R.string.right_cross_crash_message), TextToSpeech.QUEUE_ADD, null);
+                                speak(textToSpeech, getString(R.string.right_cross_crash_message));
                                 break;
                             case 4: // left side crash
                                 imgRoad.setVisibility(View.VISIBLE);
                                 imgV2v.setVisibility(View.VISIBLE);
                                 warningView.setText(getString(R.string.left_cross_crash_message));
-                                textToSpeech.speak(getString(R.string.left_cross_crash_message), TextToSpeech.QUEUE_ADD, null);
+                                speak(textToSpeech, getString(R.string.left_cross_crash_message));
                                 break;
                             case 0:
                                 warningView.setText("");
@@ -335,7 +342,7 @@ public class MainActivity extends AppCompatActivity {
                         velocityView.setText(getString(R.string.current_speed) + velocity + getString(R.string.m_per_s));
 
                         if (vc.needRemind())
-                            textToSpeech.speak("前方通过隧道", TextToSpeech.QUEUE_ADD, null);
+                            speak(textToSpeech, "前方通过隧道");
 
                         if (vc.toChangeView() != 0) {
                             imgTraffic.setVisibility(View.VISIBLE);
@@ -348,12 +355,10 @@ public class MainActivity extends AppCompatActivity {
                                     + EnDecodeUtil.lightColor(currentState)
                                     + getString(R.string.time_left) + String.valueOf(timeToChange)
                                     + getString(R.string.second));
-
                         } else {
                             imgTraffic.setVisibility(View.INVISIBLE);
                             tipView.setText(getString(R.string.welcome));
                         }
-
                     } catch (Exception e) {
                         Log.i(TAG, "MessageUpdater: " + e.toString());
                     }
@@ -381,13 +386,10 @@ public class MainActivity extends AppCompatActivity {
         markers[0] = (Marker) baiduMap.addOverlay(options);
         markers[0].setVisible(true);
 
-        int resourceArray[] = {R.drawable.ic_bullseye_black_24dp, R.drawable.ic_traffic_black_24dp, R.drawable.ic_warning_black_24dp};
-        for (int i = 1; i < MAX_SOURCE; i++) {
-            bitmapDescriptor = BitmapDescriptorFactory.fromResource(resourceArray[i - 1]);
-            options = new MarkerOptions().position(position).icon(bitmapDescriptor); // 设置Overlay图标
-            markers[i] = (Marker) (baiduMap.addOverlay(options)); // 将Marker添加到地图上。
-            markers[i].setVisible(false);    //  先将Marker隐藏。在获得对应位置信息的时候再行显示。
-        }
+        bitmapDescriptor = BitmapDescriptorFactory.fromResource(R.drawable.ic_traffic_black_48dp);
+        options = new MarkerOptions().position(position).icon(bitmapDescriptor);
+        markers[1] = (Marker) (baiduMap.addOverlay(options));
+        markers[1].setVisible(false);
 
         updaterHandler.post(messageUpdater);
         updaterHandler.post(mapUpdater);
@@ -413,7 +415,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initOfflineMap() {
-        Log.i(TAG, "initOfflineMap: ");
         mOffline = new MKOfflineMap();
         mOffline.init(new MKOfflineMapListener() {
             @Override

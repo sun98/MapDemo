@@ -13,23 +13,7 @@ public class ToastUtil {
         Toast.makeText(context, string, Toast.LENGTH_SHORT).show();
     }
 
-    public static void showShort(Context context, CharSequence sequence) {
-        Toast.makeText(context, sequence, Toast.LENGTH_SHORT).show();
-    }
-
     public static void showShort(Context context, int resId) {
         Toast.makeText(context, resId, Toast.LENGTH_SHORT).show();
-    }
-
-    public static void showLong(Context context, String string) {
-        Toast.makeText(context, string, Toast.LENGTH_LONG).show();
-    }
-
-    public static void showLong(Context context, CharSequence sequence) {
-        Toast.makeText(context, sequence, Toast.LENGTH_LONG).show();
-    }
-
-    public static void showLong(Context context, int resId) {
-        Toast.makeText(context, resId, Toast.LENGTH_LONG).show();
     }
 }
