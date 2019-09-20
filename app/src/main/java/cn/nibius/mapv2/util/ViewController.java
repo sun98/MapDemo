@@ -163,4 +163,14 @@ public class ViewController {
         Location.distanceBetween(lat1, lng1, lat2, lng2, results);
         return results[0];
     }
+
+
+    public boolean needRemind(){
+        double distance_tcross = getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng);
+        double angle_tcross = myCar.getAngle(myCar.currentLng, myCar.currentLat, tCenterLng, tCenterLat);
+        if (distance_tcross < 200 && distance_tcross > 190 && angle_tcross < 100 && angle_tcross >80)
+            return true;
+        else
+            return false;
+    }
 }

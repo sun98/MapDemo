@@ -12,19 +12,19 @@ public class Vehicle {
     public int safetyMessage = 0;
     private double lastLat = -1, lastLng = -1;
     private final double timeGap = 0.1;
-    private int consectiveCount = 0;
+    private int consecutiveCount = 0;
     private static int maxCount = 5;
 
 
     public void updatePosition(double lat, double lng, int newData){
         if (newData == 0) {
-            consectiveCount++;
-            if (consectiveCount > maxCount)
-                consectiveCount = maxCount;
+            consecutiveCount++;
+            if (consecutiveCount > maxCount)
+                consecutiveCount = maxCount;
         }
-        else
-            consectiveCount = 0;
-        if (consectiveCount < maxCount && newData == 0)
+        else if (newData == 1)
+            consecutiveCount = 0;
+        if (consecutiveCount < maxCount && newData == 0)
             return;
         lastLat = currentLat;
         lastLng = currentLng;
@@ -34,7 +34,8 @@ public class Vehicle {
             return;
         }
         speed = getDistance(lastLat, lastLng, currentLat, currentLng)/timeGap;
-        heading = getAngle(lastLng, lastLat, currentLng, currentLat);
+        if (getDistance(lastLat, lastLng, currentLat, currentLng) > 0.5)
+            heading = getAngle(lastLng, lastLat, currentLng, currentLat);
     }
 
     public void updateSafety(int message){

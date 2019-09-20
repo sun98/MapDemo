@@ -28,6 +28,7 @@ import static cn.nibius.mapv2.util.EnDecodeUtil.String8ToInt;
 import static cn.nibius.mapv2.util.EnDecodeUtil.removeTail0;
 import static cn.nibius.mapv2.util.EnDecodeUtil.stringLatTODouble;
 import static cn.nibius.mapv2.util.EnDecodeUtil.stringLngTODouble;
+import static cn.nibius.mapv2.util.EnDecodeUtil.getMatch;
 
 
 public class ComService extends Service {
@@ -195,8 +196,8 @@ public class ComService extends Service {
                     }
                     byte[] data7100 = packet.getData();
                     message7100 = new String(data7100, 0, data7100.length);
-                    //Log.d(TAG,"7100: "+message7100);
                     message7100 = removeTail0(message7100);
+                    Log.d(TAG,"7100: "+message7100);
                     if (message7100.startsWith("<ui_request>")) {
                         message7100 = message7100.substring(0, 317);
                     } else {
@@ -211,12 +212,10 @@ public class ComService extends Service {
                             myCar.updateSafety(2);
                             break;
                         case '3': // side crash
-                            /*
-                            textV2V = regexUtil.getMatch(message7100, pText);
-                            */
-                            if (message7100.charAt(9) == 'R')
+                            String textV2V = getMatch(message7100, pText);
+                            if (textV2V.charAt(9) == 'R')  // Right
                                 myCar.updateSafety(3);
-                            else
+                            else                           // Left
                                 myCar.updateSafety(4);
                             break;
                         case 't':
@@ -244,14 +243,20 @@ public class ComService extends Service {
                         e.printStackTrace();
                     }
                     byte[] dataNew = packet.getData();
-                    messageMAP = new String(dataNew, 0, dataNew.length);
-                    if (messageMAP.contains("GPGGA")) {
-                        String info[] = messageMAP.split(",");
-                        Log.i(TAG, "GPGGA: " + messageMAP);
-                        Log.i(TAG, "lat: " + info[2]);
-                        myCar.updatePosition(stringLatTODouble(info[2]),
-                                            stringLngTODouble(info[4]),
-                                            1);
+                    //Log.i(TAG, "New Data: copy");
+                    try {
+                        messageMAP = new String(dataNew, 0, dataNew.length);
+                        if (messageMAP.contains("GPGGA")) {
+                            String info[] = messageMAP.split(",");
+                            Log.i(TAG, "GPGGA: " + messageMAP);
+                            myCar.updatePosition(stringLatTODouble(info[2]),
+                                    stringLngTODouble(info[4]), 1);
+                        }
+                        else{
+                            Log.i(TAG, "not GPGGA");
+                        }
+                    } catch (Exception e) {
+                        Log.i(TAG, "New Data: " + e.toString());
                     }
                 }
                 updaterHandler.postDelayed(this, 100);

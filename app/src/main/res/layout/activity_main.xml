@@ -21,33 +21,31 @@
             android:layout_height="0dp"
             android:gravity="center"
             app:layout_constraintBottom_toTopOf="@id/button_set"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_weight="2">
+            app:layout_constraintVertical_weight="4">
 
             <RelativeLayout
                 android:id="@+id/img_layout"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="75dp"
                 android:gravity="center" >
 
                 <ImageView
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="75dp"
+                    android:layout_height="75dp"
                     android:contentDescription="@string/img_velocity_des"
                     android:src="@drawable/ic_speedometer_white_48dp" />
 
                 <ImageView
                     android:id="@+id/img_velocity"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="75dp"
+                    android:layout_height="75dp"
                     android:contentDescription="@string/img_velocity_des"
                     android:src="@drawable/ic_speedometer_black_48dp" />
 
                 <ImageView
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="75dp"
+                    android:layout_height="75dp"
                     android:layout_marginStart="10dp"
                     android:layout_toEndOf="@id/img_velocity"
                     android:contentDescription="@string/img_traffic_des"
@@ -55,16 +53,16 @@
 
                 <ImageView
                     android:id="@+id/img_traffic"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="75dp"
+                    android:layout_height="75dp"
                     android:layout_marginStart="10dp"
                     android:layout_toEndOf="@id/img_velocity"
                     android:contentDescription="@string/img_traffic_des"
                     android:src="@drawable/ic_traffic_black_48dp" />
 
                 <ImageView
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="75dp"
+                    android:layout_height="75dp"
                     android:layout_marginStart="10dp"
                     android:layout_toEndOf="@id/img_traffic"
                     android:contentDescription="@string/img_road_des"
@@ -72,16 +70,16 @@
 
                 <ImageView
                     android:id="@+id/img_road"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="75dp"
+                    android:layout_height="75dp"
                     android:layout_marginStart="10dp"
                     android:layout_toEndOf="@id/img_traffic"
                     android:contentDescription="@string/img_road_des"
                     android:src="@drawable/ic_warning_black_48dp" />
 
                 <ImageView
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="75dp"
+                    android:layout_height="75dp"
                     android:layout_marginStart="10dp"
                     android:layout_toEndOf="@id/img_road"
                     android:contentDescription="@string/img_v2v_des"
@@ -89,25 +87,43 @@
 
                 <ImageView
                     android:id="@+id/img_v2v"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="75dp"
+                    android:layout_height="75dp"
                     android:layout_marginStart="10dp"
                     android:layout_toEndOf="@id/img_road"
                     android:contentDescription="@string/img_v2v_des"
                     android:src="@drawable/ic_directions_car_black_48dp" />
             </RelativeLayout>
 
+            <TextView
+                android:id="@+id/warning_text"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_below="@id/img_layout"
+                android:gravity="center"
+                android:text=""
+                android:textAlignment="center"
+                android:textSize="25sp" />
+
+            <TextView
+                android:id="@+id/velocity_text"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_below="@id/warning_text"
+                android:gravity="center"
+                android:text=""
+                android:textAlignment="center"
+                android:textSize="25sp" />
 
             <TextView
                 android:id="@+id/tip_text"
                 android:layout_width="match_parent"
                 android:layout_height="100dp"
-                android:layout_below="@id/img_layout"
-                android:layout_marginTop="10dp"
+                android:layout_below="@id/velocity_text"
                 android:gravity="center"
                 android:text="@string/welcome"
                 android:textAlignment="center"
-                android:textSize="30sp" />
+                android:textSize="25sp" />
 
         </RelativeLayout>
 
@@ -124,12 +140,10 @@
 
             <Button
                 android:id="@+id/btn_map"
-                android:layout_width="150dp"
-                android:layout_height="150dp"
-
+                android:layout_width="130dp"
+                android:layout_height="130dp"
                 android:background="@drawable/play_icon" />
-
-    </RelativeLayout>
+        </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/information"
@@ -137,8 +151,6 @@
         android:layout_height="0dp"
         android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/button_set"
         app:layout_constraintVertical_weight="1">
 
@@ -146,8 +158,7 @@
             android:id="@+id/text_info"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="start"
-            android:layout_marginStart="50dp"
+            android:textAlignment="center"
             android:textSize="16sp" />
 
     </RelativeLayout>

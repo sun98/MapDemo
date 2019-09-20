@@ -3,6 +3,9 @@ package cn.nibius.mapv2.util;
 
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.utils.CoordinateConverter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 public class EnDecodeUtil {
 
@@ -32,12 +35,6 @@ public class EnDecodeUtil {
         for (int i = 0; i < b.length; i++)
             intValue += (b[i] & 0xFF) << (8 * (3 - i));
         return intValue;
-    }
-
-    public static int String4ToInt(String s) {
-        if (s.charAt(0) >= '0' && s.charAt(0) <= '8')
-            return String8ToInt("0000" + s);
-        else return String8ToInt("ffff" + s);
     }
 
     public static String bytesToHexString(byte[] src) {
@@ -72,5 +69,41 @@ public class EnDecodeUtil {
         converter.coord(sourceLatLng);
 
         return converter.convert();
+    }
+
+    public static String getMatch(String source, String regex) {
+        Pattern p = Pattern.compile(regex);
+        Matcher matcher = p.matcher(source);
+        while (matcher.find()) {
+            return matcher.group(1);
+        }
+        return "";
+    }
+
+    public static String lightColor(int lightNum){
+        // 0x01绿灯，0x02红灯，0x03黄灯，0x04绿闪，0x05红闪
+        String color = null;
+        switch (lightNum) {
+            case 1:
+                color = "绿灯";
+                break;
+            case 2:
+                color = "红灯";
+                break;
+            case 3:
+                color = "黄灯";
+                break;
+            case 4:
+                color = "绿灯闪烁";
+                break;
+            case 5:
+                color = "红灯闪烁";
+                break;
+            default:
+                color = "未知";
+                break;
+        }
+
+        return  color;
     }
 }

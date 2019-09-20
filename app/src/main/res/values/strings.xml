@@ -1,43 +1,21 @@
 <resources>
     <string name="app_name">车路协同系统</string>
     <string name="welcome">欢迎使用车路协同系统！</string>
-    <string name="action_settings">设置</string>
-    <string name="special_car">特殊车辆</string>
     <string name="img_velocity_des">速度信息</string>
     <string name="img_traffic_des">信号灯</string>
     <string name="img_road_des">路况信息</string>
-    <string name="img_v2v_des">V2V提示</string>
-    <string name="normal_car">普通车辆</string>
-    <string name="test">调试</string>
+    <string name="img_v2v_des">车辆信息</string>
     <string name="download_offline">正在下载 “上海市” 离线地图：</string>
     <string name="lang_not_support">不支持的语言</string>
     <string name="location_error">定位服务不可用</string>
-    <string name="in_front">前方</string>
-    <string name="construction_message">米有道路施工，请绕道行驶。</string>
-    <string name="ice_message">米为冰雪路况，请减速慢行。</string>
-    <string name="error_5">Error: event=5 &amp;&amp; TIM state!=01 &amp;&amp; TIM state!=02</string>
-    <string name="red_too_long">前方红灯时间较长。</string>
-    <string name="green_too_long">前方绿灯时间较长，可原速通过。</string>
-    <string name="yellow">前方黄灯，建议停车等待。</string>
-    <string name="error_too_long">Error: lightTime=127 &amp;&amp; lightState!=01 &amp;&amp; lightState!=02</string>
-    <string name="error_6">Error: event=6</string>
-    <string name="green_remain">前方绿灯剩余</string>
-    <string name="red_remain">前方红灯剩余</string>
-    <string name="origin_speed">秒，建议保持原速通过。</string>
-    <string name="green_stop">秒，无法通过路口，建议停车等待。</string>
-    <string name="red_slow">秒，建议减速至</string>
-    <string name="kmh">&#160;km/h</string>
-    <string name="red_stop">秒，建议缓慢减速停车等候。</string>
     <string name="current_speed">当前车速：</string>
-    <string name="forward_crash_message">前方有车，请减速！</string>
+    <string name="m_per_s">m/s</string>
+    <string name="light_ahead">前方信号灯状态：</string>
+    <string name="time_left">\n剩余时间：</string>
+    <string name="second">秒</string>
+    <string name="forward_crash_message">前方来车，请减速！</string>
     <string name="left_cross_crash_message">左侧来车，请减速！</string>
     <string name="right_cross_crash_message">右侧来车，请减速！</string>
     <string name="emergency_brake_message">请紧急制动！</string>
-    <string name="title_activity_port7100">Port7100Activity</string>
-    <string name="test_7100">7100测试</string>
-    <string name="stop">停止</string>
-    <string name="start">开始</string>
-    <string name="_7100_port_text">7100 Port Text</string>
-    <string name="info">未收到消息</string>
-    <string name="cross">您已进入路口</string>
+    <string name="no_info">未收到消息</string>
 </resources>
