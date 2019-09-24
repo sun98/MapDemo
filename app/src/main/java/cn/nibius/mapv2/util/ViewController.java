@@ -157,11 +157,13 @@ public class ViewController {
     }
 
     public boolean needRemind(){
+        if (cross != 2)
+            return false;
         double distance_tcross = getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng);
-        double angle_tcross = myCar.getAngle(myCar.currentLng, myCar.currentLat, tCenterLng, tCenterLat);
-        if (distance_tcross < 200 && distance_tcross > 190
-                && angle_tcross < 280 && angle_tcross > 260
-                && myCar.heading > 260 && myCar.heading < 280)
+        double angle_tcross = myCar.getAngle(tCenterLng, tCenterLat, myCar.currentLng, myCar.currentLat);
+        if (distance_tcross < 110 && distance_tcross > 100
+                && angle_tcross < 90 && angle_tcross > 0
+                && myCar.heading < 90 && myCar.heading > 0)
             return true;
         else
             return false;
