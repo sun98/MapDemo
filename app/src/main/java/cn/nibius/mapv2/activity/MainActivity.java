@@ -93,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
     private ViewController vc;
     private boolean gotMessage = false;
     private DecimalFormat df;
+    private int viewPos = 0, lastViewPos = 0;
     public static Lock lock = new ReentrantLock();
 
     private static String getIP(){
@@ -131,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
         initMap();
         initOfflineMap();
         bindService(new Intent(context, ComService.class), connection, BIND_AUTO_CREATE);
-        //speak(textToSpeech, "欢迎使用车路协同系统");
     }
 
     private void initVariables() {
@@ -169,7 +169,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        textToSpeech.setPitch(1.0f);
 
         toggleUpdater = new View.OnClickListener() {
             @Override
@@ -222,7 +221,8 @@ public class MainActivity extends AppCompatActivity {
                         gotMessage = true;
 
                         vc = new ViewController(myCar, intersections);
-                        if (vc.toChangeView() == 1){
+                        viewPos = vc.viewPos();
+                        if (viewPos == 1){
                             currentL = new LatLng(myCar.currentLat, myCar.currentLng);
                             mapBitmap = xCrossBitmap.copy(Bitmap.Config.ARGB_8888, true);
                             canvas = new Canvas(mapBitmap);
@@ -234,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
                             if(mapView.getVisibility() == View.VISIBLE)
                                 mapView.setVisibility(View.GONE);
 
-                        } else if (vc.toChangeView() == 2){
+                        } else if (viewPos == 2){
                             currentL = new LatLng(myCar.currentLat, myCar.currentLng);
                             mapBitmap = tCrossBitmap.copy(Bitmap.Config.ARGB_8888, true);
                             canvas = new Canvas(mapBitmap);
@@ -261,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
                             baiduMap.animateMapStatus(mapStatusUpdate);
 
                             markers[0].setPosition(currentL);
-                            if (vc.toChangeView() == 3){
+                            if (vc.viewPos() == 3){
                                 Intersection nextInter = (Intersection) intersections.get(vc.nextIntersection());
                                 interL = new LatLng(nextInter.centerLat, nextInter.centerLng);
                                 interL = EnDecodeUtil.coorConvert(interL);
@@ -341,10 +341,17 @@ public class MainActivity extends AppCompatActivity {
                         velocity = df.format(myCar.speed);
                         velocityView.setText(getString(R.string.current_speed) + velocity + getString(R.string.m_per_s));
 
+                        viewPos = vc.viewPos();
+                        if (lastViewPos == 0 && viewPos > 0)
+                            speak(textToSpeech, "您已进入路口");
+                        else if (lastViewPos > 0 && viewPos == 0)
+                            speak(textToSpeech, "您已离开路口");
+                        lastViewPos = viewPos;
+
                         if (vc.needRemind())
                             speak(textToSpeech, "前方通过隧道");
 
-                        if (vc.toChangeView() != 0) {
+                        if (viewPos != 0) {
                             imgTraffic.setVisibility(View.VISIBLE);
                             String nextInterID = vc.nextIntersection();
                             Intersection nextInter = (Intersection) intersections.get(nextInterID);

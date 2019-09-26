@@ -27,6 +27,9 @@ public class Vehicle {
             consecutiveCount = 0;
         if (consecutiveCount < maxCount && newData == 0)
             return;
+        double travelDist = getDistance(lastLat, lastLng, lat, lng);
+        if (travelDist > 10)
+            return;
         lastLat = currentLat;
         lastLng = currentLng;
         currentLat = lat;
@@ -35,8 +38,8 @@ public class Vehicle {
             updated = true;
             return;
         }
-        speed = getDistance(lastLat, lastLng, currentLat, currentLng)/timeGap;
-        if (getDistance(lastLat, lastLng, currentLat, currentLng) > 0.5)
+        speed = travelDist/timeGap;
+        if (travelDist >= 0.3)
             heading = getAngle(lastLng, lastLat, currentLng, currentLat);
     }
 

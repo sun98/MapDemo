@@ -137,7 +137,7 @@ public class ComService extends Service {
                                 JSONArray json_driveLane_array = new JSONArray(json_appr.getString("drivingLanes"));
                                 for (int j = 0; j < json_driveLane_array.length(); j++) {
                                     JSONObject json_lane = json_driveLane_array.getJSONObject(j);
-                                    newApp.lanesNodesList.put(json_lane.getString("laneNumber"), json_lane.getString("nodeList"));
+                                    newApp.lanesNodesList.put(json_lane.getString("laneNumber"), json_lane.getInt("laneWidth"));
                                 }
                                 newData.approaches.put(newApp.selfID, newApp);
                             }

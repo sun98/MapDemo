@@ -13,9 +13,9 @@
     <string name="light_ahead">前方信号灯状态：</string>
     <string name="time_left">\n剩余时间：</string>
     <string name="second">秒</string>
-    <string name="forward_crash_message">前方来车，请减速！</string>
-    <string name="left_cross_crash_message">左侧来车，请减速！</string>
-    <string name="right_cross_crash_message">右侧来车，请减速！</string>
-    <string name="emergency_brake_message">请紧急制动！</string>
+    <string name="forward_crash_message">前方碰撞预警</string>
+    <string name="left_cross_crash_message">左侧碰撞预警</string>
+    <string name="right_cross_crash_message">右侧碰撞预警</string>
+    <string name="emergency_brake_message">请紧急制动</string>
     <string name="no_info">未收到消息</string>
 </resources>

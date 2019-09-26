@@ -86,7 +86,7 @@ public class ViewController {
         return results[0];
     }
 
-    public int toChangeView(){
+    public int viewPos(){
         double distance_xcross, distance_tcross;
         distance_xcross = getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng);
         distance_tcross = getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng);
@@ -141,29 +141,57 @@ public class ViewController {
         return targetID;
     }
 
+    private int getDirection(double angle){
+        if (angle < 45 || angle >= 315)
+            return 0;
+        else if (angle >= 45 && angle < 135)
+            return 1;
+        else if (angle >= 135 && angle < 225)
+            return 2;
+        else if (angle >= 225 && angle < 315)
+            return 3;
+        else
+            return 0;
+    }
+
+    private boolean matchDirection(int dir, String name){
+        if (name.equals("Northbound") && dir == 0)
+            return true;
+        else if (name.equals("Eastbound") && dir == 1)
+            return true;
+        else if (name.equals("Southbound") && dir == 2)
+            return true;
+        else if (name.equals("Westbound") && dir == 3)
+            return true;
+        else
+            return false;
+    }
+
     public String currentLane(String interID){
-        String currentLane = null;
+        String currentLane = "";
         Intersection intersection = (Intersection) inters.get(interID);
+        double angle = myCar.getAngle(intersection.centerLng, intersection.centerLat, myCar.currentLng, myCar.currentLat);
+        int direction = getDirection(angle);
         for (Object obj : intersection.approaches.values()) {
             Approach appr = (Approach) obj;
-            for (Object lane : appr.lanesNodesList.keySet()){
-                currentLane = (String)lane;
-                break;
+            for (Object lane : appr.lanesNodesList.keySet()) {
+                currentLane = (String) lane;
+                if (matchDirection(direction, appr.selfName)) {
+                    return currentLane;
+                }
+                else{
+                    break;
+                }
             }
-            break;
         }
 
         return currentLane;
     }
 
     public boolean needRemind(){
-        if (cross != 2)
-            return false;
-        double distance_tcross = getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng);
-        double angle_tcross = myCar.getAngle(tCenterLng, tCenterLat, myCar.currentLng, myCar.currentLat);
-        if (distance_tcross < 110 && distance_tcross > 100
-                && angle_tcross < 90 && angle_tcross > 0
-                && myCar.heading < 90 && myCar.heading > 0)
+        double tunnelLng = 121.431, tunnelLat = 31.032;
+        double dist = getDistance(myCar.currentLat, myCar.currentLng, tunnelLat, tunnelLng);
+        if (dist < 100 && dist > 90)
             return true;
         else
             return false;
