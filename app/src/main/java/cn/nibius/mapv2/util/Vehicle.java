@@ -28,8 +28,10 @@ public class Vehicle {
         if (consecutiveCount < maxCount && newData == 0)
             return;
         double travelDist = getDistance(lastLat, lastLng, lat, lng);
+        /*
         if (travelDist > 10)
             return;
+            */
         lastLat = currentLat;
         lastLng = currentLng;
         currentLat = lat;

@@ -221,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                         gotMessage = true;
 
                         vc = new ViewController(myCar, intersections);
-                        viewPos = vc.viewPos();
+                        viewPos = vc.getPos();
                         if (viewPos == 1){
                             currentL = new LatLng(myCar.currentLat, myCar.currentLng);
                             mapBitmap = xCrossBitmap.copy(Bitmap.Config.ARGB_8888, true);
@@ -261,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
                             baiduMap.animateMapStatus(mapStatusUpdate);
 
                             markers[0].setPosition(currentL);
-                            if (vc.viewPos() == 3){
+                            if (vc.getPos() == 3){
                                 Intersection nextInter = (Intersection) intersections.get(vc.nextIntersection());
                                 interL = new LatLng(nextInter.centerLat, nextInter.centerLng);
                                 interL = EnDecodeUtil.coorConvert(interL);
@@ -341,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
                         velocity = df.format(myCar.speed);
                         velocityView.setText(getString(R.string.current_speed) + velocity + getString(R.string.m_per_s));
 
-                        viewPos = vc.viewPos();
+                        viewPos = vc.getPos();
                         if (lastViewPos == 0 && viewPos > 0)
                             speak(textToSpeech, "您已进入路口");
                         else if (lastViewPos > 0 && viewPos == 0)
@@ -362,6 +362,7 @@ public class MainActivity extends AppCompatActivity {
                                     + EnDecodeUtil.lightColor(currentState)
                                     + getString(R.string.time_left) + String.valueOf(timeToChange)
                                     + getString(R.string.second));
+
                         } else {
                             imgTraffic.setVisibility(View.INVISIBLE);
                             tipView.setText(getString(R.string.welcome));

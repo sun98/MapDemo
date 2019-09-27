@@ -2,12 +2,13 @@ package cn.nibius.mapv2.util;
 
 import android.location.Location;
 import java.util.Map;
-import android.util.Log;
 
 
 public class ViewController {
     private Vehicle myCar;
     private Map inters;
+
+    private double left = 0, top = 0;
 
     private double xCenterLat = 31.027853, xCenterLng = 121.421893;
     private double xRefeLat = 31.02754, xRefeLng = 121.4221;
@@ -19,6 +20,16 @@ public class ViewController {
     private double tCenterLeft = 0.62136, tCenterTop = 0.0582298;
     private double tRefeLeft = 0.5962, tRefeTop = 0.9982;
 
+    private double xLeftBound1 = 0.23292, xLeftBound2 = 0.32958;
+    private double xTopBound1 = 0.44987, xTopBound2 = 0.55235;
+    private double tLeftBound1 = 0.5962, tLeftBound2 = 0.6465;
+    private double tTopBound1 = 0.0304, tTopBound2 = 0.0861;
+
+    private double xLeftLane1 = 0.2571, xLeftLane2 = 0.3054;
+    private double xTopLane1 = 0.47549, xTopLane2 = 0.52673;
+    private double tLeftLane1 = 0.608775, tLeftLane2 = 0.633925;
+    private double tTopLane1 = 0.044325, tTopLane2 = 0.072175;
+
     private double xk1 = 0, xk2 = 0, tk1 = 0, tk2 = 0;
     private int cross = 0;
     // 0 - not in,  1 - xcross, 2 - tcross, 3 - other cross
@@ -26,58 +37,88 @@ public class ViewController {
     public ViewController(Vehicle car, Map intersections){
         myCar = car;
         inters = intersections;
-
         double Ax = xRefeLat-xCenterLat, Bx = xRefeLng-xCenterLng, Xx = xRefeLeft-xCenterLeft, Yx = xRefeTop-xCenterTop;
+        double At = tRefeLat-tCenterLat, Bt = tRefeLng-tCenterLng, Xt = tRefeLeft-tCenterLeft, Yt = tRefeTop-tCenterTop;
         xk1 = (Ax*Xx + Bx*Yx)/(Ax*Ax + Bx*Bx);
         xk2 = (Bx*Xx - Ax*Yx)/(Ax*Ax + Bx*Bx);
-
-        double At = tRefeLat-tCenterLat, Bt = tRefeLng-tCenterLng, Xt = tRefeLeft-tCenterLeft, Yt = tRefeTop-tCenterTop;
         tk1 = (At*Xt + Bt*Yt)/(At*At + Bt*Bt);
         tk2 = (Bt*Xt - At*Yt)/(At*At + Bt*Bt);
     }
 
-    public double getViewLeft(){
+    private void updateView(){
         if (cross == 1){
-            double result = xCenterLeft + xk1*(myCar.currentLat - xCenterLat) + xk2*(myCar.currentLng - xCenterLng);
-            if (result > 1)
-                result = 1;
-            if (result < 0)
-                result = 0;
-            return result;
+            left = xCenterLeft + xk1*(myCar.currentLat - xCenterLat) + xk2*(myCar.currentLng - xCenterLng);
+            top = xCenterTop + xk1*(myCar.currentLng - xCenterLng) - xk2*(myCar.currentLat - xCenterLat);
+            xFix();
         }
         else if (cross == 2){
-            double result = tCenterLeft + tk1*(myCar.currentLat - tCenterLat) + tk2*(myCar.currentLng - tCenterLng);
-            if (result > 1)
-                result = 1;
-            if (result < 0)
-                result = 0;
-            return result;
+            left = tCenterLeft + tk1*(myCar.currentLat - tCenterLat) + tk2*(myCar.currentLng - tCenterLng);
+            top = tCenterTop + tk1*(myCar.currentLng - tCenterLng) - tk2*(myCar.currentLat - tCenterLat);
+            tFix();
         }
-        else {
-            return 0;
+        if (left > 1)
+            left = 1;
+        if (left < 0)
+            left = 0;
+        if (top > 1)
+            top = 1;
+        if (top < 0)
+            top = 0;
+    }
+
+    private void xFix(){
+        if (left < xLeftBound1 && top < xTopBound1){
+            if (xLeftBound1 - left < xTopBound1 - top)
+                left = xLeftLane1;
+            else
+                top = xTopLane1;
+        }
+        else if (left > xLeftBound2 && top < xTopBound1){
+            if (left - xLeftBound2 < xTopBound1 - top)
+                left = xLeftLane2;
+            else
+                top = xTopLane1;
+        }
+        else if (left > xLeftBound2 && top > xTopBound2){
+            if (left - xLeftBound2 < top - xTopBound2)
+                left = xLeftLane2;
+            else
+                top = xTopLane2;
+        }
+        else if (left < xLeftBound1 && top > xTopBound2){
+            if (xLeftBound1 - left < top - xTopBound2)
+                left = xLeftLane1;
+            else
+                top = xTopLane2;
         }
     }
 
+    private void tFix(){
+        if (top < tTopBound1){
+            top = tTopLane1;
+        }
+        else if (left < tLeftBound1 && top > tTopBound2){
+            if (tLeftBound1 - left < top - tTopBound2)
+                left = tLeftLane1;
+            else
+                top = tTopLane2;
+        }
+        else if (left > tLeftBound2 && top > tTopBound2){
+            if (left - tLeftBound2 < top - tTopBound2)
+                left = tLeftLane2;
+            else
+                top = tTopLane2;
+        }
+    }
+
+    public double getViewLeft(){
+        updateView();
+        return left;
+    }
+
     public double getViewTop(){
-        if (cross == 1){
-            double result = xCenterTop + xk1*(myCar.currentLng - xCenterLng) - xk2*(myCar.currentLat - xCenterLat);
-            if (result > 1)
-                result = 1;
-            if (result < 0)
-                result = 0;
-            return result;
-        }
-        else if (cross == 2){
-            double result = tCenterTop + tk1*(myCar.currentLng - tCenterLng) - tk2*(myCar.currentLat - tCenterLat);
-            if (result > 1)
-                result = 1;
-            if (result < 0)
-                result = 0;
-            return result;
-        }
-        else {
-            return 0;
-        }
+        updateView();
+        return top;
     }
 
     private double getDistance(double lat1, double lng1, double lat2, double lng2) {
@@ -86,7 +127,7 @@ public class ViewController {
         return results[0];
     }
 
-    public int viewPos(){
+    public int getPos(){
         double distance_xcross, distance_tcross;
         distance_xcross = getDistance(myCar.currentLat, myCar.currentLng, xCenterLat, xCenterLng);
         distance_tcross = getDistance(myCar.currentLat, myCar.currentLng, tCenterLat, tCenterLng);
@@ -94,7 +135,7 @@ public class ViewController {
         if(distance_xcross <= 100 && distance_xcross < distance_tcross){
             cross = 1;
         }
-        else if(distance_tcross <= 100){
+        else if(distance_tcross <= 200){
             cross = 2;
         }
         else if(closeFactor() < 500){

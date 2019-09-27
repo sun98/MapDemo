@@ -197,13 +197,13 @@ public class ComService extends Service {
                     byte[] data7100 = packet.getData();
                     message7100 = new String(data7100, 0, data7100.length);
                     message7100 = removeTail0(message7100);
-                    Log.d(TAG,"7100: "+message7100);
                     if (message7100.startsWith("<ui_request>")) {
                         message7100 = message7100.substring(0, 317);
+                        Log.d(TAG,"7100: ui_request");
                     } else {
                         message7100 = message7100.substring(0, 255);
+                        Log.d(TAG,"7100: normal");
                     }
-                    Log.d(TAG,"7100 at 20: "+message7100.charAt(20));
                     switch (message7100.charAt(20)) {
                         case '1': // forward crash
                             myCar.updateSafety(1);
@@ -243,12 +243,11 @@ public class ComService extends Service {
                         e.printStackTrace();
                     }
                     byte[] dataNew = packet.getData();
-                    //Log.i(TAG, "New Data: copy");
                     try {
                         messageMAP = new String(dataNew, 0, dataNew.length);
                         if (messageMAP.contains("GPGGA")) {
                             String info[] = messageMAP.split(",");
-                            Log.i(TAG, "GPGGA: " + messageMAP);
+                            //Log.i(TAG, "GPGGA: " + messageMAP);
                             myCar.updatePosition(stringLatTODouble(info[2]),
                                     stringLngTODouble(info[4]), 1);
                         }
