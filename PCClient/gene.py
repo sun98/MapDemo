@@ -30,10 +30,13 @@ def encodeNum(num):
 
     return res
 
-# 31.029091, 121.425871
-# 31.027771, 121.421761
-#out = getStr(31.027771, 121.425)
-out = getStr(31.027771, 121.421761)
+#out = getStr(31.027771, 121.421761)
+#out = getStr(31.0310306, 121.434667)
+#out = getStr(31.0311167, 121.4346)
+#out = getStr(31.03115, 121.435033)
+#out = getStr(31.0292667, 121.426217)
+out = getStr(31.02975, 121.427617)
 f = open('broad2.txt', 'w')
 f.write(out)
 f.close()
+

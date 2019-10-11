@@ -348,11 +348,15 @@ public class MainActivity extends AppCompatActivity {
                             speak(textToSpeech, "您已离开路口");
                         lastViewPos = viewPos;
 
-                        if (vc.needRemind())
+                        if (vc.needRemind()) {
                             speak(textToSpeech, "前方通过隧道");
+                            warningView.setText("前方通过隧道");
+                            imgRoad.setVisibility(View.VISIBLE);
+                        }
 
                         if (viewPos != 0) {
                             imgTraffic.setVisibility(View.VISIBLE);
+
                             String nextInterID = vc.nextIntersection();
                             Intersection nextInter = (Intersection) intersections.get(nextInterID);
                             String currentLane = vc.currentLane(nextInterID);
@@ -362,6 +366,12 @@ public class MainActivity extends AppCompatActivity {
                                     + EnDecodeUtil.lightColor(currentState)
                                     + getString(R.string.time_left) + String.valueOf(timeToChange)
                                     + getString(R.string.second));
+                            /*
+                            tipView.setText(getString(R.string.light_ahead)
+                                    + EnDecodeUtil.lightColor(3)
+                                    + getString(R.string.time_left) + String.valueOf(69)
+                                    + getString(R.string.second));
+                                    */
 
                         } else {
                             imgTraffic.setVisibility(View.INVISIBLE);
