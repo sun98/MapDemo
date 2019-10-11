@@ -232,7 +232,7 @@ public class ViewController {
     public boolean needRemind(){
         double tunnelLng = 121.431, tunnelLat = 31.032;
         double dist = getDistance(myCar.currentLat, myCar.currentLng, tunnelLat, tunnelLng);
-        if (dist < 100 && dist > 90)
+        if (dist < 50)
             return true;
         else
             return false;
